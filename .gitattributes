@@ -1,0 +1,2 @@
+# PDFs are binary artifacts; preserve bytes and do not apply text diffs or CRLF conversion.
+*.pdf binary

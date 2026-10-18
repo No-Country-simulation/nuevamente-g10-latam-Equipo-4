@@ -1,0 +1,2 @@
+# Somente geração da documentação; não é dependência de produção do Atlas.
+reportlab==4.4.9

@@ -16,3 +16,5 @@ artifacts/
 *.log
 
 *.tsbuildinfo
+
+.venv-docs/
