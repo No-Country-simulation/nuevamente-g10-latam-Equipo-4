@@ -1,0 +1,12 @@
+node_modules
+.venv
+.git
+.agents
+data
+.env
+**/.next
+**/dist
+**/.output
+**/.eve
+**/artifacts
+**/__pycache__
