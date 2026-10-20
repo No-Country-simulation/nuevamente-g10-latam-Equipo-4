@@ -1,0 +1,153 @@
+import hashlib
+import json
+import math
+import os
+import sqlite3
+import uuid
+from contextlib import contextmanager
+from datetime import datetime, timezone
+from pathlib import Path
+
+def now():
+    return datetime.now(timezone.utc).isoformat()
+
+def uid(prefix):
+    return f"{prefix}_{uuid.uuid4().hex[:20]}"
+
+class Store:
+    def __init__(self, root=None):
+        self.root = Path(root or os.getenv("ATLAS_DATA_DIR", "data"))
+        self.root.mkdir(parents=True, exist_ok=True)
+        with self.db() as db:
+            db.executescript("""
+                PRAGMA journal_mode=WAL;
+                CREATE TABLE IF NOT EXISTS documents(tenant TEXT,id TEXT,title TEXT,filename TEXT,media_type TEXT,pages TEXT,hash TEXT,created_at TEXT,storage TEXT,PRIMARY KEY(tenant,id));
+                CREATE TABLE IF NOT EXISTS passages(tenant TEXT,doc_id TEXT,id TEXT,page INTEGER,text TEXT,vector TEXT,PRIMARY KEY(tenant,id));
+                CREATE VIRTUAL TABLE IF NOT EXISTS passages_fts USING fts5(tenant UNINDEXED,doc_id UNINDEXED,id UNINDEXED,text);
+                CREATE TABLE IF NOT EXISTS packages(tenant TEXT,id TEXT,payload TEXT,answers TEXT,input TEXT,PRIMARY KEY(tenant,id));
+                CREATE TABLE IF NOT EXISTS xp(tenant TEXT,key TEXT,amount INTEGER,created_at TEXT,PRIMARY KEY(tenant,key));
+                CREATE TABLE IF NOT EXISTS groups(tenant TEXT,id TEXT,name TEXT,topic TEXT,created_at TEXT,PRIMARY KEY(tenant,id));
+                CREATE TABLE IF NOT EXISTS messages(tenant TEXT,id TEXT,group_id TEXT,text TEXT,created_at TEXT,PRIMARY KEY(tenant,id));
+                CREATE TABLE IF NOT EXISTS consent(tenant TEXT PRIMARY KEY,enabled INTEGER);
+                CREATE TABLE IF NOT EXISTS memory_events(tenant TEXT,id TEXT,kind TEXT,payload TEXT,created_at TEXT,PRIMARY KEY(tenant,id));
+                CREATE TABLE IF NOT EXISTS policies(tenant TEXT,version INTEGER,instruction TEXT,status TEXT,created_at TEXT,PRIMARY KEY(tenant,version));
+                CREATE TABLE IF NOT EXISTS cycles(tenant TEXT,id TEXT,status TEXT,reason TEXT,metrics TEXT,created_at TEXT,PRIMARY KEY(tenant,id));
+                CREATE TABLE IF NOT EXISTS conversations(tenant TEXT,id TEXT,agent_id TEXT,role TEXT,text TEXT,created_at TEXT,PRIMARY KEY(tenant,id));
+                CREATE TABLE IF NOT EXISTS replay_cases(tenant TEXT,id TEXT,payload TEXT,input TEXT,PRIMARY KEY(tenant,id));
+                CREATE TABLE IF NOT EXISTS memory_revisions(tenant TEXT PRIMARY KEY,version INTEGER);
+            """)
+
+    @contextmanager
+    def db(self):
+        db = sqlite3.connect(self.root / "atlas.sqlite3", timeout=15)
+        db.row_factory = sqlite3.Row
+        try:
+            yield db
+            db.commit()
+        except BaseException:
+            db.rollback()
+            raise
+        finally:
+            db.close()
+
+    def documents(self, tenant):
+        with self.db() as db:
+            rows = db.execute("SELECT * FROM documents WHERE tenant=? ORDER BY created_at DESC", (tenant,)).fetchall()
+        return [self.document_meta(row) for row in rows]
+
+    def document_meta(self, row):
+        pages = json.loads(row["pages"])
+        return {k: row[k] for k in ("id", "title", "filename", "media_type", "hash", "created_at")} | {"pages": len(pages), "characters": sum(len(p["text"]) for p in pages), "version": 1, "status": "ready", "storage": json.loads(row["storage"])}
+
+    def source(self, tenant, doc_id):
+        with self.db() as db:
+            row = db.execute("SELECT * FROM documents WHERE tenant=? AND id=?", (tenant, doc_id)).fetchone()
+        if not row:
+            raise LookupError("Fonte não encontrada neste workspace.")
+        return {"id": row["id"], "title": row["title"], "pages": json.loads(row["pages"])}
+
+    def package(self, tenant, package_id):
+        with self.db() as db:
+            row = db.execute("SELECT * FROM packages WHERE tenant=? AND id=?", (tenant, package_id)).fetchone()
+        if not row:
+            raise LookupError("Material não encontrado.")
+        return row
+
+    def progress(self, tenant):
+        with self.db() as db:
+            row = db.execute("SELECT COALESCE(SUM(amount),0) xp,COUNT(*) completed FROM xp WHERE tenant=?", (tenant,)).fetchone()
+        return dict(row) | {"level": math.floor(math.sqrt(row["xp"] / 100)) + 1}
+
+    def memory_state(self, tenant):
+        if os.getenv("MEMORY_SERVICE_URL"):
+            import httpx
+            from .providers import safe_base
+            response = httpx.get(safe_base(os.environ["MEMORY_SERVICE_URL"]) + "/v1/dreamer/status", headers={"Authorization": "Bearer " + os.environ["MEMORY_SERVICE_TOKEN"], "x-atlas-tenant": tenant}, timeout=10)
+            response.raise_for_status()
+            state = response.json()
+            return {"enabled": state["consent"], "revision": state["revision"]}
+        with self.db() as db:
+            row = db.execute("SELECT COALESCE((SELECT enabled FROM consent WHERE tenant=?),0),COALESCE((SELECT version FROM memory_revisions WHERE tenant=?),0)", (tenant, tenant)).fetchone()
+        return {"enabled": bool(row[0]), "revision": row[1]}
+
+    def event(self, tenant, kind, payload, expected_revision=None):
+        if os.getenv("MEMORY_SERVICE_URL"):
+            import httpx
+            from .providers import safe_base, ProviderError
+            base = safe_base(os.environ["MEMORY_SERVICE_URL"])
+            headers = {"Authorization": "Bearer " + os.environ["MEMORY_SERVICE_TOKEN"], "x-atlas-tenant": tenant}
+            try:
+                status = httpx.get(base + "/v1/dreamer/status", headers=headers, timeout=10)
+                status.raise_for_status()
+                state = status.json()
+                if state.get("consent") and (expected_revision is None or state.get("revision") == expected_revision):
+                    response = httpx.post(base + "/v1/dreamer/experiences", json={"kind": kind, "payload": payload, "revision": state["revision"]}, headers=headers, timeout=10)
+                    response.raise_for_status()
+            except (httpx.HTTPError, ValueError) as exc:
+                raise ProviderError("A memória externa está indisponível. Não foram enviados dados sem consentimento.") from exc
+            return
+        with self.db() as db:
+            db.execute("BEGIN IMMEDIATE")
+            consent = db.execute("SELECT enabled FROM consent WHERE tenant=?", (tenant,)).fetchone()
+            revision = db.execute("SELECT COALESCE((SELECT version FROM memory_revisions WHERE tenant=?),0)", (tenant,)).fetchone()[0]
+            if consent and consent[0] and (expected_revision is None or expected_revision == revision):
+                event_payload = {key: value for key, value in payload.items() if key != "replay"}
+                db.execute("INSERT INTO memory_events VALUES(?,?,?,?,?)", (tenant, uid("ev"), kind, json.dumps(event_payload, ensure_ascii=False), now()))
+                if kind == "generation" and payload.get("replay"):
+                    replay = payload["replay"]
+                    db.execute("INSERT OR IGNORE INTO replay_cases VALUES(?,?,?,?)", (tenant, replay["package"]["id"], json.dumps(replay["package"], ensure_ascii=False), json.dumps(replay["input"], ensure_ascii=False)))
+                    db.execute("DELETE FROM replay_cases WHERE tenant=? AND id NOT IN (SELECT id FROM replay_cases WHERE tenant=? ORDER BY rowid DESC LIMIT 30)", (tenant, tenant))
+                db.execute("DELETE FROM memory_events WHERE tenant=? AND id NOT IN (SELECT id FROM memory_events WHERE tenant=? ORDER BY created_at DESC LIMIT 1000)", (tenant, tenant))
+                return True
+            return False
+
+    def groups(self, tenant):
+        with self.db() as db:
+            rows = db.execute("SELECT id,name,topic,created_at FROM groups WHERE tenant=? ORDER BY created_at DESC", (tenant,)).fetchall()
+        return [dict(row) | {"member_count": 1} for row in rows]
+
+    def group_exists(self, tenant, group_id):
+        with self.db() as db:
+            exists = db.execute("SELECT 1 FROM groups WHERE tenant=? AND id=?", (tenant, group_id)).fetchone()
+        if not exists:
+            raise LookupError("Grupo não encontrado neste workspace.")
+
+    def blob(self, tenant, key, content):
+        tenant_key = hashlib.sha256(tenant.encode()).hexdigest()[:24]
+        path = self.root / "objects" / tenant_key / key
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(content)
+        if os.getenv("STORAGE_PROVIDER", "local") != "oci":
+            return {"provider": "local", "object_key": f"{tenant_key}/{key}", "status": "stored"}
+        import oci
+        if os.getenv("OCI_AUTH_MODE", "instance_principal") == "instance_principal":
+            client = oci.object_storage.ObjectStorageClient({}, signer=oci.auth.signers.InstancePrincipalsSecurityTokenSigner())
+        else:
+            client = oci.object_storage.ObjectStorageClient(oci.config.from_file(os.getenv("OCI_CONFIG_FILE") or oci.config.DEFAULT_LOCATION, os.getenv("OCI_CONFIG_PROFILE") or "DEFAULT"))
+        namespace, bucket = os.environ["OCI_NAMESPACE"], os.environ["OCI_BUCKET"]
+        object_key = f"tenants/{tenant_key}/{key}"
+        client.put_object(namespace, bucket, object_key, content, retry_strategy=oci.retry.NoneRetryStrategy())
+        received = client.get_object(namespace, bucket, object_key).data.content
+        if hashlib.sha256(received).digest() != hashlib.sha256(content).digest():
+            raise RuntimeError("Falha na conferência do objeto OCI.")
+        return {"provider": "oci", "object_key": object_key, "status": "verified"}

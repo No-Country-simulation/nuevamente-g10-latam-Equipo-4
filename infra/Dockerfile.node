@@ -1,0 +1,29 @@
+FROM node:24-bookworm-slim AS build
+WORKDIR /repo
+COPY package.json package-lock.json ./
+COPY apps/web/package.json ./apps/web/package.json
+COPY apps/api/package.json ./apps/api/package.json
+COPY packages/contracts/package.json ./packages/contracts/package.json
+RUN --mount=type=secret,id=atlas_ca \
+    if [ -s /run/secrets/atlas_ca ]; then NODE_EXTRA_CA_CERTS=/run/secrets/atlas_ca npm ci; else npm ci; fi
+COPY apps ./apps
+COPY packages ./packages
+RUN npm run build
+
+FROM node:24-bookworm-slim AS api
+ENV NODE_ENV=production
+WORKDIR /app
+COPY --from=build --chown=node:node /repo/node_modules ./node_modules
+COPY --from=build --chown=node:node /repo/apps/api/package.json ./apps/api/package.json
+COPY --from=build --chown=node:node /repo/apps/api/dist ./apps/api/dist
+COPY --from=build --chown=node:node /repo/packages ./packages
+USER node
+CMD ["node", "apps/api/dist/main.js"]
+
+FROM node:24-bookworm-slim AS web
+ENV NODE_ENV=production HOSTNAME=0.0.0.0 PORT=3000
+WORKDIR /app
+COPY --from=build --chown=node:node /repo/apps/web/.next/standalone ./
+COPY --from=build --chown=node:node /repo/apps/web/.next/static ./apps/web/.next/static
+USER node
+CMD ["node", "apps/web/server.js"]

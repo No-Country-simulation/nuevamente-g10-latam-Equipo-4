@@ -1,0 +1,384 @@
+{
+  "$defs": {
+    "AdaptedContent": {
+      "additionalProperties": false,
+      "properties": {
+        "titulo": {
+          "title": "Titulo",
+          "type": "string"
+        },
+        "introducao_contextualizada": {
+          "title": "Introducao Contextualizada",
+          "type": "string"
+        },
+        "itens": {
+          "items": {
+            "$ref": "#/$defs/LearningItem"
+          },
+          "maxItems": 6,
+          "title": "Itens",
+          "type": "array"
+        }
+      },
+      "required": [
+        "titulo",
+        "introducao_contextualizada",
+        "itens"
+      ],
+      "title": "AdaptedContent",
+      "type": "object"
+    },
+    "Citation": {
+      "additionalProperties": false,
+      "properties": {
+        "document_id": {
+          "title": "Document Id",
+          "type": "string"
+        },
+        "document_title": {
+          "title": "Document Title",
+          "type": "string"
+        },
+        "page": {
+          "minimum": 1,
+          "title": "Page",
+          "type": "integer"
+        },
+        "section_id": {
+          "title": "Section Id",
+          "type": "string"
+        },
+        "excerpt": {
+          "maxLength": 1800,
+          "minLength": 1,
+          "title": "Excerpt",
+          "type": "string"
+        },
+        "excerpt_hash": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Excerpt Hash",
+          "type": "string"
+        }
+      },
+      "required": [
+        "document_id",
+        "document_title",
+        "page",
+        "section_id",
+        "excerpt",
+        "excerpt_hash"
+      ],
+      "title": "Citation",
+      "type": "object"
+    },
+    "Decision": {
+      "additionalProperties": false,
+      "properties": {
+        "method": {
+          "enum": [
+            "socratic",
+            "feynman",
+            "first_principles",
+            "warburg"
+          ],
+          "title": "Method",
+          "type": "string"
+        },
+        "rag_mode": {
+          "enum": [
+            "vector",
+            "hybrid",
+            "lm"
+          ],
+          "title": "Rag Mode",
+          "type": "string"
+        },
+        "reason": {
+          "maxLength": 1000,
+          "minLength": 1,
+          "title": "Reason",
+          "type": "string"
+        },
+        "source": {
+          "default": "policy",
+          "enum": [
+            "policy",
+            "typesafe"
+          ],
+          "title": "Source",
+          "type": "string"
+        }
+      },
+      "required": [
+        "method",
+        "rag_mode",
+        "reason"
+      ],
+      "title": "Decision",
+      "type": "object"
+    },
+    "LearningItem": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "tutorial",
+            "flashcards",
+            "quiz",
+            "summary"
+          ],
+          "title": "Type",
+          "type": "string"
+        },
+        "title": {
+          "title": "Title",
+          "type": "string"
+        },
+        "body": {
+          "maxLength": 6000,
+          "title": "Body",
+          "type": "string"
+        },
+        "citations": {
+          "items": {
+            "$ref": "#/$defs/Citation"
+          },
+          "maxItems": 8,
+          "minItems": 1,
+          "title": "Citations",
+          "type": "array"
+        },
+        "front": {
+          "anyOf": [
+            {
+              "maxLength": 3000,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Front"
+        },
+        "back": {
+          "anyOf": [
+            {
+              "maxLength": 3000,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Back"
+        },
+        "options": {
+          "anyOf": [
+            {
+              "items": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "type": "object"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Options"
+        }
+      },
+      "required": [
+        "id",
+        "type",
+        "title",
+        "body",
+        "citations"
+      ],
+      "title": "LearningItem",
+      "type": "object"
+    },
+    "Quality": {
+      "additionalProperties": false,
+      "properties": {
+        "judge_verdict": {
+          "enum": [
+            "not_evaluated",
+            "supported",
+            "contradicted",
+            "insufficient_evidence"
+          ],
+          "title": "Judge Verdict",
+          "type": "string"
+        },
+        "schema_valid": {
+          "title": "Schema Valid",
+          "type": "boolean"
+        },
+        "limitations": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Limitations",
+          "type": "array"
+        }
+      },
+      "required": [
+        "judge_verdict",
+        "schema_valid",
+        "limitations"
+      ],
+      "title": "Quality",
+      "type": "object"
+    },
+    "StorageReceipt": {
+      "additionalProperties": false,
+      "properties": {
+        "provider": {
+          "enum": [
+            "local",
+            "oci"
+          ],
+          "title": "Provider",
+          "type": "string"
+        },
+        "object_key": {
+          "title": "Object Key",
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "stored",
+            "verified"
+          ],
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "provider",
+        "object_key",
+        "status"
+      ],
+      "title": "StorageReceipt",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "title": "Id",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "status": {
+      "enum": [
+        "ready",
+        "abstained"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "mode": {
+      "enum": [
+        "extractive_demo",
+        "remote"
+      ],
+      "title": "Mode",
+      "type": "string"
+    },
+    "document_refs": {
+      "items": {
+        "additionalProperties": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "integer"
+            }
+          ]
+        },
+        "type": "object"
+      },
+      "title": "Document Refs",
+      "type": "array"
+    },
+    "decision": {
+      "$ref": "#/$defs/Decision"
+    },
+    "profile": {
+      "enum": [
+        "beginner",
+        "developer",
+        "architect",
+        "executive"
+      ],
+      "title": "Profile",
+      "type": "string"
+    },
+    "sector": {
+      "enum": [
+        "general",
+        "fintech",
+        "health",
+        "ecommerce"
+      ],
+      "title": "Sector",
+      "type": "string"
+    },
+    "conteudo_adaptado": {
+      "$ref": "#/$defs/AdaptedContent"
+    },
+    "quality": {
+      "$ref": "#/$defs/Quality"
+    },
+    "storage": {
+      "$ref": "#/$defs/StorageReceipt"
+    },
+    "agent_trace": {
+      "items": {
+        "additionalProperties": {
+          "type": "string"
+        },
+        "type": "object"
+      },
+      "title": "Agent Trace",
+      "type": "array"
+    },
+    "created_at": {
+      "title": "Created At",
+      "type": "string"
+    }
+  },
+  "required": [
+    "id",
+    "schema_version",
+    "status",
+    "mode",
+    "document_refs",
+    "decision",
+    "profile",
+    "sector",
+    "conteudo_adaptado",
+    "quality",
+    "storage",
+    "agent_trace",
+    "created_at"
+  ],
+  "title": "EducationalPackage",
+  "type": "object"
+}
