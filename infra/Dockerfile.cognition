@@ -6,6 +6,7 @@ RUN --mount=type=secret,id=atlas_ca \
     if [ -s /run/secrets/atlas_ca ]; then PIP_CERT=/run/secrets/atlas_ca pip install --no-cache-dir -r requirements.lock; \
     else pip install --no-cache-dir -r requirements.lock; fi
 COPY --chown=10001:10001 services/cognition/atlas ./atlas
+COPY --chown=10001:10001 packages/contracts ./packages/contracts
 RUN useradd --uid 10001 --create-home atlas && mkdir /data && chown atlas:atlas /data
 USER atlas
 CMD ["uvicorn", "atlas.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1"]

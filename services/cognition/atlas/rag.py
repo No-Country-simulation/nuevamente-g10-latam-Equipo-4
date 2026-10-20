@@ -9,6 +9,8 @@ import tempfile
 import unicodedata
 from pathlib import Path
 from . import providers
+from . import vector_index
+from .projections import project
 from .store import now, uid
 
 STOP = set("a o as os de da do das dos e em um uma para por com que qual quais como na no nas nos se ao aos eu voce me este esta esse isso sobre the is to of and or in on".split())
@@ -87,36 +89,63 @@ def ingest(store, tenant, filename, data):
         remote = providers.embed(batch)
         vectors.extend(remote or [local_vector(text) for text in batch])
     embedding_id = f"remote:{os.getenv('EMBEDDING_BASE_URL')}:{os.getenv('EMBEDDING_MODEL')}" if os.getenv("EMBEDDING_API_KEY") else "local_hash_demo_v1"
+    collection = None
+    if vector_index.enabled():
+        if not os.getenv("EMBEDDING_API_KEY"):
+            raise providers.ProviderError("Qdrant requer embeddings semânticos configurados; hashing de demo permanece apenas no modo SQLite.")
+        index = vector_index.QdrantIndex()
+        try:
+            collection = index.upsert(tenant,[dict(item, doc_id=doc_id) for item in passages],vectors,embedding_id)
+        finally:
+            index.close()
     receipt = store.blob(tenant, f"documents/{doc_id}/original{Path(filename).suffix.lower()}", data)
     with store.db() as db:
         db.execute("INSERT INTO documents VALUES(?,?,?,?,?,?,?,?,?)", (tenant, doc_id, Path(filename).stem, filename, mime, json.dumps(pages, ensure_ascii=False), digest, now(), json.dumps(receipt)))
         for passage, vector in zip(passages, vectors):
-            db.execute("INSERT INTO passages VALUES(?,?,?,?,?,?)", (tenant, doc_id, passage["id"], passage["page"], passage["text"], json.dumps({"model": embedding_id, "values": vector})))
+            db.execute("INSERT INTO passages VALUES(?,?,?,?,?,?)", (tenant, doc_id, passage["id"], passage["page"], passage["text"], json.dumps({"model": embedding_id, "values": vector, "collection": collection})))
             db.execute("INSERT INTO passages_fts VALUES(?,?,?,?)", (tenant, doc_id, passage["id"], passage["text"]))
-    return next(doc for doc in store.documents(tenant) if doc["id"] == doc_id)
+    result = next(doc for doc in store.documents(tenant) if doc["id"] == doc_id)
+    result["metadata_projection"] = project(tenant,result)
+    return result
 
 def retrieve(store, tenant, document_ids, query, mode):
     sources = [store.source(tenant, doc_id) for doc_id in dict.fromkeys(document_ids)]
     placeholders = ",".join("?" for _ in document_ids)
+    qdrant = vector_index.enabled()
+    fields = "tenant,doc_id,id,page,text,json_object('model',json_extract(vector,'$.model'),'collection',json_extract(vector,'$.collection')) AS vector" if qdrant else "*"
+    limit = 4096 if qdrant else 1024
     with store.db() as db:
-        rows = [dict(row) for row in db.execute(f"SELECT * FROM passages WHERE tenant=? AND doc_id IN ({placeholders})", [tenant, *document_ids]).fetchall()]
+        rows = [dict(row) for row in db.execute(f"SELECT {fields} FROM passages WHERE tenant=? AND doc_id IN ({placeholders}) LIMIT ?", [tenant, *document_ids,limit+1]).fetchall()]
+    if len(rows)>limit:
+        raise ValueError("As fontes excederam o orçamento desta consulta. Selecione menos documentos.")
     if not rows:
         return [], "", mode
     query_vector = (providers.embed([query]) or [local_vector(query)])[0]
     expected_model = f"remote:{os.getenv('EMBEDDING_BASE_URL')}:{os.getenv('EMBEDDING_MODEL')}" if os.getenv("EMBEDDING_API_KEY") else "local_hash_demo_v1"
-    scored = []
     words = set(tokens(query))
     overview = bool(re.search(r"documento|material|principais|resum|fonte|vis[aã]o geral", query.lower()))
     for row in rows:
-        vector = json.loads(row["vector"])
-        if vector["model"] != expected_model:
+        if json.loads(row["vector"])["model"] != expected_model:
             raise providers.ProviderError("A configuração de embeddings mudou. Reindexe as fontes para usar o novo modelo.")
-        value = cosine(query_vector, vector["values"])
-        if expected_model == "local_hash_demo_v1" and not overview and not words.intersection(tokens(row["text"])):
-            value = 0
-        scored.append((row, value))
-    scored.sort(key=lambda pair: pair[1], reverse=True)
-    ranks = {row["id"]: 1 / (60 + rank) for rank, (row, score) in enumerate(scored, 1) if score > 0 or overview}
+    if qdrant:
+        if not os.getenv("EMBEDDING_API_KEY"):
+            raise providers.ProviderError("Qdrant requer embeddings semânticos configurados.")
+        index = vector_index.QdrantIndex()
+        try:
+            ranked=index.search(tenant,rows,query_vector,expected_model)
+        finally:
+            index.close()
+        ranks={section:1/(60+rank) for rank,(section,score) in enumerate(ranked,1) if score>0 or overview}
+    else:
+        scored=[]
+        for row in rows:
+            vector=json.loads(row["vector"])
+            value=cosine(query_vector,vector["values"])
+            if expected_model == "local_hash_demo_v1" and not overview and not words.intersection(tokens(row["text"])):
+                value=0
+            scored.append((row,value))
+        scored.sort(key=lambda pair:pair[1],reverse=True)
+        ranks={row["id"]:1/(60+rank) for rank,(row,score) in enumerate(scored,1) if score>0 or overview}
     if mode == "hybrid" and words:
         # FTS expression is built from normalized terms, never raw user syntax.
         expression = " OR ".join('"' + word + '"' for word in sorted(words)[:32])
@@ -125,6 +154,7 @@ def retrieve(store, tenant, document_ids, query, mode):
         for rank, row in enumerate(hits, 1):
             ranks[row["id"]] = ranks.get(row["id"], 0) + 1 / (60 + rank)
     selected = sorted([row for row in rows if row["id"] in ranks], key=lambda row: ranks[row["id"]], reverse=True)[:6]
+    selected = providers.rank_evidence(query, selected)
     full = "\n\n".join(f"DOCUMENT {source['id']} — PAGE {p['number']}\n{p['text']}" for source in sources for p in source["pages"])
     context_budget = int(os.getenv("LM_CONTEXT_CHAR_BUDGET", "24000"))
     citation_map = "\n\nAVAILABLE CITATION IDS:\n" + "\n".join(f"{r['id']} | {r['doc_id']} p.{r['page']} | {r['text'][:100]}" for r in selected)

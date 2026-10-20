@@ -1,0 +1,1 @@
+{"name":"atlas-trigger-runner","private":true,"type":"module","scripts":{"typecheck":"tsc --noEmit"},"dependencies":{"@trigger.dev/sdk":"4.7.6","zod":"^4.0.0"},"devDependencies":{"typescript":"^5.8.0","@types/node":"^24.0.0"}}

@@ -9,6 +9,7 @@ from fastapi.responses import JSONResponse
 from starlette.concurrency import run_in_threadpool
 from . import providers
 from .dreamer import Dreamer
+from .jobs import Jobs
 from .learning import generate, attempt
 from .models import Generation, Attempt, Consent, GroupInput, MessageInput, Rollback, Experience
 from .rag import ingest
@@ -16,14 +17,9 @@ from .store import Store, uid, now
 
 store = Store()
 dreamer = Dreamer(store)
+jobs = Jobs(store)
 work = asyncio.Semaphore(1)
-AGENTS = [
-    {"id": "nilo", "name": "Nilo", "role": "Tutor", "description": "Uma ideia de cada vez, com clareza.", "color": "#74D8F7"},
-    {"id": "lumi", "name": "Lumi", "role": "Exploradora", "description": "Conexões curiosas, limites explícitos.", "color": "#85E7B8"},
-    {"id": "prisma", "name": "Prisma", "role": "Revisor", "description": "Toda afirmação precisa de evidência.", "color": "#F4B46A"},
-    {"id": "fio", "name": "Fio", "role": "Criador", "description": "Conhecimento em formatos para praticar.", "color": "#FA8C83"},
-    {"id": "soma", "name": "Soma", "role": "Coach", "description": "Aprender com continuidade e sem pressão.", "color": "#C5A7F5"},
-]
+from .catalog import AGENTS
 
 def identity(authorization: str = Header(default=""), x_atlas_tenant: str = Header(default="")):
     token = os.getenv("ATLAS_INTERNAL_TOKEN", "")
@@ -33,28 +29,41 @@ def identity(authorization: str = Header(default=""), x_atlas_tenant: str = Head
         raise HTTPException(400, "Workspace ausente ou inválido.")
     return x_atlas_tenant
 
+def job_identity(authorization: str = Header(default=""), x_atlas_tenant: str = Header(default="")):
+    secret = os.getenv("ATLAS_JOB_RUNNER_TOKEN", "")
+    if len(secret)<24 or not hmac.compare_digest(authorization, "Bearer " + secret):
+        raise HTTPException(401, "Runner não autorizado.")
+    if x_atlas_tenant != os.getenv("ATLAS_TENANT_ID", "local-workspace"):
+        raise HTTPException(403, "Workspace do runner inválido.")
+    return x_atlas_tenant
+
 async def limited(function, *args):
     if work.locked():
         raise HTTPException(429, "Há uma tarefa em andamento. Aguarde a conclusão e tente novamente.")
     async with work:
         return await run_in_threadpool(function, *args)
 
-def background_cycle(tenant, cycle_id, epoch=None):
-    if epoch is not None and epoch != dreamer.epochs.get(tenant, 0):
-        return
-    try:
-        dreamer.cycle(tenant, cycle_id)
-    except Exception:
-        # The cycle itself persists a safe failure; never log provider responses/keys.
-        pass
+async def dream_worker():
+    while True:
+        if os.getenv("ATLAS_JOB_RUNNER", "local") == "local":
+            job = await run_in_threadpool(jobs.claim)
+            if job:
+                await run_in_threadpool(jobs.execute, dreamer, job)
+        await asyncio.sleep(2)
 
 async def dream_schedule():
     while True:
         await asyncio.sleep(max(60, int(os.getenv("DREAMER_INTERVAL_SECONDS", "3600"))))
         tenant = os.getenv("ATLAS_TENANT_ID", "local-workspace")
-        state = dreamer.status(tenant)
-        if state["consent"] and state["events"] >= 3 and providers.llm_ready() and os.getenv("TYPESAFE_API_KEY"):
-            await run_in_threadpool(background_cycle, tenant, uid("dream"))
+        try:
+            state = dreamer.status(tenant)
+            if state["consent"] and state["events"] >= 3 and providers.llm_ready() and os.getenv("TYPESAFE_API_KEY"):
+                job = await run_in_threadpool(jobs.enqueue, tenant, "scheduled:" + now()[:10])
+                if os.getenv("ATLAS_JOB_RUNNER", "local") == "trigger":
+                    await run_in_threadpool(providers.dispatch_job, job)
+        except Exception:
+            # No provider response/secret in logs; durable queue remains retryable.
+            continue
 
 @asynccontextmanager
 async def lifespan(app):
@@ -81,12 +90,11 @@ Fonte demonstrativa escrita pela equipe Atlas, não um PDF oficial da Oracle. Co
 """
         await run_in_threadpool(ingest, store, tenant, "Primeiros passos na OCI.md", sample.encode())
     scheduler = asyncio.create_task(dream_schedule())
+    worker = asyncio.create_task(dream_worker())
     yield
     scheduler.cancel()
-    try:
-        await scheduler
-    except asyncio.CancelledError:
-        pass
+    worker.cancel()
+    await asyncio.gather(scheduler, worker, return_exceptions=True)
 
 app = FastAPI(title="Atlas Cognition & Dreamer", version="0.1.0", lifespan=lifespan)
 
@@ -141,7 +149,7 @@ async def chat(request: Generation, tenant=Depends(identity)):
     request.conversation_context = "\n".join(f"{r['agent_id']} / {r['role']}: {r['text']}" for r in reversed(rows))[-8000:]
     result = await limited(generate, store, tenant, request, snapshot)
     with dreamer.state_lock, store.db() as db:
-        if epoch != dreamer.epochs.get(tenant, 0):
+        if epoch != dreamer.epochs.get(tenant, 0) or store.memory_state(tenant)["revision"] != snapshot["revision"]:
             return result
         for role, text in (("user", request.goal), ("assistant", result["conteudo_adaptado"]["introducao_contextualizada"])):
             db.execute("INSERT INTO conversations VALUES(?,?,?,?,?,?)", (tenant, uid("turn"), request.agent_id, role, text[:2000], now()))
@@ -214,12 +222,17 @@ def rollback(request: Rollback, tenant=Depends(identity)):
     return dreamer.rollback(tenant, request.version)
 
 @app.post("/v1/dreamer/cycles", status_code=202)
-def cycle(background: BackgroundTasks, tenant=Depends(identity)):
-    cycle_id = uid("dream")
+def cycle(idempotency_key: str = Header(default=""), tenant=Depends(identity)):
     if not providers.llm_ready() or not os.getenv("TYPESAFE_API_KEY"):
-        return dreamer.cycle(tenant, cycle_id)
-    with dreamer.state_lock:
-        epoch = dreamer.epochs.get(tenant, 0)
-        result = dreamer.record(tenant, cycle_id, "queued", "Ciclo enfileirado; acompanhe a avaliação pelo painel.")
-    background.add_task(background_cycle, tenant, cycle_id, epoch)
-    return result
+        return dreamer.cycle(tenant)
+    if len(idempotency_key) > 100:
+        raise ValueError("Chave de idempotência acima de 100 caracteres.")
+    job = jobs.enqueue(tenant, idempotency_key or uid("request"))
+    if os.getenv("ATLAS_JOB_RUNNER", "local") == "trigger":
+        providers.dispatch_job(job)
+    return {"id":job["id"], "status":job["status"], "reason":"Ciclo persistido na fila; acompanhe pelo painel."}
+
+@app.post("/v1/internal/jobs/{job_id}/run")
+def run_job(job_id: str, tenant=Depends(job_identity)):
+    # Caller is a server-side runner; the model has no capability for this route.
+    return jobs.execute(dreamer, jobs.claim(job_id, tenant)) or {"status":"not_claimed"}

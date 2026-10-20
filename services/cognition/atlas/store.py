@@ -34,6 +34,9 @@ class Store:
                 CREATE TABLE IF NOT EXISTS cycles(tenant TEXT,id TEXT,status TEXT,reason TEXT,metrics TEXT,created_at TEXT,PRIMARY KEY(tenant,id));
                 CREATE TABLE IF NOT EXISTS conversations(tenant TEXT,id TEXT,agent_id TEXT,role TEXT,text TEXT,created_at TEXT,PRIMARY KEY(tenant,id));
                 CREATE TABLE IF NOT EXISTS replay_cases(tenant TEXT,id TEXT,payload TEXT,input TEXT,PRIMARY KEY(tenant,id));
+                CREATE TABLE IF NOT EXISTS jobs(tenant TEXT,id TEXT,dedup TEXT,revision INTEGER,kind TEXT,status TEXT,attempts INTEGER,lease_until REAL,created_at TEXT,result TEXT,PRIMARY KEY(tenant,id),UNIQUE(tenant,dedup));
+                CREATE INDEX IF NOT EXISTS jobs_pending ON jobs(status,lease_until,created_at);
+                CREATE TABLE IF NOT EXISTS dream_worlds(tenant TEXT,id TEXT,payload TEXT,created_at TEXT,PRIMARY KEY(tenant,id));
                 CREATE TABLE IF NOT EXISTS memory_revisions(tenant TEXT PRIMARY KEY,version INTEGER);
             """)
 
@@ -111,11 +114,15 @@ class Store:
             consent = db.execute("SELECT enabled FROM consent WHERE tenant=?", (tenant,)).fetchone()
             revision = db.execute("SELECT COALESCE((SELECT version FROM memory_revisions WHERE tenant=?),0)", (tenant,)).fetchone()[0]
             if consent and consent[0] and (expected_revision is None or expected_revision == revision):
-                event_payload = {key: value for key, value in payload.items() if key != "replay"}
+                event_payload = {key: value for key, value in payload.items() if key not in ("replay", "dream_world")}
                 db.execute("INSERT INTO memory_events VALUES(?,?,?,?,?)", (tenant, uid("ev"), kind, json.dumps(event_payload, ensure_ascii=False), now()))
                 if kind == "generation" and payload.get("replay"):
                     replay = payload["replay"]
                     db.execute("INSERT OR IGNORE INTO replay_cases VALUES(?,?,?,?)", (tenant, replay["package"]["id"], json.dumps(replay["package"], ensure_ascii=False), json.dumps(replay["input"], ensure_ascii=False)))
+                    world = payload.get("dream_world")
+                    if replay["package"]["status"] == "ready" and world and len(world.get("nodes", [])) >= 2 and all(n.get("verdict") == "supported" for n in world["nodes"]):
+                        db.execute("INSERT OR IGNORE INTO dream_worlds VALUES(?,?,?,?)", (tenant, replay["package"]["id"], json.dumps(world), now()))
+                        db.execute("DELETE FROM dream_worlds WHERE tenant=? AND id NOT IN (SELECT id FROM dream_worlds WHERE tenant=? ORDER BY rowid DESC LIMIT 30)", (tenant, tenant))
                     db.execute("DELETE FROM replay_cases WHERE tenant=? AND id NOT IN (SELECT id FROM replay_cases WHERE tenant=? ORDER BY rowid DESC LIMIT 30)", (tenant, tenant))
                 db.execute("DELETE FROM memory_events WHERE tenant=? AND id NOT IN (SELECT id FROM memory_events WHERE tenant=? ORDER BY created_at DESC LIMIT 1000)", (tenant, tenant))
                 return True

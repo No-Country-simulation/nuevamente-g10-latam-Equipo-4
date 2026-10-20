@@ -7,10 +7,7 @@ from .learning import active_policy, remote_content
 from .models import StrictModel, Generation
 from .store import uid, now
 
-class Policy(StrictModel):
-    preferred_method: Literal["socratic", "feynman", "first_principles", "warburg"]
-    step_size: Literal["short", "medium"]
-    question_first: bool
+from .replay import Policy, BASELINE, compare
 
 class Dreamer:
     """Independent memory domain; proposals cannot modify code, tools or permissions."""
@@ -25,15 +22,17 @@ class Dreamer:
             count = db.execute("SELECT COUNT(*) FROM memory_events WHERE tenant=?", (tenant,)).fetchone()[0]
             policies = [dict(row) for row in db.execute("SELECT version,instruction,status FROM policies WHERE tenant=? ORDER BY version DESC", (tenant,)).fetchall()]
             cycles = [dict(row) for row in db.execute("SELECT id,status,reason,created_at FROM cycles WHERE tenant=? ORDER BY created_at DESC LIMIT 10", (tenant,)).fetchall()]
+            worlds = db.execute("SELECT COUNT(*) FROM dream_worlds WHERE tenant=?", (tenant,)).fetchone()[0]
             revision = db.execute("SELECT COALESCE((SELECT version FROM memory_revisions WHERE tenant=?),0)", (tenant,)).fetchone()[0]
         active = next((p for p in policies if p["status"] == "active"), None)
         enabled = bool(consent and consent[0])
-        return {"consent": enabled, "revision": revision, "events": count, "active_version": active["version"] if active else 0, "active_policy": json.loads(active["instruction"]) if active and enabled else None, "policies": policies, "cycles": cycles}
+        return {"algorithm": "history_replay_v1", "worlds": worlds, "consent": enabled, "revision": revision, "events": count, "active_version": active["version"] if active else 0, "active_policy": json.loads(active["instruction"]) if active and enabled else None, "policies": policies, "cycles": cycles}
 
     def consent(self, tenant, enabled):
         with self.state_lock, self.store.db() as db:
             db.execute("INSERT INTO memory_revisions VALUES(?,1) ON CONFLICT(tenant) DO UPDATE SET version=version+1", (tenant,))
             if not enabled:
+                db.execute("UPDATE jobs SET status='cancelled' WHERE tenant=? AND status IN ('queued','running')", (tenant,))
                 self.epochs[tenant] = self.epochs.get(tenant, 0) + 1
                 db.execute("UPDATE cycles SET status='cancelled',reason='Consentimento revogado; ciclo cancelado.' WHERE tenant=? AND status IN ('queued','evaluating')", (tenant,))
             db.execute("INSERT INTO consent VALUES(?,?) ON CONFLICT(tenant) DO UPDATE SET enabled=excluded.enabled", (tenant, int(enabled)))
@@ -43,7 +42,7 @@ class Dreamer:
         with self.state_lock, self.store.db() as db:
             db.execute("INSERT INTO memory_revisions VALUES(?,1) ON CONFLICT(tenant) DO UPDATE SET version=version+1", (tenant,))
             self.epochs[tenant] = self.epochs.get(tenant, 0) + 1
-            for table in ("memory_events", "policies", "cycles", "consent", "conversations", "replay_cases"):
+            for table in ("jobs", "memory_events", "policies", "cycles", "consent", "conversations", "replay_cases", "dream_worlds"):
                 db.execute(f"DELETE FROM {table} WHERE tenant=?", (tenant,))
         return self.status(tenant)
 
@@ -54,6 +53,7 @@ class Dreamer:
             self.epochs[tenant] = self.epochs.get(tenant, 0) + 1
             db.execute("INSERT INTO memory_revisions VALUES(?,1) ON CONFLICT(tenant) DO UPDATE SET version=version+1", (tenant,))
             db.execute("UPDATE cycles SET status='cancelled',reason='Rollback solicitado; ciclo cancelado.' WHERE tenant=? AND status IN ('queued','evaluating')", (tenant,))
+            db.execute("UPDATE jobs SET status='cancelled' WHERE tenant=? AND status IN ('queued','running')", (tenant,))
             db.execute("UPDATE policies SET status='archived' WHERE tenant=? AND status='active'", (tenant,))
             db.execute("UPDATE policies SET status='active' WHERE tenant=? AND version=?", (tenant, version))
         return self.status(tenant)
@@ -77,41 +77,30 @@ class Dreamer:
                 if recent and recent[0][:10] == now()[:10]:
                     return self.record(tenant, cycle_id, "awaiting_evaluation", "Limite de um replay remoto por workspace/dia atingido.")
                 events = [dict(row) for row in db.execute("SELECT kind,payload FROM memory_events WHERE tenant=? ORDER BY created_at DESC LIMIT 20", (tenant,)).fetchall()]
-                cases = db.execute("SELECT payload,input FROM replay_cases WHERE tenant=? ORDER BY rowid DESC LIMIT 3", (tenant,)).fetchall()
-            cases = [row for row in cases if json.loads(row["payload"])["status"] == "ready"]
-            if len(cases) < 3:
-                return self.record(tenant, cycle_id, "awaiting_events", "São necessários três materiais com fontes para o replay de regressão.")
-            self.record(tenant, cycle_id, "evaluating", "Comparando três casos baseline/candidato; nenhuma política ativa foi modificada.")
+                rows = db.execute("SELECT payload FROM dream_worlds WHERE tenant=? ORDER BY rowid DESC LIMIT 20", (tenant,)).fetchall()
+            worlds = [json.loads(row["payload"]) for row in rows]
+            if len(worlds) < 3:
+                return self.record(tenant, cycle_id, "awaiting_events", "São necessários três mundos com pelo menos duas alternativas reais avaliadas. O simulador não inventa experiências.")
+            # Most recent third is held out; proposer sees only the training pool.
+            split = max(1, len(worlds) // 3)
+            heldout, train = worlds[:split], worlds[split:]
+            baseline = active_policy(self.store, tenant) or BASELINE
+            baseline = Policy.model_validate(baseline).model_dump()
+            self.record(tenant, cycle_id, "evaluating", "Consolidando histórico e avaliando políticas em simulador; nenhum replay chama o agente ou o judge.")
             if self.status(tenant)["revision"] != revision:
-                raise ValueError("Revisão da memória mudou; replay cancelado.")
-            proposed = providers.complete("Proponha somente preferências pedagógicas. Não altere segurança, ferramentas ou permissões. Retorne JSON no schema fornecido.", json.dumps({"events": events, "schema": Policy.model_json_schema()}, ensure_ascii=False))
+                raise ValueError("Revisão da memória mudou; dreaming cancelado.")
+            proposed = providers.complete("Você é o desenvolvedor de políticas Dream-RSI do Atlas. Consolide as experiências e proponha uma política tipada de exploração. O modelo, o avaliador e preferred_method/step_size/question_first são fixos; copie esses três campos da baseline e altere somente exploration. Não altere segurança, ferramentas, permissões ou código. Use somente os mundos de treinamento fornecidos.", json.dumps({"events": events, "training_worlds": train, "baseline": baseline, "schema": Policy.model_json_schema(), "objective": "max observed grounded score - 0.03 * observed attempts; W=1"}, ensure_ascii=False), agent_id="soma", purpose="dreamer_policy")
             candidate = Policy.model_validate(proposed).model_dump()
-            baseline = active_policy(self.store, tenant)
-            scores, valid = [], True
-            for row in cases:
-                payload = json.loads(row["payload"])
-                request = Generation.model_validate_json(row["input"])
-                citations = [c for item in payload["conteudo_adaptado"]["itens"] for c in item["citations"]]
-                evidence = "\n".join(f"EVIDENCE {c['section_id']} | {c['excerpt']}" for c in citations)
-                allowed = {c['section_id'] for c in citations}
-                results = []
-                for policy in (baseline, candidate):
-                    state_now = self.status(tenant)
-                    if not state_now["consent"] or state_now["revision"] != revision or epoch != self.epochs.get(tenant, 0):
-                        raise ValueError("Consentimento revogado; replay interrompido.")
-                    content = remote_content(request, evidence, policy)
-                    if self.status(tenant)["revision"] != revision:
-                        raise ValueError("Memória mudou durante geração; avaliação cancelada.")
-                    if any(cid not in allowed for item in content.items for cid in item.evidence_ids):
-                        raise ValueError("O replay retornou citações não autorizadas.")
-                    verdict = providers.judge(request.goal, evidence, content.model_dump_json())
-                    results.append(verdict)
-                valid = valid and all(r["verdict"] == "supported" and isinstance(r.get("score"), (float, int)) for r in results)
-                scores.append([results[0].get("score") or 0, results[1].get("score") or 0])
-            before = sum(p[0] for p in scores) / len(scores)
-            after = sum(p[1] for p in scores) / len(scores)
+            if any(candidate[key] != baseline[key] for key in ("preferred_method", "step_size", "question_first")):
+                return self.record(tenant, cycle_id, "rejected", "O candidato mudou uma preferência sem contrafactual observado; baseline preservada.")
+            if self.status(tenant)["revision"] != revision or epoch != self.epochs.get(tenant, 0):
+                raise ValueError("Consentimento ou memória mudou durante proposta.")
+            training = compare(train, baseline["exploration"], candidate["exploration"])
+            validation = compare(heldout, baseline["exploration"], candidate["exploration"])
+            before, after = validation["baseline"], validation["candidate"]
+            valid = training["covered"] and validation["covered"] and training["no_regression"] and validation["no_regression"] and training["no_quality_regression"] and validation["no_quality_regression"]
             consent_still_enabled = self.status(tenant)["consent"]
-            promote = valid and consent_still_enabled and after > before + 0.05 and all(b >= a for a,b in scores)
+            promote = valid and consent_still_enabled and after > before + 0.01
             with self.state_lock, self.store.db() as db:
                 db.execute("BEGIN IMMEDIATE")
                 current_revision = db.execute("SELECT version FROM memory_revisions WHERE tenant=?", (tenant,)).fetchone()
@@ -124,7 +113,7 @@ class Dreamer:
             with self.state_lock:
                 if epoch != self.epochs.get(tenant, 0):
                     return {"id": cycle_id, "status": "cancelled", "reason": "Memória apagada durante o ciclo."}
-                return self.record(tenant, cycle_id, "promoted" if promote else "rejected", "Melhoria observada no replay; política pedagógica promovida." if promote else "O candidato não melhorou todos os critérios; baseline preservada.", {"baseline": before, "candidate": after, "cases": 3, "version": version, "rubric": "grounding_and_pedagogical_utility_v1"})
+                return self.record(tenant, cycle_id, "promoted" if promote else "rejected", "Melhoria observada no replay; política pedagógica promovida." if promote else "O candidato não melhorou todos os critérios; baseline preservada.", {"baseline": before, "candidate": after, "training": training, "heldout": validation, "worlds": len(worlds), "version": version, "algorithm": "history_replay_v1", "rubric": "grounding_and_pedagogical_utility_v1", "learning_efficacy": "not_measured"})
         except Exception:
             with self.state_lock:
                 if epoch == self.epochs.get(tenant, 0):

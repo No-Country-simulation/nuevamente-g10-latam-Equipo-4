@@ -79,11 +79,17 @@ class PipelineTests(unittest.TestCase):
         dream.forget('alice');self.assertEqual(dream.status('alice')['events'],0)
         self.assertTrue(self.store.documents('alice'))
 
+    def seed_worlds(self):
+        world={"nodes":[{"id":"first","parent":"root","score":0.66,"verdict":"supported"},{"id":"second","parent":"first","score":0.66,"verdict":"supported"}]}
+        with self.store.db() as db:
+            for i in range(3):db.execute("INSERT INTO dream_worlds VALUES(?,?,?,?)",('alice',f'world_{i}',json.dumps(world),f'2026-10-{i+1:02d}'))
+
     def test_dreamer_promotes_only_evaluated_improvement_and_can_rollback(self):
         dream=Dreamer(self.store);dream.consent('alice',True)
         for _ in range(3):self.package()
-        candidate={'preferred_method':'socratic','step_size':'short','question_first':True}
-        def content(request,evidence,policy):
+        self.seed_worlds()
+        candidate={'preferred_method':'feynman','step_size':'short','question_first':False,'exploration':{'branching':'depth_first','max_rounds':1,'stop_score':0.5}}
+        def content(request,evidence,policy,**kwargs):
             section=evidence.split('EVIDENCE ')[1].split(' | ')[0]
             return RemoteContent(title='Redes',introduction='Teste',items=[{'title':'Fonte','body':'candidato' if policy else 'baseline','evidence_ids':[section]}])
         def judge(question,evidence,answer):return {'verdict':'supported','score':1.0 if 'candidato' in answer else 0.33}
@@ -96,9 +102,10 @@ class PipelineTests(unittest.TestCase):
     def test_forgetting_during_dream_does_not_recreate_deleted_memory(self):
         dream=Dreamer(self.store);dream.consent('alice',True)
         for _ in range(3):self.package()
-        def erase(system,prompt):
+        self.seed_worlds()
+        def erase(system,prompt,**kwargs):
             dream.forget('alice')
-            return {'preferred_method':'socratic','step_size':'short','question_first':True}
+            return {'preferred_method':'feynman','step_size':'short','question_first':False}
         with patch('atlas.providers.llm_ready',return_value=True),patch.dict(os.environ,{'TYPESAFE_API_KEY':'test-only-not-real'}),patch('atlas.dreamer.providers.complete',side_effect=erase):
             with self.assertRaises(ValueError):dream.cycle('alice')
         state=dream.status('alice');self.assertEqual(state['events'],0);self.assertEqual(state['policies'],[]);self.assertEqual(state['cycles'],[])

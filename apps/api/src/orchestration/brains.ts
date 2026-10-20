@@ -1,14 +1,9 @@
+import {personas,catalogVersion} from './catalog.js';
 import type {Generation} from '../policy.js';
 import {decide,generationSchema} from '../policy.js';
 import {brainCapabilities,brainPrincipal,type ActionEngines} from './actions.js';
 
-export const brains=Object.freeze([
-  {id:'nilo',persona:'Tutor paciente',purpose:'Coordenar explicação e prática com evidências.'},
-  {id:'lumi',persona:'Exploradora curiosa',purpose:'Pesquisar conexões e analogias com limites explícitos.'},
-  {id:'prisma',persona:'Revisor crítico',purpose:'Examinar suporte e incerteza das respostas.'},
-  {id:'fio',persona:'Criador organizado',purpose:'Transformar evidências em materiais de estudo.'},
-  {id:'soma',persona:'Coach acolhedor',purpose:'Orientar continuidade e adaptação pedagógica.'},
-].map(brain=>Object.freeze({...brain,version:'0.2.0',capabilities:brainCapabilities})));
+export const brains=Object.freeze(personas.map(brain=>Object.freeze({...brain,version:catalogVersion,capabilities:brainCapabilities})));
 
 /** Atlas brain = domain decision loop; Eve remains the LLM/handoff runtime. */
 export function createBrains(tenant:string,actions:ActionEngines,decision:typeof decide=decide) {

@@ -8,9 +8,10 @@ import { NestFactory } from '@nestjs/core';
 import { Client } from 'eve/client';
 import { z, ZodError } from 'zod';
 import type { Request, Response } from 'express';
-import { generationSchema, judge } from './policy.js';
+import { generationSchema, judge, selectTeam, evaluateEvidence } from './policy.js';
 import {createActionEngines, controlPrincipal} from './orchestration/actions.js';
 import {createBrains} from './orchestration/brains.js';
+import {createAgentFactory,eveRuntime} from './orchestration/factory.js';
 
 config({path:process.env.ATLAS_ENV_FILE || '../../.env',quiet:true});
 const token = process.env.ATLAS_INTERNAL_TOKEN;
@@ -36,10 +37,13 @@ const actions=createActionEngines(tenant,{cognition,judge,remoteMemory:!!process
     if (!response.ok) throw Object.assign(new Error('Busca web indisponível. Nenhuma chave foi enviada ao navegador.'),{status:503});
     const data = await response.json();
     const results = Array.isArray(data.data) ? data.data : data.data?.web || [];
-    return {results:results.filter((r:{url?:string})=>{try{const url=new URL(r.url||'');return url.protocol==='https:' && !isIP(url.hostname) && url.hostname.includes('.') && !url.hostname.endsWith('.local') && !url.hostname.endsWith('.internal');}catch{return false;}}).slice(0,3),source:'firecrawl',retrieved_at:new Date().toISOString()};
+    const filtered=results.filter((r:{url?:string})=>{try{const url=new URL(r.url||'');return url.protocol==='https:' && !isIP(url.hostname) && url.hostname.includes('.') && !url.hostname.endsWith('.local') && !url.hostname.endsWith('.internal');}catch{return false;}}).slice(0,3);
+    const evaluation=await evaluateEvidence(query,filtered.map((item:{title?:string;description?:string},index:number)=>({id:String(index),text:((item.title||'')+' '+(item.description||'')).slice(0,2000)})));
+    return {results:filtered.filter((_item:unknown,index:number)=>evaluation.source!=='typesafe'||evaluation.scores.some(score=>score.id===String(index)&&score.score>0)),source:'firecrawl',retrieved_at:new Date().toISOString(),relevance:evaluation};
 }});
 const brains=createBrains(tenant,actions);
 const control=controlPrincipal(tenant);
+const factory=createAgentFactory(tenant,process.env.EVE_SERVICE_TOKEN||token,actions,eveRuntime(process.env.EVE_URL||'http://127.0.0.1:2000'),{enabled:process.env.ATLAS_TEAM_DEBATE!=='0'&&!!process.env.TYPESAFE_API_KEY,select:selectTeam});
 
 @Controller('v1')
 class AtlasController {
@@ -76,20 +80,22 @@ class AtlasController {
     return actions.invoke('atlas.memory.forget',{},control);
   }
   @Post('web/search') async search(@Req() req:Request){return actions.invoke('atlas.web-search',req.body,control);}
-  @Get('orchestration') async orchestration(){return {brains:brains.catalog(),engines:actions.catalog()};}
+  @Get('orchestration') async orchestration(){return {brains:brains.catalog(),engines:actions.catalog(),factory:factory.catalog()};}
   @Post('internal/judge') async review(@Req() req:Request){return actions.invoke('atlas.judge',req.body,control);}
+  @Post('internal/evidence') async evidence(@Req() req:Request){
+    const input=z.object({question:z.string().max(2000),passages:z.array(z.object({id:z.string().max(100),text:z.string().max(2000)}).strict()).min(1).max(6)}).strict().parse(req.body);
+    return evaluateEvidence(input.question,input.passages);
+  }
   @Post('internal/generate') async eveGenerate(@Req() req:Request){
     if(!process.env.EVE_URL)throw Object.assign(new Error('Runtime Eve não configurado.'),{status:503});
-    const input=z.object({system:z.string().max(4000),prompt:z.string().max(60000)}).strict().parse(req.body);
-    const client=new Client({host:process.env.EVE_URL,redirect:'error',auth:{bearer:process.env.EVE_SERVICE_TOKEN||token!}});
-    const {response}=await client.sessions.create({message:JSON.stringify({role_and_rules:input.system,task:input.prompt}),outputSchema:{type:'object',additionalProperties:true},signal:AbortSignal.timeout(90000)});
-    const result=await response.result();
-    if(result.status!=='completed')throw new Error('Eve não concluiu o turno.');
-    return result.data ?? JSON.parse(result.message||'');
+    return factory.run(req.body);
+  }
+  @Post('internal/agent-tool') async agentTool(@Req() req:Request){
+    return factory.invokeTool((req.headers.authorization||'').replace(/^Bearer /,''),req.body);
   }
   @Get('integrations/eve') async eve(){
     if(!process.env.EVE_URL)return {status:'not_configured',reason:'Runtime Eve externo ou sob demanda. Credenciais e provedor ainda não configurados.'};
-    const client=new Client({host:process.env.EVE_URL});
+    const client=new Client({host:process.env.EVE_URL,redirect:'error'});
     return {status:'connected',health:await client.health()};
   }
 }
@@ -101,7 +107,7 @@ const windows=new Map<string,{start:number;count:number}>();
 app.use((req:Request,res:Response,next:()=>void)=>{
   res.setHeader('X-Content-Type-Options','nosniff');res.setHeader('Cache-Control','no-store');
   const received=Buffer.from(req.headers.authorization||'');const expected=Buffer.from(`Bearer ${token}`);
-  if(received.length!==expected.length||!timingSafeEqual(received,expected)){res.status(401).json({message:'Acesso interno não autorizado.'});return;}
+  if(req.path!=='/v1/internal/agent-tool'&&(received.length!==expected.length||!timingSafeEqual(received,expected))){res.status(401).json({message:'Acesso interno não autorizado.'});return;}
   const key=req.ip||'local';const current=windows.get(key);const time=Date.now();
   if(!current||time-current.start>60000){windows.set(key,{start:time,count:1});}else if(++current.count>120){res.status(429).json({message:'Muitas solicitações. Aguarde um minuto.'});return;}
   next();
