@@ -1,0 +1,20 @@
+# Somente se não usar Qdrant externo: acrescenta 512 MiB ao orçamento.
+services:
+  cognition:
+    environment:
+      VECTOR_BACKEND: qdrant
+      QDRANT_URL: http://qdrant:6333
+    depends_on:
+      qdrant: {condition: service_started}
+  qdrant:
+    image: qdrant/qdrant:v1.15.4
+    environment:
+      QDRANT__SERVICE__API_KEY: ${QDRANT_API_KEY:?Configure uma chave Qdrant no servidor}
+      QDRANT__STORAGE__ON_DISK_PAYLOAD: "true"
+    volumes: [qdrant-data:/qdrant/storage]
+    mem_limit: 512m
+    cpus: 0.5
+    restart: unless-stopped
+    logging: {driver: json-file, options: {max-size: "5m", max-file: "2"}}
+volumes:
+  qdrant-data:

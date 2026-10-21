@@ -6,7 +6,10 @@ from urllib.parse import urlsplit
 import httpx
 
 class ProviderError(RuntimeError):
-    pass
+    status_code = 503
+
+class ProviderBusy(ProviderError):
+    status_code = 429
 
 _execution = ContextVar("atlas_generation_execution", default=None)
 
@@ -40,6 +43,10 @@ def complete(system, prompt, *, agent_id="nilo", purpose="learning"):
             result = response.json()
             _execution.set(result["execution"])
             return result["data"]
+        except httpx.HTTPStatusError as exc:
+            if exc.response.status_code == 429:
+                raise ProviderBusy("Um agente já está trabalhando. Aguarde a conclusão e tente novamente.") from exc
+            raise ProviderError("O runtime Eve não concluiu a geração. Verifique sua configuração no servidor.") from exc
         except (httpx.HTTPError, ValueError, KeyError) as exc:
             raise ProviderError("O runtime Eve não concluiu a geração. Verifique sua configuração no servidor.") from exc
     base = safe_base(os.environ["LLM_BASE_URL"])

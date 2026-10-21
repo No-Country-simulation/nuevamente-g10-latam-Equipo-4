@@ -17,6 +17,7 @@ COPY --from=build --chown=node:node /repo/node_modules ./node_modules
 COPY --from=build --chown=node:node /repo/apps/api/package.json ./apps/api/package.json
 COPY --from=build --chown=node:node /repo/apps/api/dist ./apps/api/dist
 COPY --from=build --chown=node:node /repo/packages ./packages
+COPY --chown=node:node scripts/check-eve.mjs ./scripts/check-eve.mjs
 USER node
 CMD ["node", "apps/api/dist/main.js"]
 
@@ -27,3 +28,22 @@ COPY --from=build --chown=node:node /repo/apps/web/.next/standalone ./
 COPY --from=build --chown=node:node /repo/apps/web/.next/static ./apps/web/.next/static
 USER node
 CMD ["node", "apps/web/server.js"]
+
+# Eve is a separate runtime so it can move to another VM without moving Next.
+FROM build AS eve-build
+ARG EVE_MODEL
+ARG EVE_MODEL_CONTEXT_WINDOW
+RUN --mount=type=secret,id=atlas_ca \
+    test -n "$EVE_MODEL" && \
+    if [ -s /run/secrets/atlas_ca ]; then \
+      NODE_EXTRA_CA_CERTS=/run/secrets/atlas_ca EVE_MODEL="$EVE_MODEL" EVE_MODEL_CONTEXT_WINDOW="$EVE_MODEL_CONTEXT_WINDOW" npm run agent:build -w @atlas/api; \
+    else EVE_MODEL="$EVE_MODEL" EVE_MODEL_CONTEXT_WINDOW="$EVE_MODEL_CONTEXT_WINDOW" npm run agent:build -w @atlas/api; fi
+
+FROM node:24-bookworm-slim AS eve
+ENV NODE_ENV=production NODE_OPTIONS=--max-old-space-size=640 HOST=0.0.0.0 PORT=2000
+WORKDIR /app/apps/api
+COPY --from=eve-build --chown=node:node /repo/apps/api/.output ./.output
+COPY --from=eve-build --chown=node:node /repo/packages/contracts /app/node_modules/@atlas/contracts
+RUN mkdir -p .eve/.workflow-data && chown -R node:node /app
+USER node
+CMD ["node", ".output/server/index.mjs"]

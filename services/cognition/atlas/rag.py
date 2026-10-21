@@ -100,7 +100,7 @@ def ingest(store, tenant, filename, data):
             index.close()
     receipt = store.blob(tenant, f"documents/{doc_id}/original{Path(filename).suffix.lower()}", data)
     with store.db() as db:
-        db.execute("INSERT INTO documents VALUES(?,?,?,?,?,?,?,?,?)", (tenant, doc_id, Path(filename).stem, filename, mime, json.dumps(pages, ensure_ascii=False), digest, now(), json.dumps(receipt)))
+        db.execute("INSERT INTO documents(tenant,id,title,filename,media_type,pages,hash,created_at,storage,page_count,characters) VALUES(?,?,?,?,?,?,?,?,?,?,?)", (tenant, doc_id, Path(filename).stem, filename, mime, json.dumps(pages, ensure_ascii=False), digest, now(), json.dumps(receipt), len(pages), sum(len(page["text"]) for page in pages)))
         for passage, vector in zip(passages, vectors):
             db.execute("INSERT INTO passages VALUES(?,?,?,?,?,?)", (tenant, doc_id, passage["id"], passage["page"], passage["text"], json.dumps({"model": embedding_id, "values": vector, "collection": collection})))
             db.execute("INSERT INTO passages_fts VALUES(?,?,?,?)", (tenant, doc_id, passage["id"], passage["text"]))

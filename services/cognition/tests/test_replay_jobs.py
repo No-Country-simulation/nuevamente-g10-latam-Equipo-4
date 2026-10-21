@@ -76,3 +76,10 @@ class ReplayAndJobsTests(unittest.TestCase):
         with patch.dict(os.environ,{"TYPESAFE_API_KEY":"test","ATLAS_INTERNAL_TOKEN":"test"}),patch('atlas.providers.httpx.post') as post:
             post.return_value.json.return_value={"source":"typesafe","scores":[{"id":"foreign","score":1}]}
             with self.assertRaises(providers.ProviderError):providers.rank_evidence('q',[{"id":"allowed","text":"t"}])
+
+    def test_runtime_backpressure_keeps_http_429(self):
+        import httpx
+        response=httpx.Response(429,request=httpx.Request('POST','http://127.0.0.1:4000/v1/internal/generate'))
+        with patch.dict(os.environ,{'EVE_URL':'http://127.0.0.1:2000','ATLAS_INTERNAL_TOKEN':'test'}),patch('atlas.providers.httpx.post',return_value=response):
+            with self.assertRaises(providers.ProviderBusy) as caught:providers.complete('s','p')
+            self.assertEqual(caught.exception.status_code,429)

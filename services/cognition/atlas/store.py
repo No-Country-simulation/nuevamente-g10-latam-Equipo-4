@@ -36,9 +36,17 @@ class Store:
                 CREATE TABLE IF NOT EXISTS replay_cases(tenant TEXT,id TEXT,payload TEXT,input TEXT,PRIMARY KEY(tenant,id));
                 CREATE TABLE IF NOT EXISTS jobs(tenant TEXT,id TEXT,dedup TEXT,revision INTEGER,kind TEXT,status TEXT,attempts INTEGER,lease_until REAL,created_at TEXT,result TEXT,PRIMARY KEY(tenant,id),UNIQUE(tenant,dedup));
                 CREATE INDEX IF NOT EXISTS jobs_pending ON jobs(status,lease_until,created_at);
+                CREATE TABLE IF NOT EXISTS agent_runs(tenant TEXT,id TEXT,payload TEXT,created_at TEXT,PRIMARY KEY(tenant,id));
                 CREATE TABLE IF NOT EXISTS dream_worlds(tenant TEXT,id TEXT,payload TEXT,created_at TEXT,PRIMARY KEY(tenant,id));
                 CREATE TABLE IF NOT EXISTS memory_revisions(tenant TEXT PRIMARY KEY,version INTEGER);
             """)
+            columns = {row["name"] for row in db.execute("PRAGMA table_info(documents)")}
+            for field in ("page_count", "characters"):
+                if field not in columns:
+                    db.execute(f"ALTER TABLE documents ADD COLUMN {field} INTEGER NOT NULL DEFAULT 0")
+            db.execute("UPDATE documents SET page_count=json_array_length(pages),characters=(SELECT COALESCE(SUM(length(json_extract(value,'$.text'))),0) FROM json_each(documents.pages)) WHERE page_count=0")
+            db.execute("CREATE INDEX IF NOT EXISTS documents_by_date ON documents(tenant,created_at)")
+            db.execute("CREATE INDEX IF NOT EXISTS passages_by_document ON passages(tenant,doc_id)")
 
     @contextmanager
     def db(self):
@@ -55,12 +63,14 @@ class Store:
 
     def documents(self, tenant):
         with self.db() as db:
-            rows = db.execute("SELECT * FROM documents WHERE tenant=? ORDER BY created_at DESC", (tenant,)).fetchall()
+            rows = db.execute("SELECT id,title,filename,media_type,hash,created_at,storage,page_count,characters FROM documents WHERE tenant=? ORDER BY created_at DESC", (tenant,)).fetchall()
         return [self.document_meta(row) for row in rows]
 
     def document_meta(self, row):
-        pages = json.loads(row["pages"])
-        return {k: row[k] for k in ("id", "title", "filename", "media_type", "hash", "created_at")} | {"pages": len(pages), "characters": sum(len(p["text"]) for p in pages), "version": 1, "status": "ready", "storage": json.loads(row["storage"])}
+        pages = json.loads(row["pages"]) if "pages" in row.keys() else None
+        page_count = len(pages) if pages is not None else row["page_count"]
+        characters = sum(len(p["text"]) for p in pages) if pages is not None else row["characters"]
+        return {k: row[k] for k in ("id", "title", "filename", "media_type", "hash", "created_at")} | {"pages": page_count, "characters": characters, "version": 1, "status": "ready", "storage": json.loads(row["storage"])}
 
     def source(self, tenant, doc_id):
         with self.db() as db:
@@ -114,11 +124,15 @@ class Store:
             consent = db.execute("SELECT enabled FROM consent WHERE tenant=?", (tenant,)).fetchone()
             revision = db.execute("SELECT COALESCE((SELECT version FROM memory_revisions WHERE tenant=?),0)", (tenant,)).fetchone()[0]
             if consent and consent[0] and (expected_revision is None or expected_revision == revision):
-                event_payload = {key: value for key, value in payload.items() if key not in ("replay", "dream_world")}
+                event_payload = {key: value for key, value in payload.items() if key not in ("replay", "dream_world", "execution")}
                 db.execute("INSERT INTO memory_events VALUES(?,?,?,?,?)", (tenant, uid("ev"), kind, json.dumps(event_payload, ensure_ascii=False), now()))
                 if kind == "generation" and payload.get("replay"):
                     replay = payload["replay"]
                     db.execute("INSERT OR IGNORE INTO replay_cases VALUES(?,?,?,?)", (tenant, replay["package"]["id"], json.dumps(replay["package"], ensure_ascii=False), json.dumps(replay["input"], ensure_ascii=False)))
+                    execution = payload.get("execution")
+                    if execution:
+                        db.execute("INSERT OR IGNORE INTO agent_runs VALUES(?,?,?,?)", (tenant,replay["package"]["id"],json.dumps(execution),now()))
+                        db.execute("DELETE FROM agent_runs WHERE tenant=? AND id NOT IN (SELECT id FROM agent_runs WHERE tenant=? ORDER BY rowid DESC LIMIT 100)", (tenant,tenant))
                     world = payload.get("dream_world")
                     if replay["package"]["status"] == "ready" and world and len(world.get("nodes", [])) >= 2 and all(n.get("verdict") == "supported" for n in world["nodes"]):
                         db.execute("INSERT OR IGNORE INTO dream_worlds VALUES(?,?,?,?)", (tenant, replay["package"]["id"], json.dumps(world), now()))

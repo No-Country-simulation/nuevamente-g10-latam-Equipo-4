@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 cd "$(dirname "$0")/.."
-set -a
-source .env
-set +a
+if [ "${ATLAS_ENV_READY:-0}" != "1" ]; then
+  exec node scripts/with-env.mjs bash scripts/eve.sh "$@"
+fi
 test -n "${EVE_MODEL:-}" || { echo 'Configure EVE_MODEL no .env antes de executar Eve.'; exit 1; }
 cd apps/api
 case "${1:-start}" in

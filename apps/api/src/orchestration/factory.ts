@@ -18,12 +18,12 @@ export function eveRuntime(host:string):AgentRuntime {
     let completed=false;
     try {
       const result=await response.result();
-      if(result.status!=='completed')throw new Error('Eve não concluiu o turno.');
+      if(result.status==='failed'||result.data===undefined||result.inputRequests.length)throw new Error('Eve não concluiu o resultado estruturado.');
       completed=true;
       return {data:result.data,session_id:session.state.sessionId};
     }finally {
       // Abort only disconnects transport; request cooperative turn cancellation too.
-      if(!completed)await response.cancel().catch(()=>undefined);
+      if(!completed)await session.cancel({signal:AbortSignal.timeout(5000)}).catch(()=>undefined);
     }
   }};
 }

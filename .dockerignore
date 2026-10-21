@@ -10,3 +10,6 @@ data
 **/.eve
 **/artifacts
 **/__pycache__
+
+.venv-docs
+**/node_modules

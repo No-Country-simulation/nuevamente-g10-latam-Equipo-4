@@ -37,7 +37,7 @@ const actions=createActionEngines(tenant,{cognition,judge,remoteMemory:!!process
     if (!response.ok) throw Object.assign(new Error('Busca web indisponível. Nenhuma chave foi enviada ao navegador.'),{status:503});
     const data = await response.json();
     const results = Array.isArray(data.data) ? data.data : data.data?.web || [];
-    const filtered=results.filter((r:{url?:string})=>{try{const url=new URL(r.url||'');return url.protocol==='https:' && !isIP(url.hostname) && url.hostname.includes('.') && !url.hostname.endsWith('.local') && !url.hostname.endsWith('.internal');}catch{return false;}}).slice(0,3);
+    const filtered=results.filter((r:{url?:string})=>{try{const url=new URL(r.url||'');return url.protocol==='https:' && !isIP(url.hostname) && url.hostname.includes('.') && !url.hostname.endsWith('.local') && !url.hostname.endsWith('.internal');}catch{return false;}}).slice(0,3).map((item:{url:string;title?:string;description?:string})=>({url:item.url,title:(item.title||'').slice(0,300),description:(item.description||'').slice(0,2000)}));
     const evaluation=await evaluateEvidence(query,filtered.map((item:{title?:string;description?:string},index:number)=>({id:String(index),text:((item.title||'')+' '+(item.description||'')).slice(0,2000)})));
     return {results:filtered.filter((_item:unknown,index:number)=>evaluation.source!=='typesafe'||evaluation.scores.some(score=>score.id===String(index)&&score.score>0)),source:'firecrawl',retrieved_at:new Date().toISOString(),relevance:evaluation};
 }});

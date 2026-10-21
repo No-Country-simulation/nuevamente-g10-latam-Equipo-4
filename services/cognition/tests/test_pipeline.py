@@ -161,4 +161,19 @@ class PipelineTests(unittest.TestCase):
         self.assertEqual(json.loads(after[0][2])['model'],'remote:https://example.com/v1:test')
         self.assertEqual(rows('bob'),other);self.assertEqual(self.store.source('alice',self.doc['id']),source)
 
+    def test_debate_details_stay_private_and_are_erased_with_memory(self):
+        dream=Dreamer(self.store);dream.consent('alice',True)
+        execution={'runtime':'eve','turns':[{'agent_id':'lumi','phase':'private-team-review'}],'debate':{'winner':'b','world':{'nodes':[{'id':'a','parent':'root','score':0.66,'verdict':'supported'},{'id':'b','parent':'a','score':0.66,'verdict':'supported'}]}}}
+        def content(request,evidence,policy,**kwargs):
+            section=next(iter(kwargs['authorized_ids']))
+            return RemoteContent(title='Redes',introduction='Vamos entender redes.',items=[{'title':'VCN','body':'Uma VCN possui sub-redes privadas.','evidence_ids':[section]}])
+        with patch('atlas.providers.llm_ready',return_value=True),patch('atlas.learning.remote_content',side_effect=content),patch('atlas.providers.judge',return_value={'verdict':'supported','score':0.66}),patch('atlas.providers.last_execution',return_value=execution):
+            result=self.package()
+        self.assertNotIn('private-team-review',json.dumps(result));self.assertNotIn('winner',json.dumps(result))
+        with self.store.db() as db:
+            self.assertEqual(db.execute('SELECT COUNT(*) FROM agent_runs').fetchone()[0],1)
+            self.assertNotIn('private-team-review',db.execute('SELECT payload FROM memory_events').fetchone()[0])
+        dream.forget('alice')
+        with self.store.db() as db:self.assertEqual(db.execute('SELECT COUNT(*) FROM agent_runs').fetchone()[0],0)
+
 if __name__=='__main__':unittest.main()

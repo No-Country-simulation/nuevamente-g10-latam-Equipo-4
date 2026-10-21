@@ -5,6 +5,7 @@ services:
     environment:
       ATLAS_API_URL: http://api:4000
       ATLAS_INTERNAL_TOKEN: ${ATLAS_INTERNAL_TOKEN:?Execute scripts/setup.sh para criar o token interno}
+      NODE_OPTIONS: --max-old-space-size=256
     ports: ["127.0.0.1:3000:3000"]
     depends_on:
       api: {condition: service_healthy}
@@ -14,7 +15,7 @@ services:
       timeout: 5s
       start_period: 20s
       retries: 6
-    mem_limit: 768m
+    mem_limit: 384m
     cpus: 0.75
     restart: unless-stopped
     logging: {driver: json-file, options: {max-size: "5m", max-file: "2"}}
@@ -24,6 +25,7 @@ services:
     environment:
       ATLAS_BIND_ADDRESS: 0.0.0.0
       COGNITION_URL: http://cognition:8000
+      NODE_OPTIONS: --max-old-space-size=256
     depends_on:
       cognition: {condition: service_healthy}
     healthcheck:
@@ -32,7 +34,7 @@ services:
       timeout: 5s
       start_period: 15s
       retries: 6
-    mem_limit: 512m
+    mem_limit: 384m
     cpus: 0.5
     restart: unless-stopped
     logging: {driver: json-file, options: {max-size: "5m", max-file: "2"}}
@@ -49,7 +51,7 @@ services:
       timeout: 5s
       start_period: 10s
       retries: 6
-    mem_limit: 1536m
+    mem_limit: 896m
     cpus: 1.0
     restart: unless-stopped
     logging: {driver: json-file, options: {max-size: "5m", max-file: "2"}}

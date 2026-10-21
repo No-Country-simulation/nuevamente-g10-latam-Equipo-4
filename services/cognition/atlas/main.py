@@ -108,7 +108,7 @@ async def missing(request, exc):
 
 @app.exception_handler(providers.ProviderError)
 async def provider_failed(request, exc):
-    return JSONResponse(status_code=503, content={"detail": str(exc)})
+    return JSONResponse(status_code=exc.status_code, content={"detail": str(exc)})
 
 @app.exception_handler(Exception)
 async def internal_error(request, exc):

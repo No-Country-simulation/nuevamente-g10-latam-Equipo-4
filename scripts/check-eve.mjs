@@ -1,0 +1,17 @@
+import assert from 'node:assert/strict';
+import {config} from 'dotenv';
+import {Client} from 'eve/client';
+import {issueTicket} from '../apps/api/dist/orchestration/tickets.js';
+config({path:'.env',quiet:true});
+const host=process.env.EVE_URL;
+if(!host)throw new Error('Configure EVE_URL e compile a API antes desta verificação.');
+const secret=process.env.EVE_SERVICE_TOKEN||process.env.ATLAS_INTERNAL_TOKEN||'';
+const {ticket}=issueTicket({tenant:process.env.ATLAS_TENANT_ID||'local-workspace',agent:'lumi',purpose:'learning',capabilities:[]},secret);
+const anonymous=new Client({host,auth:{bearer:'invalid-probe'},redirect:'error'});
+await assert.rejects(anonymous.sessions.create({signal:AbortSignal.timeout(5000)}));
+const client=new Client({host,auth:{bearer:ticket},redirect:'error'});
+assert.ok(await client.health());
+const {session}=await client.sessions.create({signal:AbortSignal.timeout(8000)});
+assert.ok(session.state.sessionId);
+await session.reset({reason:'Atlas prewarm/reset validation; no model turn requested'});
+console.log('Eve: health, recusa de ticket inválido, prewarm autenticado e reset passaram. Nenhum turno LLM foi solicitado.');

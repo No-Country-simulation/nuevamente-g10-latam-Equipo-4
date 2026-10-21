@@ -42,7 +42,7 @@ class Dreamer:
         with self.state_lock, self.store.db() as db:
             db.execute("INSERT INTO memory_revisions VALUES(?,1) ON CONFLICT(tenant) DO UPDATE SET version=version+1", (tenant,))
             self.epochs[tenant] = self.epochs.get(tenant, 0) + 1
-            for table in ("jobs", "memory_events", "policies", "cycles", "consent", "conversations", "replay_cases", "dream_worlds"):
+            for table in ("jobs", "memory_events", "policies", "cycles", "consent", "conversations", "replay_cases", "dream_worlds", "agent_runs"):
                 db.execute(f"DELETE FROM {table} WHERE tenant=?", (tenant,))
         return self.status(tenant)
 
