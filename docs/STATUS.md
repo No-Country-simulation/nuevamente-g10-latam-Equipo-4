@@ -5,7 +5,28 @@ O código está disponível para desenvolvimento local. Enviar fontes ao GitHub 
 é deploy: não houve publicação pública nem provisionamento de VM/serviço pago.
 O MVP completo continua dependendo de integrações reais e autenticação pública.
 
-## Implementado neste incremento
+## Landing e identidade pessoal — 21/10/2026
+
+A entrada `/` segue o novo book Atlas; o estúdio existente está em `/studio`.
+O criador permite nome, cor e tutor-base, com preferência local validada,
+edição/restauração no estúdio e manutenção dos IDs das personas no backend.
+Método e consentimento Dreamer continuam independentes. Não há sincronização por
+conta nem nome personalizado nos prompts nesta primeira etapa.
+
+Validação deste incremento: typecheck web e build Next de produção; fluxos reais
+em Chromium para criação, edição, restauração, persistência após reload, chat com
+ID original e método automático, armazenamento bloqueado, dados locais inválidos
+e consentimento Dreamer preservado. Sem overflow horizontal em 320, 390, 768,
+1024 e 1440 px; menu mobile e preferência de movimento reduzido conferidos.
+As oito verificações do proxy continuam passando. Rotas `/`, `/studio` e arte WebP
+retornam 200 no standalone de produção, com CSS, fontes e hidratação verificados.
+
+O PDF foi atualizado para edição 1.2, com 37 páginas e 31 capítulos. A nova seção
+foi renderizada e revisada; nenhum texto está fora das páginas. Tokens, arquivos
+e limites estão em [DESIGN_ATLAS.md](DESIGN_ATLAS.md). O estágio Docker web copia
+os assets públicos; não foi necessário adicionar dependências ou serviços.
+
+## Implementado na camada de agentes
 
 | Área | Comportamento |
 | --- | --- |
@@ -22,7 +43,7 @@ O MVP completo continua dependendo de integrações reais e autenticação públ
 | Operação | Compose de 4 serviços com limites somando 2560 MiB; Qdrant local opcional acrescenta 512 MiB |
 | Biblioteca | Metadados pré-calculados e índices por workspace/documento; listar fontes não carrega seus textos integrais no Python |
 | Ambiente | Scripts preservam credenciais/variáveis injetadas e completam apenas ausências com `.env`; exemplos sem segredos |
-| Documentação | README detalhado e guia didático PDF com 30 capítulos, fontes Markdown e diagramas editáveis |
+| Documentação | README detalhado e guia didático PDF com 31 capítulos, fontes Markdown e diagramas editáveis |
 
 A interface Atelier, upload PDF/MD/TXT, três estratégias RAG, quatro formatos,
 citações canônicas, quiz/XP idempotente, chat individual e grupos locais continuam
@@ -49,7 +70,7 @@ lexical, explicitamente identificada. Não há debate, score ou melhoria fictíc
 - PyMongo 4.19.0 instalado; queries de projeção verificadas com driver controlado,
   sem MongoDB remoto. SDK/task Trigger 4.7.6 com instalação congelada e typecheck;
   despacho verificado com HTTP controlado, sem conta externa provisionada.
-- PDF: 35 páginas e 30 entradas de sumário, extração de texto, links locais conferidos,
+- PDF atualizado: 37 páginas e 31 entradas de sumário, extração de texto, links locais conferidos,
   renderização visual dos capítulos novos e nenhuma palavra fora da página.
 
 Testes controlados demonstram mecanismos e contratos. Não comprovam qualidade de

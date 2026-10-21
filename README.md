@@ -112,7 +112,18 @@ Mantenha esse terminal aberto. Espere mensagens de prontidão do Next, da API At
 | Python/FastAPI | 8000 | Extrai documentos, recupera evidências e mantém materiais/memória |
 | Eve, necessário para agentes generativos | 2000 | Executa sessões de modelos e handoffs; não inicia com `npm run dev` |
 
-No seu computador local, abra o navegador em `http://127.0.0.1:3000`. Em um ambiente remoto, use o mecanismo de acesso a portas fornecido pela plataforma, sem alterar o bind para expor os serviços publicamente. Não há autenticação pública pronta nesta versão.
+No seu computador local, abra o navegador em `http://127.0.0.1:3000` para conhecer a landing Atlas. Clique em **Crie seu Atlas** para escolher nome, cor e tutor-base, ou em **Abrir estúdio** para ir direto a `http://127.0.0.1:3000/studio`. Em um ambiente remoto, use o mecanismo de acesso a portas fornecido pela plataforma, sem alterar o bind para expor os serviços publicamente. Não há autenticação pública pronta nesta versão.
+
+### Seu Atlas: identidade pessoal
+
+A landing segue o novo book: Instrument Serif nos títulos, Plus Jakarta Sans na interface, superfícies escuras, órbitas e laranja. Veja os tokens e limites em [Direção visual Atlas](docs/DESIGN_ATLAS.md).
+
+1. Em **Crie seu próprio Atlas**, digite um nome de até 24 caracteres.
+2. Escolha uma das quatro cores e um dos cinco tutores como perspectiva inicial.
+3. Clique em **Criar meu Atlas e começar**. O estúdio abre com esse tutor selecionado.
+4. Use **Personalizar [nome]** na barra lateral para editar ou restaurar os tutores originais. No celular, abra primeiro o menu de navegação.
+
+Nome e aparência são preferências visuais neste navegador (`localStorage`), sem sincronização entre dispositivos. As chamadas ao backend preservam o ID da persona original; esta primeira etapa não renomeia prompts, treina modelos nem cria uma nova persona no servidor. A escolha não fixa método, não concede ferramentas e não ativa memória Dreamer. A memória continua exigindo consentimento separado. Não há conta ou plano pago criado pelo formulário.
 
 ### 4. Conferir se está funcionando
 
@@ -556,7 +567,7 @@ Os SVGs são saídas geradas: para mudar um diagrama, edite a função `diagrams
 
 ## Princípios para continuar o projeto
 
-Leia [AGENTS.md](AGENTS.md), [SPEC](docs/SPEC.md), [STATUS](docs/STATUS.md) e a pesquisa de integrações antes de mudar arquitetura. Preserve o design Atelier do protótipo e os modos de foco/baixo estímulo. Mantenha segredos no servidor, citações reais, gabaritos privados e consentimento explícito. Rust e inferência local pesada não fazem parte deste incremento. Uma demonstração local que funciona é o começo da validação, não a conclusão automática do MVP Oracle.
+Leia [AGENTS.md](AGENTS.md), [SPEC](docs/SPEC.md), [STATUS](docs/STATUS.md) e a pesquisa de integrações antes de mudar arquitetura. A landing segue o [book Atlas](docs/DESIGN_ATLAS.md); o estúdio conserva o leitor de fontes, o foco e o baixo estímulo do Atelier. Mantenha segredos no servidor, citações reais, gabaritos privados e consentimento explícito. Rust e inferência local pesada não fazem parte deste incremento. Uma demonstração local que funciona é o começo da validação, não a conclusão automática do MVP Oracle.
 
 ## Publicar o mesmo commit nos dois repositórios
 

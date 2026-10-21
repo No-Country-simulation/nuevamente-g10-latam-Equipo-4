@@ -11,5 +11,5 @@ Leia docs/SPEC_AGENT_FACTORY_V03.md, docs/SPEC.md, docs/STATUS.md e docs/researc
 - OCI Object Storage é obrigatório para encerrar o MVP. Sempre verificar upload com readback. Não provisionar recursos pagos nem presumir que AMD/4GB disponíveis está em Always Free.
 - Alvo AMD64/4GB disponíveis: inferência externa, um parser isolado, backpressure, sem banco/broker pesado. Memória e agentes podem ser movidos para outra VM via contrato autenticado; frontend permanece sem credenciais.
 - Não publicar na Internet antes de autenticação/isolamento multiusuário. Esta primeira versão é um workspace local em loopback.
-- Preserve o design Atelier do HTML de referência e suas opções de foco/baixo estímulo. Não troque por dashboard genérico ou pelo print do portal do hackathon.
+- A landing segue o book Atlas enviado pelo usuário: fundo escuro, Instrument Serif/Plus Jakarta Sans, laranja, órbitas e escultura/globo. O estúdio em /studio preserva a estrutura Atelier, o leitor de fontes e as opções de foco/baixo estímulo. Personalizar nome/aparência não concede memória, ferramentas ou muda métodos.
 - Validar mudanças importantes com testes de comportamento, typecheck/build e smoke real. Skills instaladas são ferramentas selecionáveis; não aplicar todas simultaneamente nem sobrepor requisitos explícitos do usuário.

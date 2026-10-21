@@ -182,7 +182,7 @@ class Cover(Flowable):
             c.drawString(0, 258-i*26, label)
         c.setFillColor(colors.HexColor('#d1d8dd'))
         c.setFont('Atlas', 10)
-        c.drawString(0, 108, 'Equipe ONE G10 • Edição didática 1.1 • 20/10/2026')
+        c.drawString(0, 108, 'Equipe ONE G10 • Edição didática 1.2 • 21/10/2026')
         c.drawString(0, 86, 'Atlas 0.3 / Times Eve + Dream-RSI / 4 GB')
         try:
             revision = subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD'], cwd=ROOT, text=True).strip()

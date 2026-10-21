@@ -1,6 +1,6 @@
 # NovaMente Atlas — guia didático de arquitetura
 
-Edição 1.1 • Equipe ONE G10 • Atlas 0.3 • 20/10/2026
+Edição 1.2 • Equipe ONE G10 • Atlas 0.3 • 21/10/2026
 
 Este documento é a fonte editável do PDF. Leia os capítulos em ordem na primeira vez. Os exemplos de configuração não contêm chaves. O guia descreve o código existente e identifica o que ainda depende de integração ou desenvolvimento.
 
@@ -106,7 +106,7 @@ npm run dev
 
 Espere o Next, a API Atlas e o Uvicorn indicarem prontidão. Não feche esse terminal. O script inicia Next em 3000, Nest em 4000 e Python em 8000. Eve executa os agentes generativos e tem inicialização separada; a demo extrativa funciona sem ele.
 
-No computador local, abra o navegador no endereço `http://127.0.0.1:3000`. Em ambiente remoto, use o acesso a portas oferecido pela plataforma sem publicar os serviços diretamente na Internet.
+No computador local, abra o navegador no endereço `http://127.0.0.1:3000` para a landing. Use **Abrir estúdio** para entrar em `/studio`, ou **Crie seu Atlas** para personalizar um tutor primeiro. Em ambiente remoto, use o acesso a portas oferecido pela plataforma sem publicar os serviços diretamente na Internet.
 
 ### Terminal B: conferência funcional
 
@@ -498,7 +498,7 @@ Escolha uma alteração de texto antes de criar uma nova tela. Exemplo: melhorar
 
 ### Como avaliar a alteração
 
-O texto deve indicar uma ação compreensível, caber na tela e continuar legível com baixo estímulo. Não remova foco de teclado nem rótulos de acessibilidade para ganhar espaço. A identidade visual segue o protótipo Atelier: superfícies escuras, acento vermelhão e painel de fontes em papel.
+O texto deve indicar uma ação compreensível, caber na tela e continuar legível com baixo estímulo. Não remova foco de teclado nem rótulos de acessibilidade para ganhar espaço. A landing segue o novo book Atlas: escultura e globo, órbitas, Instrument Serif nos títulos e Plus Jakarta Sans na interface. O estúdio conserva superfícies escuras, acento vermelhão e painel de fontes em papel. A especificação visual está em `docs/DESIGN_ATLAS.md`.
 
 Motion cuida de transições; Anime.js é usado em feedback deliberado; Material UI e Radix compartilham a mesma linguagem visual. Uma alteração de texto não exige adicionar uma biblioteca de animação.
 
@@ -859,3 +859,61 @@ esconder divergência. O deploy público ainda depende de autenticação multius
 Referências: arxiv.org/html/2609.14858v1 e github.com/zhengkid/Dream-RSI. O PDF
 oficial no repositório foi consultado; o código completo está anunciado como em
 preparação. O relatório `docs/research/integrations.md` registra a verificação.
+
+
+## 31. Crie seu próprio Atlas
+
+**Objetivo:** personalizar a companhia de estudo sem precisar configurar IA.
+
+A página inicial em `/` apresenta o produto. O estúdio continua em `/studio`.
+Você pode ir direto ao estúdio ou escolher primeiro uma identidade para um tutor.
+
+### Criar, estudar e editar
+
+1. Na landing, clique em **Crie seu Atlas** para chegar ao formulário.
+2. Digite um nome de até 24 caracteres, como Íris ou Cosmo.
+3. Escolha uma das quatro cores e um tutor-base. A prévia muda na hora.
+4. Clique em **Criar meu Atlas e começar**. O estúdio abre com esse tutor selecionado.
+5. Adicione uma fonte, faça uma pergunta e continue estudando normalmente.
+6. Na barra lateral, use **Personalizar [nome]** para mudar a identidade. No celular, abra primeiro o menu.
+7. Para desfazer, abra a personalização e escolha **Restaurar tutores originais**.
+
+**Exemplo:** você escolhe o nome Íris, a cor violeta e a perspectiva de Lumi.
+A interface mostra Íris no seletor e na conversa, enquanto o backend continua
+executando a persona Lumi. Os outros quatro tutores continuam disponíveis.
+Escolher essa companhia não fixa o método de estudo; você ainda pode deixar a
+escolha automática ou ajustar a abordagem.
+
+### O que fica salvo
+
+Nome, cor e tutor-base ficam no armazenamento local deste navegador. Não são
+sincronizados com outra máquina e desaparecem ao limpar os dados do site. Não
+escreva segredos no nome. Se o navegador bloquear o armazenamento, o formulário
+informa a falha e permite tentar novamente. O estúdio também pode ser aberto
+sem personalizar.
+
+Esta etapa personaliza a apresentação. Ela não cria outra persona no servidor,
+não altera prompts nem faz o modelo reconhecer um novo nome em sua
+apresentação. A memória de aprendizagem segue separada: só é ativada com seu
+consentimento em **Memória & Dreamer**. Restaurar o nome não apaga memórias;
+apagar memórias não remove a identidade visual.
+
+### Onde alterar o código
+
+| Arquivo | Responsabilidade |
+| --- | --- |
+| `apps/web/app/page.tsx` | Conteúdo da landing |
+| `apps/web/app/landing.css` | Composição e responsividade |
+| `apps/web/app/studio/page.tsx` | Entrada do estúdio existente |
+| `apps/web/components/atlas-customizer.tsx` | Formulário e prévia |
+| `apps/web/lib/atlas-identity.ts` | Validação e preferência local |
+| `apps/web/components/atlas-identity.css` | Identidade compartilhada entre landing e estúdio |
+| `apps/web/public/images/atlas-world.webp` | Arte local otimizada |
+
+O estágio web do Docker copia a pasta `public`, além do build Next. Não há novo
+banco, worker ou serviço pago para a landing. O acesso público ao estúdio continua
+dependendo de autenticação e isolamento multiusuário.
+
+**Ao terminar:** crie uma identidade, recarregue o estúdio, confirme a persistência
+e restaure os nomes originais. A memória Dreamer deve continuar no estado que
+você escolheu antes desse exercício.
