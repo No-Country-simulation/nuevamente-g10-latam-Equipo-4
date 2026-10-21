@@ -6,6 +6,10 @@ Este README foi escrito também para quem está começando. Siga a ordem abaixo;
 
 > **Estado atual:** primeiro incremento funcional, em um workspace local. Ainda não é o MVP completo nem uma aplicação pronta para acesso público multiusuário. Sem chaves, o sistema usa trechos literais e busca lexical de demonstração. Isso é diferente de uma resposta gerada por LLM ou de embeddings semânticos.
 
+Repositórios sincronizados: [Oracle](https://github.com/Oracle-hackatom-g10-team-4/Nova-mente-Solution) e [No Country](https://github.com/No-Country-simulation/nuevamente-g10-latam-Equipo-4).
+
+Arquitetura atual: [Agent Factory 0.3](docs/SPEC_AGENT_FACTORY_V03.md).
+
 ## Por onde começar
 
 | Seu objetivo | Leitura recomendada |
@@ -89,6 +93,8 @@ Você não precisa ativar a `.venv` manualmente para usar os comandos da raiz. A
 
 **Não cole o conteúdo de `.env` em chat, issue ou captura de tela.** Ele contém credenciais. O exemplo é público; o arquivo real fica fora do Git.
 
+Os scripts preservam variáveis já injetadas pelo ambiente cloud; `.env` fornece apenas valores ausentes. Não imprima variáveis de credenciais para diagnosticar configuração.
+
 ### 3. Iniciar os três serviços
 
 No **terminal A**, na raiz:
@@ -104,7 +110,7 @@ Mantenha esse terminal aberto. Espere mensagens de prontidão do Next, da API At
 | Next.js | 3000 | Mostra a interface e encaminha pedidos pelo proxy do servidor |
 | NestJS | 4000 | Valida pedidos, executa brains e Action Engines |
 | Python/FastAPI | 8000 | Extrai documentos, recupera evidências e mantém materiais/memória |
-| Eve, opcional | 2000 | Executa sessões de modelos e handoffs; não inicia com `npm run dev` |
+| Eve, necessário para agentes generativos | 2000 | Executa sessões de modelos e handoffs; não inicia com `npm run dev` |
 
 No seu computador local, abra o navegador em `http://127.0.0.1:3000`. Em um ambiente remoto, use o mecanismo de acesso a portas fornecido pela plataforma, sem alterar o bind para expor os serviços publicamente. Não há autenticação pública pronta nesta versão.
 
@@ -148,6 +154,28 @@ Sem chaves, o material estará em `extractive_demo`: passagens literais organiza
 
 **Limites de upload:** 10 MiB por arquivo, até 100 páginas no PDF, até 300 mil caracteres extraídos e até 512 segmentos. Há timeout e limite de memória no parser PDF. PDFs escaneados sem texto e arquivos com senha não têm suporte neste incremento. Se um limite for excedido, divida o material em volumes menores.
 
+## Times de agentes: colaboração nos bastidores
+
+Com Eve e TypeSafe configurados, `ATLAS_TEAM_DEBATE=1` ativa o fluxo no backend:
+
+1. Nilo propõe uma explicação; Fio recebe a proposta e apresenta uma alternativa prática.
+2. Jev avalia as duas propostas nas mesmas evidências autorizadas.
+3. Se a política pedir outra rodada e a qualidade inicial não atingir o critério
+   de parada, Lumi e Soma trocam propostas e fazem revisões para seus times.
+4. Jev compara as propostas sustentadas. A persona escolhida pelo usuário sintetiza
+   o resultado; Python valida suas citações e executa o gate final.
+
+São três a cinco turnos Eve sequenciais, com deadline global de 90 segundos na
+factory, uma busca web e até três delegações nativas adicionais por execução.
+A interface entrega a síntese e as fontes. Não mostra votação, ranking interno
+ou raciocínio privado. Personas são consistentes e usam contexto consentido;
+sem provedores, a interface declara o modo extrativo e não simula debate.
+
+Jev também escolhe método/RAG, avalia a relevância das passagens e filtra resultados
+Firecrawl. Decisão de relevância não equivale a comprovação factual: o gate final
+continua necessário. Menos rodadas pode reduzir custo/latência; a rapidez real
+precisa ser medida com os fornecedores configurados.
+
 ## Arquitetura em linguagem simples
 
 Pense em uma biblioteca: a interface é o balcão; o proxy entrega o pedido; o Nest organiza o atendimento; o brain escolhe a abordagem; a Action Engine executa uma tarefa com regras; o Python localiza e organiza as evidências. O Dreamer revisa experiências autorizadas para propor um atendimento melhor no futuro.
@@ -164,7 +192,7 @@ Pense em uma biblioteca: a interface é o balcão; o proxy entrega o pedido; o N
 | Modelo/provedor | Serviço de inferência usado em uma função | TypeSafe decide/julga; outro LLM gera conteúdo |
 | Action Engine | Resultado de domínio com contrato, autorização e execução | Learning Engine entrega material citável |
 | Eve | Runtime de sessões e delegação entre agentes | Nilo encaminha uma tarefa a um especialista |
-| Dreamer | Ciclo de aperfeiçoamento pedagógico com avaliação e versões | Promover passos mais curtos após replay bem-sucedido |
+| Dreamer | Ciclo de aperfeiçoamento pedagógico com avaliação e versões | Reduzir revisão redundante após replay sem regressão |
 
 **Invokta não fornece uma classe `Brain`.** Essa abstração é do Atlas, construída sobre suas capacidades e regras. O projeto usa `@invokta/core@0.9.0` com `createEngine`, `defineCapability` e `engine.invoke`. As engines rodam dentro do Nest; não são três novas VMs.
 
@@ -259,14 +287,30 @@ Esse comando é para a biblioteca local em `data/`, conforme o `.env`. Ele prese
 
 ## Dreamer: memória e aperfeiçoamento são parte do núcleo
 
-Dreamer não é uma animação nem uma promessa de que o modelo reescreve a si mesmo. Ele modifica **políticas pedagógicas permitidas**, como método preferido, tamanho de passos e pergunta inicial. Não modifica pesos, código, segurança, ferramentas ou permissões.
+Dreamer é núcleo e implementa uma adaptação do **Dream-RSI**: o agente consolida
+experiências e melhora sua política de exploração sobre um simulador de histórico.
+O modelo gerador e o avaliador permanecem fixos. A implementação usa políticas
+JSON tipadas, em lugar de executar código arbitrário produzido pelo modelo.
 
-1. Você concede consentimento no painel **Memória & Dreamer**.
-2. O servidor registra experiências e casos de replay autorizados. Materiais anteriores ao consentimento não viram casos automaticamente.
-3. Com pelo menos três experiências e três materiais prontos elegíveis, além de geração e TypeSafe configurados, um ciclo propõe uma candidata.
-4. O serviço compara baseline e candidata em três casos. Todas as respostas precisam de suporte, sem regressão por caso, e a média precisa melhorar mais de 0,05 na rubrica.
-5. O servidor promove a política ou a rejeita. A próxima geração/chat consulta a política ativa, respeitando escolhas manuais.
-6. Rollback invalida ciclos pendentes; exclusão impede escritores antigos de recriar memórias apagadas.
+1. Com consentimento, a exploração online registra propostas, revisões, relações
+   de parentesco e resultados reais do judge. Sem avaliação não há mundo elegível.
+2. Três mundos com pelo menos duas rodadas avaliadas formam o pool mínimo. O
+   treinamento usa parte dele; o terço mais recente fica separado para validação.
+3. Soma, executada no Eve, propõe ordem de exploração, limite de rodadas e critério
+   de parada. Não recebe resultados dos mundos reservados para validação.
+4. O simulador revela apenas filhos registrados, na ordem histórica. **Não chama
+   novamente o agente nem o judge**. Um ramo inexistente é marcado como sem cobertura.
+5. A política precisa preservar a melhor qualidade observada em cada mundo,
+   não regredir em utilidade e melhorar a média de validação em mais de 0,01.
+   Utilidade = melhor score registrado menos 0,03 por tentativa representada.
+6. A promoção é atômica, versionada e consumida pelas próximas execuções. Pode
+   economizar uma revisão redundante. Preferências pedagógicas não podem mudar
+   sem contrafactual observado; segurança e permissões nunca são autoalteradas.
+7. Revogação, rollback e exclusão invalidam trabalhos e escritores antigos.
+
+É uma adaptação limitada a duas rodadas e um worker, adequada ao orçamento de RAM.
+Score de judge é um indicador de suporte/utilidade, não medição de aprendizado
+humano. Não atribuímos ao Atlas os resultados experimentais do artigo.
 
 | Estado | Significado para quem está usando |
 | --- | --- |
@@ -277,7 +321,7 @@ Dreamer não é uma animação nem uma promessa de que o modelo reescreve a si m
 | `promoted` / `rejected` | Candidata aprovada ou baseline preservada |
 | `cancelled` / `failed` | Operação invalidada ou avaliação não concluída |
 
-Há no máximo um replay remoto por workspace/dia; o agendador verifica condições a cada hora por padrão. Testes com provedores controlados verificam o mecanismo, não eficácia pedagógica em pessoas. O compartilhamento de histórico entre personas no workspace depende de consentimento; conversar pode manter histórico local da persona mesmo sem consentir com o aperfeiçoamento. Apagar memória também limpa esse histórico, mas não remove documentos e materiais da biblioteca.
+Há no máximo uma proposta remota de política por workspace/dia; o agendador verifica condições a cada hora por padrão. Testes com provedores controlados verificam o mecanismo, não eficácia pedagógica em pessoas. O compartilhamento de histórico entre personas no workspace depende de consentimento; conversar pode manter histórico local da persona mesmo sem consentir com o aperfeiçoamento. Apagar memória também limpa esse histórico, mas não remove documentos e materiais da biblioteca.
 
 ### Memória em outra VM Oracle ou Railway
 
@@ -316,7 +360,14 @@ bash scripts/eve.sh build
 bash scripts/eve.sh start
 ```
 
-São comandos separados: build prepara o runtime; start o mantém em execução em outro terminal. Configure `EVE_URL` no app principal somente quando o runtime estiver pronto e reinicie o app. O canal usa Bearer `EVE_SERVICE_TOKEN`, com fallback ao token interno local. Em outra máquina, use TLS/rede privada e um token de serviço adequado. Sem `EVE_URL`, a geração direta configurada pode ser usada; com `EVE_URL`, o adapter prioriza Eve.
+São comandos separados: build prepara o runtime; start o mantém em execução em outro terminal. Configure `EVE_URL` no app principal somente quando o runtime estiver pronto e reinicie o app. O canal valida tickets assinados de curta duração emitidos pela factory. `EVE_SERVICE_TOKEN`
+é o segredo de assinatura entre os servidores (fallback local: token interno), não uma
+chave enviada ao modelo. Configure o mesmo segredo e tenant nos dois processos.
+`ATLAS_AGENT_RUNTIME=eve` é o padrão. O modo direto requer seleção explícita
+`ATLAS_AGENT_RUNTIME=direct`; falha de Eve não troca de provedor silenciosamente.
+`npm run check:eve` confere health, recusa de ticket inválido e prewarm/reset autenticado sem solicitar um turno LLM; compile a API antes e configure `EVE_URL`. A geração real ainda precisa ser testada separadamente.
+`EVE_MODEL_CONTEXT_WINDOW`, quando preenchido, deve corresponder a um teto válido
+para o modelo; sem ele, o build consulta o catálogo do Gateway.
 
 O build foi verificado anteriormente com um modelo de metadados embutidos no SDK; isso não seleciona o fornecedor final nem demonstra inferência real. O filesystem virtual JS e as ferramentas padrão desativadas reduzem o acesso do agente ao host. Não habilite shell/arquivos arbitrários para resolver uma falha de configuração.
 
@@ -368,36 +419,105 @@ Abra um pull request no GitHub e descreva o que mudou e como conferiu. `git add`
 
 O repositório inclui os 112 skills instalados, mas eles são apoio ao desenvolvimento, não agentes do produto nem processos em produção. Escolha a skill relevante à tarefa; não aplique todos os packs simultaneamente.
 
-## Docker e o alvo Oracle de 6GB
+## Docker e Oracle: 4 GB disponíveis para o Atlas
 
-Primeiro experimente o fluxo local. Para testar containers, pare o `npm run dev`, confirme Docker/Compose e use:
+A VPS pode ter 8 GB totais, mas o Atlas só pode usar aproximadamente 4 GB.
+Os outros 4 GB são de outras cargas. Construa imagens em CI ou em máquina de
+build; os limites abaixo valem para operação, não para instalação/compilação.
 
 ```bash
-docker --version
-docker compose version
-docker compose build
-docker compose up -d --wait --wait-timeout 90
+docker compose up -d --build --wait
 npm run smoke
-docker compose ps
-docker compose logs --tail 50
-# Parar preservando a biblioteca do container:
 docker compose down
 ```
 
-Não acrescente `-v` ao `down` se quiser preservar o volume. O `data/` local e o volume Docker `atlas-data` são bibliotecas diferentes. Parar o container não copia o volume para `data/`.
+Sem modelos, esses comandos usam demonstração extrativa. Para o runtime real,
+configure o `.env` e acrescente o arquivo de agentes:
 
-| Serviço | Limite de RAM no Compose |
+```bash
+docker compose -f compose.yaml -f compose.agents.yaml up -d --build --wait
+```
+
+| Serviço | Limite |
 | --- | --- |
-| Web | 768 MiB |
-| Nest | 512 MiB |
-| Python/parser | 1536 MiB |
-| Total de limites | 2816 MiB |
+| Next | 384 MiB |
+| Nest | 384 MiB |
+| Python/parser | 896 MiB |
+| Eve | 896 MiB |
+| Total com Eve | 2560 MiB |
+| Qdrant local opcional | +512 MiB |
+| Total com Eve e Qdrant | 3072 MiB |
 
-A meta é caber com margem em 6GB AMD64 usando inferência externa. SO, daemon Docker e runtime Eve não entram nesses 2816MiB. As medidas anteriores estão no STATUS e não são benchmark atualizado de carga multiusuário ou inferência. Construa imagens em CI ou máquina de desenvolvimento; o build precisa de mais recursos/disco do que os serviços em operação.
+Limites são metas de contenção, não garantia de capacidade sob qualquer carga.
+Há uma geração/parser e uma factory ativa por vez, recusas 429 e fila de até oito
+jobs pendentes. Use `docker stats --no-stream` e confira OOM/restarts sob carga.
+O diretório `data/` local e o volume `atlas-data` do Compose são bibliotecas diferentes.
+`docker compose down` preserva volumes; não use `down -v` para uma parada normal.
 
-O BuildKit aceita a CA pública do host como secret de build; use `ATLAS_BUILD_CA_BUNDLE` se o caminho do host for diferente. Não desative TLS. As portas internas não são publicadas; a web fica em loopback. Antes de produção pública, ainda faltam identidade, isolamento multiusuário e validação operacional.
+**Imagens na Oracle:** OCIR guarda imagens Docker; a VM executa os containers;
+Object Storage guarda PDFs originais e pacotes JSON. Upload/readback OCI é obrigatório
+para encerrar o MVP. Credenciais e documentos privados não entram nas imagens.
+AMD não é automaticamente Always Free: confirmar SKU, cotas e preço da conta.
 
-OCI Object Storage com upload/readback do original e do JSON é obrigatório para concluir o MVP. Prefira instance principal e bucket privado. Um perfil local OCI precisa ficar fora do Git e, em container, requer montagem explícita por quem prepara o deploy; a variável de caminho não monta o arquivo sozinha. AMD com 6GB não é automaticamente Always Free: confirmar SKU, região, cotas e custo da conta continua necessário.
+O volume `eve-workflow` preserva `.eve/.workflow-data`. Um proxy para Eve deve
+encaminhar `/eve/` e `/.well-known/workflow/`. Mantenha tudo em loopback/rede interna
+até implementar autenticação pública multiusuário.
+
+## Qdrant, MongoDB e Trigger.dev: quando ativar
+
+Os três conectores são opcionais. O perfil padrão usa SQLite WAL e scheduler local;
+isso permite desenvolver sem abrir contas ou iniciar bancos que não serão usados.
+
+| Serviço | Papel | Configuração e verificação |
+| --- | --- | --- |
+| Qdrant | Índice semântico filtrado por tenant/documento/modelo | `VECTOR_BACKEND=qdrant`, URL/chave e embeddings reais; reindexar antes de consultar |
+| MongoDB externo | Projeção de metadados dos documentos | `MONGODB_URI`; instalar `requirements-mongo.lock`; sincronizar e conferir campos |
+| Trigger.dev externo | Disparar jobs Dreamer por ID | Publicar task, configurar callback HTTPS exclusivo e chave de runner |
+
+Qdrant não recebe texto integral, somente vetores e referências. A consulta
+confere filtros e IDs novamente no Atlas. Erro de Qdrant configurado não vira
+hashing lexical silenciosamente. Reindexação cria coleção nova e só depois troca
+os ponteiros na transação SQLite. Coleções antigas exigem limpeza operacional
+após conferir backups e ausência de leitores; nunca apagar por nome presumido.
+
+Para Qdrant na própria VPS, acrescente `compose.qdrant.yaml` aos arquivos Compose.
+O serviço é limitado a 512 MiB e não publica portas. Configure chave e embeddings
+antes; esse perfil não funciona como demonstração lexical.
+
+Para Mongo, instale somente no serviço que usar o conector:
+
+```bash
+.venv/bin/pip install -r services/cognition/requirements-mongo.lock
+# Execute a partir de services/cognition com as variáveis do servidor carregadas:
+../../.venv/bin/python -m atlas.projections
+```
+
+Mongo exige TLS e um pool de até duas conexões. As consultas usam tenant, projeção,
+índice composto e paginação. A projeção contém apenas IDs, título, hash, versão,
+quantidade de páginas/caracteres e data. Não armazena PDFs, texto, conversas ou
+segredos. Falha deixa estado `pending`; SQLite continua sendo a fonte de verdade.
+Em Docker, construa cognition com `--build-arg ATLAS_WITH_MONGO=1` se precisar.
+
+Para Trigger.dev, o runner está em `integrations/trigger/`:
+
+```bash
+npm ci --prefix integrations/trigger
+npm run typecheck --prefix integrations/trigger
+```
+
+Configure `TRIGGER_PROJECT_REF`, publique a task `atlas-dreamer` na sua conta pelo
+CLI oficial e cadastre as variáveis de callback/runner nessa plataforma. Depois
+configure `ATLAS_JOB_RUNNER=trigger` e `TRIGGER_SECRET_KEY` no Atlas. O callback
+usa `ATLAS_JOB_RUNNER_TOKEN` próprio; não aceita o token de runner em outras rotas.
+Exponha somente essa rota por rede privada/TLS ou proxy restrito ao runner, nunca
+o serviço inteiro. Sem rota segura alcançável, mantenha runner local. Não há
+conta/worker externo provisionado por este commit.
+
+O contrato envia somente IDs de job/tenant. Idempotência e lease permanecem no
+SQLite, inclusive após reinícios. O guia oficial Trigger self-host requer 6+ GB
+para webapp e 8+ GB para worker; por isso não instalamos esse stack na VPS.
+
+Em ambiente cloud com proxy, use os certificados e o proxy fornecidos pela plataforma. O BuildKit recebe a CA pública por secret; para chamadas HTTPS em containers de runtime também é necessário montar a CA e configurar a confiança de cada cliente. Não desative TLS. Serviços externos continuam sujeitos à allowlist e às credenciais configuradas.
 
 ## Problemas comuns
 
@@ -437,3 +557,10 @@ Os SVGs são saídas geradas: para mudar um diagrama, edite a função `diagrams
 ## Princípios para continuar o projeto
 
 Leia [AGENTS.md](AGENTS.md), [SPEC](docs/SPEC.md), [STATUS](docs/STATUS.md) e a pesquisa de integrações antes de mudar arquitetura. Preserve o design Atelier do protótipo e os modos de foco/baixo estímulo. Mantenha segredos no servidor, citações reais, gabaritos privados e consentimento explícito. Rust e inferência local pesada não fazem parte deste incremento. Uma demonstração local que funciona é o começo da validação, não a conclusão automática do MVP Oracle.
+
+## Publicar o mesmo commit nos dois repositórios
+
+Depois de revisar e commitar, execute `bash scripts/push-both.sh`. O script envia
+`HEAD` para `main` nos dois destinos, sem force, e confere o SHA remoto. Se o
+segundo falhar, informa sincronização parcial; preserve os commits e corrija
+acesso/divergência antes de repetir. Não há transação atômica entre dois GitHubs.

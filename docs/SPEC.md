@@ -1,5 +1,7 @@
 # NovaMente Atlas — especificação de implementação v3.0
 
+A arquitetura operacional atual está em [SPEC_AGENT_FACTORY_V03.md](SPEC_AGENT_FACTORY_V03.md), que prevalece sobre os limites e o Dreamer descritos no kickoff abaixo.
+
 Estado: baseline de kickoff, 17/10/2026 (America/Sao_Paulo). A solicitação atual prevalece sobre as versões anexadas. O usuário autorizou iniciar a implementação depois desta consolidação; não há nova etapa de aprovação implícita.
 
 ## 1. Problema, resultado e autoridade das fontes
@@ -108,22 +110,34 @@ Comunidade amplia o MVP em incrementos: grupos temáticos, chat persistente, tri
 
 ## 9. Dreaming individual e coletivo
 
-Inspiração: https://www.dream-rsi.com/ (integração/biblioteca não presumida). Processo fora do caminho do chat: eventos consentidos → consolidação de preferências → proposta versionada de política/método → replay em avaliações fixas → revisão humana → canário → rollback. Aprimora memórias, prompts e escolha de técnicas, não pesos do modelo. Nunca altera autenticação, segurança, orçamento ou consentimento. Privado por padrão; coletivo somente com opt-in, agregação suficiente para impedir reidentificação e registros de origem. Sem treinar globalmente com PDFs ou conversas privados. Dreamer é parte basilar do primeiro incremento: serviço de memória independente do frontend, ciclos persistentes de proposta/avaliação/promoção/rollback e estados auditáveis. Sem provedores configurados, captura apenas eventos consentidos e registra o ciclo como aguardando avaliação; nunca finge uma melhoria avaliada. Com LLM e judge configurados, faz replay baseline/candidato sobre casos de fonte e rubrica, promove automaticamente apenas revisões pedagógicas de baixo risco que melhorem a avaliação e preservem fidelidade. Mudanças de autorização/segurança e política coletiva exigem revisão humana. Memória/consolidação podem ser apontadas a serviço externo por MEMORY_SERVICE_URL e token entre serviços: outra VM OCI ou Railway, com TLS/rede privada, orçamento e política de dados verificados; isso não transfere chaves ao frontend.
+Base: [Dream-RSI](https://github.com/zhengkid/Dream-RSI), artigo arXiv:2609.14858.
+O Atlas adapta o ciclo de exploração online, histórico como simulador e melhoria
+de políticas offline. Eve executa agentes e propõe políticas; o replay lê
+resultados registrados sem novas chamadas ao agente/avaliador. Políticas tipadas
+controlam até duas rodadas e parada, com treino/validação separados, cobertura,
+não regressão e promoção versionada. Sem mundos avaliados, espera explicitamente.
+Não há alteração de pesos/modelo/evaluator, código executável ou permissões.
+Memórias e mundos dependem de consentimento; rollback/exclusão invalidam escritores
+antigos. Memória coletiva continua pendente de publicação/agregação autorizada.
 
 ## 10. Oracle, recursos e custo
 
-Alvo: Linux AMD64, 6 GB de RAM totais. Confirmar elegibilidade do SKU AMD e memória: um orçamento de 6 GB não significa que uma instância AMD de 6 GB seja Always Free. Não migrar silenciosamente para ARM nem provisionar recurso pago. OCI Object Storage é obrigatório, usando instance principal ou identidade de desenvolvimento via arquivo externo não versionado; bucket privado, prefixos por tenant, mínimo privilégio e readback.
+Alvo atual: Linux AMD64, 4 GB disponíveis para o Atlas em uma VPS de 8 GB; os demais 4 GB não são margem da aplicação. Confirmar elegibilidade do SKU AMD e memória: um orçamento de 6 GB não significa que uma instância AMD de 6 GB seja Always Free. Não migrar silenciosamente para ARM nem provisionar recurso pago. OCI Object Storage é obrigatório, usando instance principal ou identidade de desenvolvimento via arquivo externo não versionado; bucket privado, prefixos por tenant, mínimo privilégio e readback.
 
 | Recurso | Meta RAM reservada |
 | --- | --- |
-| SO + proxy/logs | 700 MiB |
-| Next standalone | 500 MiB |
-| Nest + Eve/Invokta | 400 MiB |
-| Python + parser/índice (1 job) | 1.200 MiB |
-| SQLite + cache limitado | 250 MiB |
-| Margem e picos | >2.000 MiB |
+| Next | 384 MiB |
+| Nest | 384 MiB |
+| Python/parser | 896 MiB |
+| Eve | 896 MiB |
+| Total principal | 2560 MiB |
+| Qdrant local opcional | +512 MiB |
 
-São metas, não benchmarks. Sem LLM/GPU/Torch local, Redis, banco vetorial em serviço separado ou Rust no MVP. Construir imagens em CI, não na VM-alvo. Um worker de ingestão, uma geração concorrente por workspace, limite global dois, cache LRU limitado, backpressure/429, timeout e circuit breaker. Testar memória com cgroup 6GB e cargas reais antes de declarar capacidade. Runtimes Rust ficam na fase 2 somente após profiling mostrar benefício.
+São limites de contenção, não garantia de capacidade. A operação usa inferência
+externa e concorrência limitada. Qdrant/Mongo externos são opcionais; SQLite é
+fonte transacional. Trigger self-host não cabe: usar serviço externo ou scheduler
+local. Sem Redis, GPU/modelo local ou Rust. Builds em CI fora da VPS. Benchmarks
+com chaves reais e provas OCI ainda são necessários antes de declarar o MVP pronto.
 
 ## 11. Segurança e configuração
 

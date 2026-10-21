@@ -1,6 +1,6 @@
 # NovaMente Atlas — guia didático de arquitetura
 
-Edição 1.0 • Equipe ONE G10 • Base funcional Atlas com orquestração 0.2
+Edição 1.1 • Equipe ONE G10 • Atlas 0.3 • 20/10/2026
 
 Este documento é a fonte editável do PDF. Leia os capítulos em ordem na primeira vez. Os exemplos de configuração não contêm chaves. O guia descreve o código existente e identifica o que ainda depende de integração ou desenvolvimento.
 
@@ -104,7 +104,7 @@ O script cria `.env` se necessário, gera o token interno vazio, restringe a lei
 npm run dev
 ```
 
-Espere o Next, a API Atlas e o Uvicorn indicarem prontidão. Não feche esse terminal. O script inicia Next em 3000, Nest em 4000 e Python em 8000. Eve é opcional e tem inicialização separada.
+Espere o Next, a API Atlas e o Uvicorn indicarem prontidão. Não feche esse terminal. O script inicia Next em 3000, Nest em 4000 e Python em 8000. Eve executa os agentes generativos e tem inicialização separada; a demo extrativa funciona sem ele.
 
 No computador local, abra o navegador no endereço `http://127.0.0.1:3000`. Em ambiente remoto, use o acesso a portas oferecido pela plataforma sem publicar os serviços diretamente na Internet.
 
@@ -349,17 +349,30 @@ Grupos/chat e prática são bases locais. Trilhas completas geradas por LLM, ran
 
 ![Ciclo Dreamer](diagrams/dreamer.svg)
 
-O Dreamer observa apenas experiências autorizadas para propor uma política pedagógica. Seus campos permitidos são método preferido, tamanho dos passos e uso de pergunta inicial. Não reescreve código, pesos de modelo, segurança, ferramentas ou permissões.
+Dreamer é núcleo e implementa uma adaptação do **Dream-RSI**: o agente consolida
+experiências e melhora sua política de exploração sobre um simulador de histórico.
+O modelo gerador e o avaliador permanecem fixos. A implementação usa políticas
+JSON tipadas, em lugar de executar código arbitrário produzido pelo modelo.
 
-### O gate de promoção
+1. Com consentimento, a exploração online registra propostas, revisões, relações
+   de parentesco e resultados reais do judge. Sem avaliação não há mundo elegível.
+2. Três mundos com pelo menos duas rodadas avaliadas formam o pool mínimo. O
+   treinamento usa parte dele; o terço mais recente fica separado para validação.
+3. Soma, executada no Eve, propõe ordem de exploração, limite de rodadas e critério
+   de parada. Não recebe resultados dos mundos reservados para validação.
+4. O simulador revela apenas filhos registrados, na ordem histórica. **Não chama
+   novamente o agente nem o judge**. Um ramo inexistente é marcado como sem cobertura.
+5. A política precisa preservar a melhor qualidade observada em cada mundo,
+   não regredir em utilidade e melhorar a média de validação em mais de 0,01.
+   Utilidade = melhor score registrado menos 0,03 por tentativa representada.
+6. A promoção é atômica, versionada e consumida pelas próximas execuções. Pode
+   economizar uma revisão redundante. Preferências pedagógicas não podem mudar
+   sem contrafactual observado; segurança e permissões nunca são autoalteradas.
+7. Revogação, rollback e exclusão invalidam trabalhos e escritores antigos.
 
-São necessários consentimento, pelo menos três experiências e três materiais prontos elegíveis, além de geração e judge configurados. A candidata é comparada à baseline em três casos com evidências. Todos os resultados precisam de suporte; nenhum caso pode regredir; a média precisa melhorar mais de 0,05 na rubrica.
-
-A promoção altera a política ativa. Os brains a consultam no pedido seguinte, e o gerador também usa suas instruções. Escolhas manuais continuam prioritárias. Uma política rejeitada não deve substituir a anterior só por ter sido proposta por um modelo.
-
-> Esse mecanismo já existe no núcleo. Sem credenciais, o ciclo aguarda avaliação; não é uma melhoria fictícia nem um módulo retirado para uma fase opcional.
-
-O replay pequeno ajuda a controlar custo, mas ainda exige avaliação humana mais ampla. Passar nesses três casos não prova aprendizado acelerado em pessoas ou eficácia coletiva.
+É uma adaptação limitada a duas rodadas e um worker, adequada ao orçamento de RAM.
+Score de judge é um indicador de suporte/utilidade, não medição de aprendizado
+humano. Não atribuímos ao Atlas os resultados experimentais do artigo.
 
 ## 15. Consentimento, rollback e exclusão
 
@@ -375,7 +388,7 @@ O replay pequeno ajuda a controlar custo, mas ainda exige avaliação humana mai
 | `rejected` | A política anterior foi preservada |
 | `cancelled` / `failed` | Ler o motivo; não considerar promoção concluída |
 
-O agendador verifica condições a cada hora por padrão. Há limite de um replay remoto por workspace/dia. Os estados e motivos persistem; uma operação concorrente precisa chegar a um estado terminal, não ficar eternamente enfileirada.
+O agendador verifica condições a cada hora por padrão. Há limite de uma proposta remota de política por workspace/dia; o replay não executa novamente agente/judge. Os estados e motivos persistem; uma operação concorrente precisa chegar a um estado terminal, não ficar eternamente enfileirada.
 
 ### Rollback
 
@@ -417,7 +430,7 @@ Firecrawl hospedado evita um browser de scraping local, mas depende de chave/cr�
 
 **Objetivo:** saber quando um runtime de agentes é realmente necessário.
 
-Eve é separado dos três serviços comuns. `npm run dev` não o inicia. Os arquivos em `apps/api/agent/` descrevem Nilo e os quatro especialistas; criar esses arquivos não executa uma sessão de modelo.
+Eve é separado dos três serviços comuns. `npm run dev` não o inicia. O catálogo em `packages/contracts/agents.json` define cinco personas para o root e quatro especialistas; criar esses arquivos não executa uma sessão de modelo.
 
 ### Ativação, depois de escolher provedor/modelo
 
@@ -430,11 +443,13 @@ bash scripts/eve.sh start
 
 O primeiro prepara os artefatos. O segundo mantém o runtime ativo em outro terminal, por padrão na porta 2000. Depois configure `EVE_URL` no app principal e reinicie esse app. Com `EVE_URL`, o adapter de geração prioriza o caminho Eve; não presuma fallback automático para o LLM direto em qualquer falha.
 
-O canal exige Bearer `EVE_SERVICE_TOKEN`, com fallback ao token interno local. Fora da máquina, use TLS/rede privada e token adequado. A verificação de health e acesso autenticado não substitui um turno real com o modelo.
+O canal valida tickets de curta duração assinados pela factory. `EVE_SERVICE_TOKEN` é segredo de assinatura server-side, com fallback ao token interno local. Fora da máquina, use TLS/rede privada e token adequado. A verificação de health e acesso autenticado não substitui um turno real com o modelo.
 
 ### Ferramentas e delegação
 
 As instruções do coordenador restringem handoffs e pedem evidências autorizadas. A ferramenta de pesquisa chama a rota Nest que usa o Research Engine. O filesystem virtual JavaScript não dá acesso nativo ao host; ferramentas padrão de shell/arquivos ficam desativadas.
+
+`npm run check:eve` valida health e criação/reset autenticados sem pedir geração. Isso testa o contrato de sessão, não o desempenho do modelo. Compile a API antes. Os scripts de inicialização preservam variáveis do ambiente cloud e completam somente as ausentes com `.env`.
 
 **Erro a evitar:** habilitar shell ou permitir leitura de credenciais porque um modelo retornou JSON inválido. Corrija o contrato/provedor e seus limites. Uma sugestão do agente não concede permissões a ele mesmo.
 
@@ -602,14 +617,18 @@ Os healthchecks esperam Python, Nest e web ficarem prontos. `down` preserva o vo
 
 | Núcleo | Limite de memória |
 | --- | --- |
-| Web | 768 MiB |
-| Nest | 512 MiB |
-| Python/parser | 1536 MiB |
-| Soma | 2816 MiB |
+| Web | 384 MiB |
+| Nest | 384 MiB |
+| Python/parser | 896 MiB |
+| Eve | 896 MiB |
+| Soma principal | 2560 MiB |
+| Qdrant local opcional | +512 MiB |
 
-O alvo é Linux AMD64 com 6GB e inferência externa. SO, daemon e Eve não estão nessa soma. Medidas anteriores de demonstração local constam no STATUS; não provam carga real de inferência ou multiusuário, e não são um novo benchmark da refatoração dos brains.
+O alvo é Linux AMD64 com 4 GB disponíveis para o Atlas, mesmo que a VPS tenha 8 GB.
+O total agora inclui Eve. Qdrant local opcional leva a soma a 3072 MiB. Esses limites
+não comprovam qualquer carga: consulte STATUS para as medições e limitações.
 
-Build precisa de espaço e memória adicionais; prefira fazê-lo em CI, não na VM-alvo. Não remova volumes ou arquivos do usuário para liberar cache. Valide região, SKU, cotas e preço: AMD/6GB não é automaticamente Always Free.
+Build precisa de espaço e memória adicionais; prefira fazê-lo em CI, não na VM-alvo. Não remova volumes ou arquivos do usuário para liberar cache. Valide região, SKU, cotas e preço: AMD não é automaticamente Always Free.
 
 Antes da Internet, faltam autenticação multiusuário, ensaio de carga e configuração operacional. Não abra portas administrativas para “demonstrar mais rápido”.
 
@@ -696,3 +715,147 @@ A mudança deve ter motivo, escopo pequeno, diff conferido e validação adequad
 Alguns sites oficiais estavam bloqueados pelo proxy da sessão de implementação. Links de referência não significam que todas essas integrações foram executadas. Se código, spec e este guia divergirem, registre a divergência e confira o comportamento real antes de documentá-lo como pronto.
 
 O PDF e os SVGs são gerados por `scripts/docs/build_guide.py` a partir deste Markdown e da função `diagrams()`. Para atualizar um desenho, altere essa função; mudar só o SVG será sobrescrito na próxima geração. Revise fonte e PDF juntos.
+
+## 27. Times de ensino e Agent Factory
+
+**Objetivo:** acompanhar a colaboração real mantendo uma interface simples.
+
+Com Eve e TypeSafe configurados, `ATLAS_TEAM_DEBATE=1` ativa o fluxo no backend:
+
+1. Nilo propõe uma explicação; Fio recebe a proposta e apresenta uma alternativa prática.
+2. Jev avalia as duas propostas nas mesmas evidências autorizadas.
+3. Se a política pedir outra rodada e a qualidade inicial não atingir o critério
+   de parada, Lumi e Soma trocam propostas e fazem revisões para seus times.
+4. Jev compara as propostas sustentadas. A persona escolhida pelo usuário sintetiza
+   o resultado; Python valida suas citações e executa o gate final.
+
+São três a cinco turnos Eve sequenciais, com deadline global de 90 segundos na
+factory, uma busca web e até três delegações nativas adicionais por execução.
+A interface entrega a síntese e as fontes. Não mostra votação, ranking interno
+ou raciocínio privado. Personas são consistentes e usam contexto consentido;
+sem provedores, a interface declara o modo extrativo e não simula debate.
+
+Jev também escolhe método/RAG, avalia a relevância das passagens e filtra resultados
+Firecrawl. Decisão de relevância não equivale a comprovação factual: o gate final
+continua necessário. Menos rodadas pode reduzir custo/latência; a rapidez real
+precisa ser medida com os fornecedores configurados.
+
+### Onde mexer com segurança
+
+O catálogo de personas fica em `packages/contracts/agents.json`; o bootstrap Python,
+brains e instruções Eve leem esse mesmo arquivo. Campos de persona não são permissões.
+Para adicionar uma sexta persona, atualize também enums TypeScript/Python,
+validações de principal, tickets e testes; não basta copiar um botão.
+
+O workflow de times está em `apps/api/src/orchestration/factory.ts`. Os especialistas
+nativos são definidos em `apps/api/agent/subagents/`. `consult-specialists` usa a
+API real `ctx.agent(nome).send(...)` da versão instalada, com reserva de orçamento
+no backend. Não copie exemplos de outra versão sem conferir os tipos do pacote.
+
+**Exercício:** rode os testes factory e localize a passagem da proposta de Nilo
+para Fio e da revisão de Lumi para Soma. Esse teste usa runtime controlado:
+execute depois um turno com credenciais e fonte não sensível para validar o provedor.
+
+## 28. O sonho como simulador de experiências
+
+**Objetivo:** diferenciar consolidação e contrafactual de uma nova geração.
+
+Imagine uma trilha registrada: root → propostas com score 0,66 → revisão também
+com score 0,66. Uma política que termina após a primeira rodada mantém a melhor
+qualidade e evita tentativas adicionais. O simulador compara essas trajetórias
+somente lendo os scores registrados. Não inventa como seria uma revisão nunca
+executada e não utiliza o material de validação para escrever a candidata.
+
+O artigo original altera código de políticas para agentes de descoberta. O Atlas
+adapta isso para um espaço tipado de exploração pedagógica, com duas rodadas, um
+worker e gates adicionais. São escolhas de engenharia próprias do Atlas; não uma
+reprodução dos experimentos científicos nem prova de eficácia educacional.
+
+Leia `atlas/replay.py` primeiro, depois `rollout.py`, `dreamer.py` e `jobs.py`.
+Um caso sem dois resultados reais avaliados não entra no pool. Os estados de espera
+são esperados quando ainda há pouca experiência. A política ativa inclui
+`exploration.max_rounds` e `stop_score`, consumidos pelo próximo debate.
+
+**Exercício:** execute o teste que marca `breadth_first` sem cobertura quando só
+há um filho de root. Explique por que atribuir um score a esse ramo seria inventar
+evidência. Depois execute o teste de redução de custo sem queda de qualidade.
+
+## 29. Serviços opcionais e fila durável
+
+**Objetivo:** ativar só a infraestrutura que o uso exige.
+
+Os três conectores são opcionais. O perfil padrão usa SQLite WAL e scheduler local;
+isso permite desenvolver sem abrir contas ou iniciar bancos que não serão usados.
+
+| Serviço | Papel | Configuração e verificação |
+| --- | --- | --- |
+| Qdrant | Índice semântico filtrado por tenant/documento/modelo | `VECTOR_BACKEND=qdrant`, URL/chave e embeddings reais; reindexar antes de consultar |
+| MongoDB externo | Projeção de metadados dos documentos | `MONGODB_URI`; instalar `requirements-mongo.lock`; sincronizar e conferir campos |
+| Trigger.dev externo | Disparar jobs Dreamer por ID | Publicar task, configurar callback HTTPS exclusivo e chave de runner |
+
+Qdrant não recebe texto integral, somente vetores e referências. A consulta
+confere filtros e IDs novamente no Atlas. Erro de Qdrant configurado não vira
+hashing lexical silenciosamente. Reindexação cria coleção nova e só depois troca
+os ponteiros na transação SQLite. Coleções antigas exigem limpeza operacional
+após conferir backups e ausência de leitores; nunca apagar por nome presumido.
+
+Para Qdrant na própria VPS, acrescente `compose.qdrant.yaml` aos arquivos Compose.
+O serviço é limitado a 512 MiB e não publica portas. Configure chave e embeddings
+antes; esse perfil não funciona como demonstração lexical.
+
+Para Mongo, instale somente no serviço que usar o conector:
+
+```bash
+.venv/bin/pip install -r services/cognition/requirements-mongo.lock
+# Execute a partir de services/cognition com as variáveis do servidor carregadas:
+../../.venv/bin/python -m atlas.projections
+```
+
+Mongo exige TLS e um pool de até duas conexões. As consultas usam tenant, projeção,
+índice composto e paginação. A projeção contém apenas IDs, título, hash, versão,
+quantidade de páginas/caracteres e data. Não armazena PDFs, texto, conversas ou
+segredos. Falha deixa estado `pending`; SQLite continua sendo a fonte de verdade.
+Em Docker, construa cognition com `--build-arg ATLAS_WITH_MONGO=1` se precisar.
+
+Para Trigger.dev, o runner está em `integrations/trigger/`:
+
+```bash
+npm ci --prefix integrations/trigger
+npm run typecheck --prefix integrations/trigger
+```
+
+Configure `TRIGGER_PROJECT_REF`, publique a task `atlas-dreamer` na sua conta pelo
+CLI oficial e cadastre as variáveis de callback/runner nessa plataforma. Depois
+configure `ATLAS_JOB_RUNNER=trigger` e `TRIGGER_SECRET_KEY` no Atlas. O callback
+usa `ATLAS_JOB_RUNNER_TOKEN` próprio; não aceita o token de runner em outras rotas.
+Exponha somente essa rota por rede privada/TLS ou proxy restrito ao runner, nunca
+o serviço inteiro. Sem rota segura alcançável, mantenha runner local. Não há
+conta/worker externo provisionado por este commit.
+
+O contrato envia somente IDs de job/tenant. Idempotência e lease permanecem no
+SQLite, inclusive após reinícios. O guia oficial Trigger self-host requer 6+ GB
+para webapp e 8+ GB para worker; por isso não instalamos esse stack na VPS.
+
+## 30. Retenção, deploy e conferência em equipe
+
+**Objetivo:** saber o que verificar antes de usar documentos reais.
+
+Apagar memória Atlas remove conversas, eventos, casos, mundos e jobs daquele
+workspace; preserva documentos e materiais da biblioteca. Sessões Eve são novas a
+cada tarefa e configuradas para retenção zero ao terminar, quando suportado pelo
+Workflow World. Isso não apaga retroativamente dados do provedor LLM, backups ou
+runs de ferramentas Workflow, que têm retenção própria. O operador deve verificar
+essas políticas e a execução da limpeza antes de prometer exclusão integral.
+
+Configure segredos e tenant coerentes, volumes duráveis, backups e restore; depois
+faça smoke com fonte não sensível. Confira cgroups, logs sem segredos, recusa de
+rotas administrativas no BFF, cancelamento e ausência de OOM/restarts. Um health
+verde não demonstra que o LLM, o judge ou o upload OCI foram executados.
+
+Para publicar o mesmo commit nos dois repositórios, use `bash scripts/push-both.sh`.
+Confira o SHA final em ambos. Se houver erro parcial, não use force push para
+esconder divergência. O deploy público ainda depende de autenticação multiusuário.
+
+Referências: arxiv.org/html/2609.14858v1 e github.com/zhengkid/Dream-RSI. O PDF
+oficial no repositório foi consultado; o código completo está anunciado como em
+preparação. O relatório `docs/research/integrations.md` registra a verificação.

@@ -106,3 +106,40 @@ Chaves serão adicionadas posteriormente pelo usuário. Validação remota ainda
 ## Aplicação no incremento Atlas 0.2
 
 A implementação usa três instâncias reais de `createEngine` com `defineCapability`, regras por principal/tenant, schemas, timeout e cancelamento. Os brains são uma abstração Atlas (`src/orchestration/brains.ts`), não um export nativo presumido do Invokta. Referência de categoria e limites: README oficial, seções “What Invokta owns” e “What an Action Engine can own”, relido nesta alteração. Arquitetura: [brains e engines](../architecture/brains-and-action-engines.md).
+
+## Atualização 20/10/2026 — Dream-RSI, times e infraestrutura
+
+As conclusões abaixo substituem a seção anterior “Dreaming / identidade pendente”.
+O README e o PDF oficial em
+https://github.com/zhengkid/Dream-RSI/blob/main/papers/Dream-RSI.pdf foram lidos.
+O HTML arXiv foi bloqueado pelo túnel, mas o PDF de 976554 bytes foi obtido do
+repositório indicado pelo usuário com verificação TLS normal.
+
+A seção 3 formaliza exploração online, árvores de tentativas avaliadas, simulador
+que revela filhos registrados e desenvolvimento de políticas offline. Avaliar o
+simulador não executa novamente agente/evaluator. O modelo e o avaliador são
+fixos; a política de exploração muda. O README anuncia código e reprodução ainda
+em preparação. Não existe instalação de SDK oficial alegada pelo Atlas.
+
+O Atlas implementa uma adaptação tipada: duas rodadas, W=1, histórico consentido,
+validação separada, penalidade de tentativas e gates de não regressão. Não replica
+os experimentos de agentes de código/GPU nem afirma benefício educacional humano.
+Propostas/evaluações de times ocorrem online; “dreaming” é o replay posterior.
+
+Eve 0.80.1 foi compilado com instruções dinâmicas autenticadas, especialistas e
+workflow. Os tipos instalados usam `ctx.agent(name).send(message)` no workflow;
+alguns exemplos narrativos da documentação mostram outra assinatura. Seguimos os
+tipos/código compilado. `MessageResult.status=waiting` com `data` válido é um
+turno concluído com sessão aguardando mensagem, não erro. O resultado é revalidado.
+
+Qdrant REST 1.15.4: upload de pontos, índices keyword, `/points/query` com filtros
+e troca de coleção foram exercitados contra container real com vetores controlados.
+Não houve chamada de embeddings semânticos remotos nesse teste. Imagem oficial
+com digest `sha256:6ac4807063bbecddca0250bfbcff52acf18c22263b904d12919349e6d0a408f1`.
+MongoDB: PyMongo 4.19.0 e dnspython 2.9.0, dependências opcionais fixadas;
+consultas de projeção foram verificadas com driver controlado, sem servidor externo.
+Trigger SDK 4.7.6: task e configuração passaram por typecheck. Contrato HTTP
+confirmado em `packages/core/src/v3/apiClient/index.ts`: POST
+`/api/v1/tasks/{taskId}/trigger`, payload e options.idempotencyKey. Guia self-host
+oficial pede 6+ GB webapp e 8+ GB worker; não colocar esse stack na VPS de 4 GB.
+Publicação/execução em conta Trigger real continuam pendentes de credenciais.

@@ -72,35 +72,35 @@ def diagrams():
     box(architecture, 334, 232, 146, 54, 'API Nest', 'porta 4000')
     arrow(architecture, 145, 259, 167, 259)
     arrow(architecture, 312, 259, 334, 259)
-    box(architecture, 245, 128, 235, 62, '5 brains + 3 Action Engines', 'no mesmo processo Nest / Invokta')
+    box(architecture, 245, 128, 235, 62, '5 brains + 3 Action Engines', 'Factory + Invokta / TypeSafe / Firecrawl')
     arrow(architecture, 407, 232, 407, 190)
     box(architecture, 0, 128, 185, 62, 'Python / porta 8000', 'RAG + materiais + Dreamer')
     arrow(architecture, 245, 159, 185, 159)
     box(architecture, 0, 17, 185, 62, 'Persistência', 'SQLite + objetos / local ou OCI')
     arrow(architecture, 92, 128, 92, 79)
-    box(architecture, 245, 17, 235, 62, 'Integrações configuráveis', 'LLM/Eve / TypeSafe / Firecrawl')
+    box(architecture, 245, 17, 235, 62, 'Eve / porta 2000', 'Sessoes + especialistas / LLM externo')
     arrow(architecture, 363, 128, 363, 79)
     architecture.add(Line(185, 148, 217, 148, strokeColor=ACCENT))
     architecture.add(Line(217, 148, 217, 48, strokeColor=ACCENT))
     arrow(architecture, 217, 48, 245, 48)
 
-    generation = Drawing(480, 300)
-    positions = [51, 176, 301, 427]
-    for x, name in zip(positions, ['Interface/proxy', 'Brain / Nest', 'Engines', 'Python']):
-        box(generation, x-50, 265, 100, 32, name)
-        generation.add(Line(x, 256, x, 10, strokeColor=BORDER, strokeDashArray=[3, 3]))
-    steps = [(0, 1, '1. Objetivo e fontes'), (1, 2, '2. Ler contexto'), (2, 3, '3. Fontes + memória'),
-             (3, 2, '4. Contexto autorizado'), (2, 1, '5. Decidir método/RAG'),
-             (1, 2, '6. Gerar com decisão'), (2, 3, '7. RAG + geração + gate'),
-             (3, 0, '8. Material validado retorna pela API e pelo proxy')]
+    generation = Drawing(480, 340)
+    positions = [43, 140, 237, 334, 437]
+    for x, name in zip(positions, ['UI / proxy', 'Brain', 'Invokta', 'Python', 'Factory / Eve']):
+        box(generation, x-42, 305, 84, 32, name)
+        generation.add(Line(x, 296, x, 10, strokeColor=BORDER, strokeDashArray=[3, 3]))
+    steps = [(0, 1, '1. Objetivo/fontes'), (1, 2, '2. Ler contexto'), (2, 3, '3. Fontes/memoria'),
+             (3, 2, '4. Referencias'), (2, 1, '5. Decidir RAG'), (1, 2, '6. Enviar decisao'), (2, 3, '7. RAG/evidencias'),
+             (3, 4, '8. Contexto/times'), (4, 3, '9. Sintese'),
+             (3, 0, '10. Citacoes + judge + persistencia; resposta pela API e proxy')]
     for i, (a, b, label) in enumerate(steps):
-        y = 237-i*29
+        y = 277-i*29
         arrow(generation, positions[a], y, positions[b], y)
-        generation.add(String((positions[a]+positions[b])/2, y+7, label, fontName='Helvetica', fontSize=8.1, textAnchor='middle', fillColor=INK))
+        generation.add(String((positions[a]+positions[b])/2, y+7, label, fontName='Helvetica', fontSize=8.0, textAnchor='middle', fillColor=INK))
 
     dreamer = Drawing(480, 337)
-    labels = ['1. Consentimento explícito', '2. Experiências + três casos elegíveis', '3. Propor política restrita',
-              '4. Replay: baseline e candidata', '5. Gate: suporte + melhoria sem regressão',
+    labels = ['1. Consentimento explícito', '2. Consolidar tres mundos registrados', '3. Eve propoe politica de exploracao',
+              '4. Simular historico sem novas chamadas', '5. Gate: suporte + melhoria sem regressão',
               '6. Promover ou preservar baseline', '7. Aplicar / rollback / excluir']
     for i, label in enumerate(labels):
         y = 300-i*46
@@ -182,8 +182,8 @@ class Cover(Flowable):
             c.drawString(0, 258-i*26, label)
         c.setFillColor(colors.HexColor('#d1d8dd'))
         c.setFont('Atlas', 10)
-        c.drawString(0, 108, 'Equipe ONE G10 • Edição didática 1.0 • 18/10/2026')
-        c.drawString(0, 86, 'Primeiro incremento funcional / Orquestração 0.2')
+        c.drawString(0, 108, 'Equipe ONE G10 • Edição didática 1.1 • 20/10/2026')
+        c.drawString(0, 86, 'Atlas 0.3 / Times Eve + Dream-RSI / 4 GB')
         try:
             revision = subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD'], cwd=ROOT, text=True).strip()
             c.setFont('AtlasMono', 8.5)

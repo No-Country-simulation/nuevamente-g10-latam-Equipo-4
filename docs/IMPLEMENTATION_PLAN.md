@@ -42,3 +42,20 @@ Workspace único local até autenticação de produção; loopback; segredos ser
 ## Revisão de interfaces e decisões
 
 Web e API compartilham o contrato TypeScript de dados. Nest acrescenta decisões validadas e Python verifica novamente decisões/limites. Questões corretas e token interno nunca transitam no contrato público. O primeiro corte usa leitor textual por página, não anuncia PDF.js/quad implementado. Dreamer é núcleo deste primeiro corte: ciclo, política versionada e rollback; avaliação externa ausente impede promoção, sem impedir captura consentida de memória. Trilhas LLM completas são evolução.
+
+## Incremento 0.3 — factory, times e 4 GB
+
+- [x] Copiar o principal ao destino No Country antes das novas mudanças, preservando históricos.
+- [x] Publicar a spec e os incrementos nos dois repositórios, sem force push.
+- [x] Catálogo único, sessões Eve autenticadas e ferramentas Invokta com escopo mínimo.
+- [x] Times com mensagens cruzadas, Jev na avaliação/seleção e síntese privada ao usuário.
+- [x] Adaptar Dream-RSI: históricos reais, simulador sem novas execuções, split de validação e promoção restrita.
+- [x] Jobs persistentes, recuperação e revisão de memória; conectores opcionais Qdrant/Mongo/Trigger.
+- [x] Containers com orçamento principal de 2560 MiB incluindo Eve; Qdrant opcional de 512 MiB.
+- [x] Testes, builds, smoke HTTP, Qdrant real controlado e Eve prewarm/reset autenticado.
+- [x] Atualizar README e guia didático de arquitetura.
+- [ ] Inferência/decisão/judge/embeddings/Firecrawl reais, custo/latência e provas OCI após inserir credenciais.
+- [ ] Autenticação pública, memória coletiva, trilhas completas e avaliação pedagógica com usuários.
+
+Os números e limites deste incremento prevalecem sobre os registros históricos
+0.1/0.2 acima. Veja `docs/STATUS.md` para distinguir testes reais de fixtures.

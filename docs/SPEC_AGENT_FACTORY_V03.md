@@ -71,10 +71,19 @@ especialistas não delegam recursivamente. Sem shell ou browser de scraping loca
 
 ## 6. Dreamer basilar
 
-O mesmo runtime Eve gera propostas e conteúdo de replay. Python preserva os
-gates: consentimento, revisão persistente, três casos, baseline versus candidato,
-suporte documental, melhora mínima, promoção versionada e rollback. Uma revisão
-não pode alterar ferramentas, segurança ou permissões. Não há alteração de pesos.
+A base é o artigo Dream-RSI (arXiv:2609.14858v1), consultado pelo PDF do
+repositório oficial `zhengkid/Dream-RSI`. O runtime Eve propõe políticas; a
+simulação offline reutiliza árvores de resultados já avaliados e não chama
+novamente agente/judge. O código oficial completo ainda está anunciado como
+pendente. Esta é uma adaptação Atlas com política JSON tipada, W=1 e duas rodadas.
+
+O fluxo registra árvores online consentidas, separa treinamento/validação,
+propõe uma política restrita e avalia trajetórias sobre filhos observados. Ramos
+não registrados não têm recompensa inventada. A promoção exige cobertura,
+nenhuma queda na melhor qualidade por caso, nenhuma regressão de utilidade e
+ganho médio de validação >0,01. Utilidade = melhor score -0,03 por tentativa
+representada. Método/tamanho de passos/pergunta inicial não mudam sem evidência
+contrafactual. O próximo debate usa limite e parada da política ativa.
 
 Jobs devem sobreviver ao reinício, possuir idempotência, lease, tentativas limitadas
 e estados auditáveis. Agendamento local é o padrão; Trigger.dev pode disparar o
@@ -150,3 +159,18 @@ Registrar claramente o que foi testado com mocks e o que exige credenciais.
 
 Versões de runtime estão fixadas no lockfile. Não houve provisionamento de
 serviços pagos nem validação de fornecedores remotos apenas por esta pesquisa.
+
+## 11. Competição e conversas entre times — solicitação adicional
+
+Competição é interna ao backend. Nilo/Fio trocam propostas e Lumi/Soma podem
+revisá-las em segunda rodada; a persona escolhida sintetiza. Jev avalia
+relevância documental/web, suporte e qualidade das propostas e seleciona o time.
+Uma proposta sem suporte nunca vence por preferência do modelo. Os agentes
+conversam por mensagens estruturadas, sem repassar raciocínio interno ao usuário.
+
+Limites: três a cinco turnos sequenciais na factory, deadline global de 90s,
+uma busca web por execução e até três handoffs nativos adicionais. Sem Typesafe
+configurado o modo competitivo não é ativado; sem Eve, a demonstração é extrativa.
+A rapidez do serviço remoto depende de medição, não do nome do decision model.
+A interface continua orientada a fonte, objetivo e próximo passo, sem painel de
+votação/debate. Personas usam tom acolhedor e contexto consentido.
