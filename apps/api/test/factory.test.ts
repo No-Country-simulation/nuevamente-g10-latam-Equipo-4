@@ -93,3 +93,15 @@ test('debate cannot publish fabricated citations or an unsupported winner',async
   const unsupported=fixture({async run(){return {data:content,session_id:'test'};}},{enabled:true,async select(){return {winner:'a',source:'typesafe'};}},async()=>({verdict:'insufficient_evidence',score:0}));
   await assert.rejects(unsupported.factory.run({...task,prompt:debatePrompt}),/Nenhum time/);
 });
+
+test('global cancellation also bounds a decision provider that ignores AbortSignal',async()=>{
+  let selecting!:()=>void;
+  const ready=new Promise<void>(resolve=>selecting=resolve);
+  const {factory}=fixture({async run(){return {data:content,session_id:'test'};}},{enabled:true,async select(){selecting();return new Promise(()=>{});}});
+  const controller=new AbortController();
+  const result=factory.run({...task,prompt:debatePrompt},controller.signal);
+  await ready;controller.abort();
+  await assert.rejects(result,(error:any)=>error.status===504);
+  // A cancelled workflow releases the slot; no new synthesis was published.
+  await assert.rejects(factory.run({...task,purpose:'dreamer_policy'}));
+});
