@@ -15,5 +15,6 @@ if '\nATLAS_INTERNAL_TOKEN=\n' in '\n'+text:
 os.chmod(path,0o600)
 PY
 npm ci
+node scripts/init-vault.mjs
 python3 -m venv .venv
 .venv/bin/pip install -r services/cognition/requirements.lock

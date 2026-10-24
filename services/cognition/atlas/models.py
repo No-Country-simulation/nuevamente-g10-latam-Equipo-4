@@ -92,6 +92,16 @@ class StorageReceipt(StrictModel):
     object_key: str
     status: Literal["stored", "verified"]
 
+class LearningMetadata(StrictModel):
+    perfil_aplicado: str
+    formato_gerado: str
+    tempo_estimado_estudo_minutos: int = Field(ge=1)
+    estimativa_metodo: str
+    conceitos_chave: list[str] = Field(max_length=8)
+    conceitos_origem: str
+    pre_requisitos: list[str]
+    pre_requisitos_status: Literal["nao_inferidos"]
+
 class EducationalPackage(StrictModel):
     id: str
     schema_version: Literal["1.0"]
@@ -101,6 +111,7 @@ class EducationalPackage(StrictModel):
     decision: Decision
     profile: Literal["beginner", "developer", "architect", "executive"]
     sector: Literal["general", "fintech", "health", "ecommerce"]
+    metadados: LearningMetadata | None = None
     conteudo_adaptado: AdaptedContent
     quality: Quality
     storage: StorageReceipt

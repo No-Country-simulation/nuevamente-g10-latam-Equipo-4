@@ -4,6 +4,7 @@ from .models import Generation, RemoteContent, EducationalPackage
 from .rag import retrieve
 from .store import uid, now
 from .rollout import online_rollout
+from .metadata import learning_metadata
 
 from .catalog import PERSONAS
 
@@ -93,6 +94,7 @@ def generate(store, tenant, request: Generation, memory_snapshot=None):
                 answers[item_id] = {"correct": f"option_{correct}", "feedback": citation["excerpt"]}
             package["conteudo_adaptado"]["itens"].append(item)
     package["agent_trace"].append({"agent_id": request.agent_id, "action": "validar", "summary": "Âncoras conferidas. Judge: " + package["quality"]["judge_verdict"], "kind": "review"})
+    package["metadados"] = learning_metadata(request, package, citations)
     receipt = store.blob(tenant, f"packages/{package_id}.json", json.dumps(package, ensure_ascii=False).encode())
     package["storage"] = receipt
     package = EducationalPackage.model_validate(package).model_dump(exclude_none=True)

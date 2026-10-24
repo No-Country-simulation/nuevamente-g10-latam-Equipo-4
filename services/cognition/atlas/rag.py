@@ -8,7 +8,7 @@ import sys
 import tempfile
 import unicodedata
 from pathlib import Path
-from . import providers
+from . import providers, credentials
 from . import vector_index
 from .projections import project
 from .store import now, uid
@@ -88,10 +88,10 @@ def ingest(store, tenant, filename, data):
         batch = [s["text"] for s in passages[start:start+16]]
         remote = providers.embed(batch)
         vectors.extend(remote or [local_vector(text) for text in batch])
-    embedding_id = f"remote:{os.getenv('EMBEDDING_BASE_URL')}:{os.getenv('EMBEDDING_MODEL')}" if os.getenv("EMBEDDING_API_KEY") else "local_hash_demo_v1"
+    embedding_id = credentials.embedding_id()
     collection = None
     if vector_index.enabled():
-        if not os.getenv("EMBEDDING_API_KEY"):
+        if not credentials.configured("embeddings"):
             raise providers.ProviderError("Qdrant requer embeddings semânticos configurados; hashing de demo permanece apenas no modo SQLite.")
         index = vector_index.QdrantIndex()
         try:
@@ -121,14 +121,14 @@ def retrieve(store, tenant, document_ids, query, mode):
     if not rows:
         return [], "", mode
     query_vector = (providers.embed([query]) or [local_vector(query)])[0]
-    expected_model = f"remote:{os.getenv('EMBEDDING_BASE_URL')}:{os.getenv('EMBEDDING_MODEL')}" if os.getenv("EMBEDDING_API_KEY") else "local_hash_demo_v1"
+    expected_model = credentials.embedding_id()
     words = set(tokens(query))
     overview = bool(re.search(r"documento|material|principais|resum|fonte|vis[aã]o geral", query.lower()))
     for row in rows:
         if json.loads(row["vector"])["model"] != expected_model:
             raise providers.ProviderError("A configuração de embeddings mudou. Reindexe as fontes para usar o novo modelo.")
     if qdrant:
-        if not os.getenv("EMBEDDING_API_KEY"):
+        if not credentials.configured("embeddings"):
             raise providers.ProviderError("Qdrant requer embeddings semânticos configurados.")
         index = vector_index.QdrantIndex()
         try:

@@ -1,5 +1,5 @@
 FROM python:3.12-slim
-ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 NODE_ENV=production
 WORKDIR /app
 COPY services/cognition/requirements.lock services/cognition/requirements-mongo.lock ./
 ARG ATLAS_WITH_MONGO=0

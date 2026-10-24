@@ -2,7 +2,7 @@ import json
 import threading
 from typing import Literal
 from pydantic import Field
-from . import providers
+from . import providers, credentials
 from .learning import active_policy, remote_content
 from .models import StrictModel, Generation
 from .store import uid, now
@@ -70,7 +70,7 @@ class Dreamer:
                 return self.record(tenant, cycle_id, "awaiting_consent", "Ative a memória individual antes de consolidar experiências.")
             if state["events"] < 3:
                 return self.record(tenant, cycle_id, "awaiting_events", "Ainda não há três experiências consentidas para propor uma revisão.")
-            if not providers.llm_ready() or not __import__('os').getenv("TYPESAFE_API_KEY"):
+            if not providers.llm_ready() or not credentials.configured("decision"):
                 return self.record(tenant, cycle_id, "awaiting_evaluation", "Memórias preservadas. Configure geração e Typesafe para comparar baseline/candidato; nenhuma melhoria foi promovida sem avaliação.")
             with self.store.db() as db:
                 recent = db.execute("SELECT created_at FROM cycles WHERE tenant=? AND status IN ('promoted','rejected','failed') ORDER BY created_at DESC LIMIT 1", (tenant,)).fetchone()

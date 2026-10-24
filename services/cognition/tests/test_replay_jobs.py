@@ -62,7 +62,7 @@ class ReplayAndJobsTests(unittest.TestCase):
             self.assertFalse(providers.llm_ready())
             with patch.dict(os.environ,{"ATLAS_AGENT_RUNTIME":"direct"}):self.assertTrue(providers.llm_ready())
     def test_factory_provider_preserves_persona_purpose_and_returns_only_typed_data(self):
-        with patch.dict(os.environ,{"EVE_URL":"http://127.0.0.1:2000","ATLAS_INTERNAL_TOKEN":"test-internal-not-real"}),patch('atlas.providers.httpx.post') as post:
+        with patch.dict(os.environ,{"ATLAS_AGENT_RUNTIME":"eve","EVE_URL":"http://127.0.0.1:2000","ATLAS_INTERNAL_TOKEN":"test-internal-not-real","EVE_MODEL":"test-model","AI_GATEWAY_API_KEY":"test-only-key"}),patch('atlas.providers.httpx.post') as post:
             post.return_value.json.return_value={"data":{"ok":True},"execution":{"runtime":"eve","agent_id":"soma"}}
             self.assertEqual(providers.complete('s','p',agent_id='soma',purpose='dreamer_policy'),{"ok":True})
             sent=post.call_args.kwargs['json'];self.assertEqual(sent['agent_id'],'soma');self.assertEqual(sent['purpose'],'dreamer_policy')
@@ -80,6 +80,6 @@ class ReplayAndJobsTests(unittest.TestCase):
     def test_runtime_backpressure_keeps_http_429(self):
         import httpx
         response=httpx.Response(429,request=httpx.Request('POST','http://127.0.0.1:4000/v1/internal/generate'))
-        with patch.dict(os.environ,{'EVE_URL':'http://127.0.0.1:2000','ATLAS_INTERNAL_TOKEN':'test'}),patch('atlas.providers.httpx.post',return_value=response):
+        with patch.dict(os.environ,{'ATLAS_AGENT_RUNTIME':'eve','EVE_URL':'http://127.0.0.1:2000','ATLAS_INTERNAL_TOKEN':'test','EVE_MODEL':'test-model','AI_GATEWAY_API_KEY':'test-only-key'}),patch('atlas.providers.httpx.post',return_value=response):
             with self.assertRaises(providers.ProviderBusy) as caught:providers.complete('s','p')
             self.assertEqual(caught.exception.status_code,429)
