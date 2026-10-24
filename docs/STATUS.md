@@ -1,9 +1,45 @@
-# Estado do Atlas 0.3
+# Estado do Atlas 0.4
 
 A camada de agentes foi ampliada segundo [SPEC_AGENT_FACTORY_V03.md](SPEC_AGENT_FACTORY_V03.md).
 O código está disponível para desenvolvimento local. Enviar fontes ao GitHub não
 é deploy: não houve publicação pública nem provisionamento de VM/serviço pago.
 O MVP completo continua dependendo de integrações reais e autenticação pública.
+
+## Conexões, auditoria e entrega — 24/10/2026
+
+O PDF oficial foi conferido: Object Storage e prova vetorial são obrigatórios;
+Compute OCI é diferencial. Build Actions/GHCR é permitido. A matriz de pendências
+está em [AUDITORIA_MVP_POS_MVP.md](AUDITORIA_MVP_POS_MVP.md); arquitetura em
+[conexões e entrega](architecture/connections-and-delivery.md).
+
+- Painel `/studio/settings`: ambiente/arquivo de segredo, chave manual cifrada e
+  instruções de login ChatGPT local, desativado por padrão e recusado em produção.
+- SDKs independentes no modelo dinâmico Eve: OpenRouter/OpenAI-compatible,
+  Anthropic e AI Gateway. Chaves são resolvidas fora dos prompts.
+- Cofre AES-256-GCM, AAD de tenant/versão, escrita atômica, master externa e
+  snapshot de configuração durante operações Python. Next não monta o cofre.
+- Uso cotidiano segue lexical/seções/LM RAG com Jev opcional, sem serviço dedicado
+  de embeddings. Caminho semântico opcional preservado para o critério do edital.
+- Metadados tipados com termos das fontes e tempo heurístico; pré-requisitos
+  explicitamente não inferidos. Script de aceite exige três cenários reais,
+  suporte Jev, prova vetorial e recibos OCI verificados.
+- CI/checks e quatro imagens AMD64; publicação manual GHCR por SHA; Compose e
+  script de deploy com pull/up sem build. API/Python/Eve alinham UID no volume.
+
+Verificações deste incremento: 30 testes Node + 37 Python; typecheck dos apps e
+modelos Eve; build Next/Nest e compilação nativa Eve. Chromium desktop/mobile
+conferiu chave manual sem eco/localStorage, leitura da configuração pelo Python,
+restauração de ambiente, gate do login local, rejeição de origem/destino arbitrário
+e navegação. Smoke HTTP e oito verificações do proxy passaram em modo extrativo.
+Runtime Eve ativo: health, ticket inválido, prewarm/reset autenticado, sem turno
+LLM. Workflows passaram por actionlint; Compose e scripts de deploy validados.
+
+Ainda não verificados: login do operador, geração/judge/busca/embeddings reais,
+readback OCI real, primeira execução remota Actions/GHCR e pull na VPS. A mudança
+de UID/volume foi definida no empacotamento, sem benchmark de containers novos.
+Nenhum serviço pago, VM ou registry foi provisionado; o estúdio não foi exposto
+publicamente. O guia PDF foi atualizado para a edição 1.3, 42 páginas/34 capítulos.
+As medições de containers abaixo são históricas da versão 0.3.
 
 ## Landing e identidade pessoal — 21/10/2026
 

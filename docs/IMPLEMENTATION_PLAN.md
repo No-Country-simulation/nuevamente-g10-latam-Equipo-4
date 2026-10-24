@@ -59,3 +59,17 @@ Web e API compartilham o contrato TypeScript de dados. Nest acrescenta decisões
 
 Os números e limites deste incremento prevalecem sobre os registros históricos
 0.1/0.2 acima. Veja `docs/STATUS.md` para distinguir testes reais de fixtures.
+
+
+## Incremento 0.4 — 24/10/2026
+
+- [x] Auditar a primeira spec e o PDF oficial, separando obrigatórios de diferenciais.
+- [x] Manter RAG lexical/Jev sem serviço dedicado; preservar embeddings opcionais para o aceite.
+- [x] Painel de conexões, env/arquivos, cofre AES-256-GCM e SDKs independentes do Eve.
+- [x] Preparar helper ChatGPT somente local com login explícito, sem alegar OAuth de produção.
+- [x] Metadados pedagógicos conservadores e roteiro de três cenários com gates reais.
+- [x] Workflows de checks/imagens, GHCR manual e Compose pull-only por SHA.
+- [ ] Validar com as chaves reais e o login do operador, sem usar as credenciais da sessão Codex.
+- [ ] Rodar os três cenários com embeddings reais e originais/JSONs OCI verificados.
+- [ ] Acompanhar primeira execução Actions/publicação e medir a VPS sob carga.
+- [ ] Autenticação/isolamento antes de Internet; trilhas, grafo físico e comunidade/memória coletiva no pós-MVP.

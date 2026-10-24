@@ -110,7 +110,37 @@ def diagrams():
     box(dreamer, 330, 212, 150, 90, 'Sem provedores', 'aguarda avaliação')
     for i, text in enumerate(['Não altera código,', 'pesos, segurança', 'ou permissões.', '', 'Coletivo exige', 'outro consentimento', 'e implementação.']):
         dreamer.add(String(335, 179-i*16, text, fontName='Helvetica', fontSize=10, fillColor=MUTED))
-    return {'architecture': architecture, 'generation': generation, 'dreamer': dreamer}
+    credentials = Drawing(480, 340)
+    for x, title, sub in [(0, 'Painel', 'entrada da chave uma vez'), (170, 'BFF Next', 'origem + allowlist'), (340, 'API Nest', 'valida e grava')]:
+        box(credentials, x, 265, 140, 54, title, sub)
+    arrow(credentials,140,292,170,292)
+    arrow(credentials,310,292,340,292)
+    box(credentials,0,145,190,60,'Env / arquivos montados','chave mestra fora do volume')
+    box(credentials,290,145,190,60,'Cofre AES-256-GCM','envelope privado / tenant + versao')
+    arrow(credentials,190,175,290,175)
+    arrow(credentials,410,265,410,205)
+    credentials.add(Line(385,145,385,110,strokeColor=ACCENT))
+    credentials.add(Line(70,110,410,110,strokeColor=ACCENT))
+    for x, title in [(0,'Python'),(170,'Resolvedor Nest'),(340,'Eve + SDK')]:
+        box(credentials,x,20,140,60,title,'leitura no servidor')
+        arrow(credentials,x+70,110,x+70,80)
+    credentials.add(String(0,124,'Next nao monta o volume nem recebe a chave mestra.',fontName='Helvetica',fontSize=9,fillColor=MUTED))
+
+    delivery = Drawing(480, 330)
+    box(delivery,0,260,200,55,'Commit revisado','GitHub / main')
+    box(delivery,270,260,210,55,'GitHub Actions','testes + build AMD64')
+    arrow(delivery,200,287,270,287)
+    box(delivery,270,145,210,55,'GHCR / imagens por SHA','publicacao manual')
+    arrow(delivery,375,260,375,200)
+    box(delivery,0,145,200,55,'VPS / pull + up --no-build','app privada / sem compilacao')
+    arrow(delivery,270,173,200,173)
+    box(delivery,0,20,200,55,'OCI Object Storage','originais + JSON / readback')
+    arrow(delivery,100,145,100,75)
+    box(delivery,270,20,210,55,'Volumes privados','SQLite / cofre / workflows')
+    delivery.add(Line(200,155,240,155,strokeColor=ACCENT))
+    delivery.add(Line(240,155,240,47,strokeColor=ACCENT))
+    arrow(delivery,240,47,270,47)
+    return {'architecture': architecture, 'generation': generation, 'dreamer': dreamer, 'credentials': credentials, 'delivery': delivery}
 
 
 def inline(text):
@@ -182,8 +212,8 @@ class Cover(Flowable):
             c.drawString(0, 258-i*26, label)
         c.setFillColor(colors.HexColor('#d1d8dd'))
         c.setFont('Atlas', 10)
-        c.drawString(0, 108, 'Equipe ONE G10 • Edição didática 1.2 • 21/10/2026')
-        c.drawString(0, 86, 'Atlas 0.3 / Times Eve + Dream-RSI / 4 GB')
+        c.drawString(0, 108, 'Equipe ONE G10 • Edição didática 1.3 • 24/10/2026')
+        c.drawString(0, 86, 'Atlas 0.4 / Conexoes + Eve + Dream-RSI / 4 GB')
         try:
             revision = subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD'], cwd=ROOT, text=True).strip()
             c.setFont('AtlasMono', 8.5)
@@ -277,7 +307,7 @@ def parse_markdown(text, st, figures):
             flush()
             name = Path(re.search(r'\((.*?)\)', line).group(1)).stem
             story.append(figures[name])
-            caption = {'architecture': 'Interface/proxy compartilham o Next; brains e engines compartilham o Nest. Serviços opcionais exigem configuração.', 'generation': 'A resposta retorna pelas mesmas fronteiras. As setas sintetizam o fluxo; não autorizam chamada direta do browser ao Python.', 'dreamer': 'A promoção exige avaliação; ausência de provedor ou de consentimento produz espera, não uma melhoria simulada.'}[name]
+            caption = {'architecture': 'Interface/proxy compartilham o Next; brains e engines compartilham o Nest. Serviços opcionais exigem configuração.', 'generation': 'A resposta retorna pelas mesmas fronteiras. As setas sintetizam o fluxo; não autorizam chamada direta do browser ao Python.', 'dreamer': 'A promoção exige avaliação; ausência de provedor ou de consentimento produz espera, não uma melhoria simulada.', 'credentials': 'O painel envia a chave por conexão local/segura; os leitores compartilham o cofre no servidor. Resolvedor Nest e API Nest são o mesmo serviço.', 'delivery': 'GitHub guarda software; Object Storage guarda os dados obrigatórios. Compute OCI é opcional no edital; confirmar Always Free antes de usar.'}[name]
             story.append(Paragraph(caption, st['caption']))
         elif line.startswith('> '):
             flush()

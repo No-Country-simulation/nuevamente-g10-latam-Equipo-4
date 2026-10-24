@@ -8,7 +8,9 @@ Este README foi escrito também para quem está começando. Siga a ordem abaixo;
 
 Repositórios sincronizados: [Oracle](https://github.com/Oracle-hackatom-g10-team-4/Nova-mente-Solution) e [No Country](https://github.com/No-Country-simulation/nuevamente-g10-latam-Equipo-4).
 
-Arquitetura atual: [Agent Factory 0.3](docs/SPEC_AGENT_FACTORY_V03.md).
+Arquitetura atual: [Agent Factory 0.3](docs/SPEC_AGENT_FACTORY_V03.md) + [Conexões e entrega 0.4](docs/architecture/connections-and-delivery.md).
+
+**Revisão de requisitos:** [Matriz MVP e pós-MVP](docs/AUDITORIA_MVP_POS_MVP.md), conferida com o PDF do hackathon. **Configuração:** [chaves, login local, SDKs e deploy por GitHub Actions/GHCR](docs/CONFIGURACAO_E_DEPLOY.md). O edital exige Object Storage e prova vetorial; OCI Compute é opcional.
 
 ## Por onde começar
 
@@ -113,6 +115,14 @@ Mantenha esse terminal aberto. Espere mensagens de prontidão do Next, da API At
 | Eve, necessário para agentes generativos | 2000 | Executa sessões de modelos e handoffs; não inicia com `npm run dev` |
 
 No seu computador local, abra o navegador em `http://127.0.0.1:3000` para conhecer a landing Atlas. Clique em **Crie seu Atlas** para escolher nome, cor e tutor-base, ou em **Abrir estúdio** para ir direto a `http://127.0.0.1:3000/studio`. Em um ambiente remoto, use o mecanismo de acesso a portas fornecido pela plataforma, sem alterar o bind para expor os serviços publicamente. Não há autenticação pública pronta nesta versão.
+
+### Conexões e modelos
+
+Abra `/studio/settings` ou **Conexões e modelos** na barra lateral. O painel separa geração, Jev, Firecrawl e embeddings opcionais. Aceita chaves gerenciadas por ambiente/arquivos ou chaves manuais criptografadas no servidor. `npm run init:vault` prepara a chave mestra em um checkout existente; reinicie os serviços depois. Não há chaves salvas no navegador.
+
+Eve pode chamar SDKs independentes OpenAI-compatible/OpenRouter e Anthropic, além do AI Gateway. O login por assinatura ChatGPT é opção de **desenvolvimento local**, mediante habilitação do operador e `/login` no terminal Eve; não é login de usuários do Atlas nem API de produção. Não há reutilização das credenciais do Codex desenvolvedor.
+
+O uso cotidiano continua sem modelo dedicado de embeddings: lexical, contexto de documentos e reranking Jev opcional. O caminho semântico fica disponível para o critério obrigatório do edital. Ao trocar embeddings, reindexe; o classificador Jev não gera vetores.
 
 ### Seu Atlas: identidade pessoal
 
@@ -357,7 +367,7 @@ Pare os processos antes de editar `.env` e reinicie depois. Mantenha a chave vaz
 | Embeddings | `EMBEDDING_BASE_URL`, `EMBEDDING_MODEL`, `EMBEDDING_API_KEY` | Reindexação e recuperação semântica |
 | Pesquisa | `FIRECRAWL_API_KEY` | Busca autenticada com resultados limitados |
 | OCI Object Storage | `STORAGE_PROVIDER=oci`, `OCI_NAMESPACE`, `OCI_BUCKET`, modo de identidade | Original e JSON enviados e conferidos por readback |
-| Eve | `EVE_MODEL`, `AI_GATEWAY_API_KEY`, `EVE_URL`, `EVE_SERVICE_TOKEN` | Runtime autenticado e turno real |
+| Eve | Painel ou `EVE_MODEL_PROVIDER`/`EVE_MODEL`/chave do SDK; `EVE_URL`, `EVE_SERVICE_TOKEN` | Runtime autenticado e turno real |
 | Memória externa | `MEMORY_SERVICE_URL`, `MEMORY_SERVICE_TOKEN` | Consentimento e exclusão coordenados |
 
 Os adapters diretos de geração/embeddings aceitam um contrato no formato OpenAI, com endpoints `/chat/completions` e `/embeddings`. Isso não comprova compatibilidade SubQ Snap: nome de modelo, base e contrato desse fornecedor continuam pendentes de confirmação. TypeSafe é decisão/judge, não embedding. Dream-RSI é inspiração para o mecanismo; não há SDK oficial dele presumido. A instalação oficial de Antigravity CLI continua não confirmada.
@@ -575,3 +585,10 @@ Depois de revisar e commitar, execute `bash scripts/push-both.sh`. O script envi
 `HEAD` para `main` nos dois destinos, sem force, e confere o SHA remoto. Se o
 segundo falhar, informa sincronização parcial; preserve os commits e corrija
 acesso/divergência antes de repetir. Não há transação atômica entre dois GitHubs.
+
+
+## Build e registry fora da VPS
+
+O PDF permite GitHub Actions para build e GHCR para imagens Docker. OCI Compute é opcional; OCI Object Storage é obrigatório para originais e JSONs. Os workflows `Atlas checks` e `Atlas container images` não recebem chaves dos modelos nem da OCI. A publicação no GHCR é manual em `main`, com tags pelo SHA completo.
+
+`compose.deploy.yaml` e `scripts/deploy-pull.sh` usam imagens prontas: pull e `up --no-build`. Isso evita compilação nos 4 GB disponíveis. Confira a configuração, permissões do registry, cotas, saúde e os passos em [CONFIGURACAO_E_DEPLOY.md](docs/CONFIGURACAO_E_DEPLOY.md). Não houve provisionamento de VM, cobrança Oracle nem publicação automática do estúdio.

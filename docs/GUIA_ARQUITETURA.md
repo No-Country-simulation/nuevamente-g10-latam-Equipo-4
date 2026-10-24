@@ -1,6 +1,6 @@
 # NovaMente Atlas — guia didático de arquitetura
 
-Edição 1.2 • Equipe ONE G10 • Atlas 0.3 • 21/10/2026
+Edição 1.3 • Equipe ONE G10 • Atlas 0.4 • 24/10/2026
 
 Este documento é a fonte editável do PDF. Leia os capítulos em ordem na primeira vez. Os exemplos de configuração não contêm chaves. O guia descreve o código existente e identifica o que ainda depende de integração ou desenvolvimento.
 
@@ -917,3 +917,142 @@ dependendo de autenticação e isolamento multiusuário.
 **Ao terminar:** crie uma identidade, recarregue o estúdio, confirme a persistência
 e restaure os nomes originais. A memória Dreamer deve continuar no estado que
 você escolheu antes desse exercício.
+
+
+## 32. Conexões: ambiente, cofre e login local
+
+**Objetivo:** escolher um provedor sem espalhar chaves pelo projeto.
+
+Abra **Conexões e modelos** no estúdio, ou o caminho `/studio/settings`.
+O painel separa geração, decisão Jev, pesquisa Firecrawl e embeddings opcionais.
+Uma chave de geração não configura automaticamente os outros recursos.
+
+![Caminho das credenciais](diagrams/credentials.svg)
+
+### Três caminhos, sem misturar permissões
+
+| Caminho | Quem configura | O que acontece |
+| --- | --- | --- |
+| Gerenciado pelo servidor | Operador | Variável ou arquivo montado com sufixo `_FILE` |
+| Minha chave de API | Pessoa com acesso ao workspace local | Chave enviada uma vez e criptografada no servidor |
+| Login com ChatGPT | Operador do ambiente local | Fluxo `/login` do Eve, habilitado explicitamente; não funciona em produção |
+
+Para preparar a criptografia num checkout existente, execute `npm run init:vault`
+e reinicie os serviços. O comando não mostra a chave nem substitui uma existente.
+Guarde backup seguro dela, separado do volume. Sem a chave mestra original, o
+arquivo criptografado não pode ser recuperado.
+
+No modo manual, escolha provedor, ID do modelo e chave. Depois de salvar, o campo
+da chave é limpo; a API devolve somente estado e metadados. **Configurado** não
+significa **verificado**. O teste de catálogo não gera conteúdo nem comprova que o
+modelo executa ferramentas e JSON. Confirme uma geração real no estúdio.
+
+Para restaurar as variáveis do operador, escolha **Gerenciado pelo servidor** e
+**Usar configuração do servidor**. Uma fonte `_FILE` configurada mas ausente falha
+explicitamente; não muda silenciosamente para outra credencial.
+
+### ChatGPT e SDKs
+
+O Eve pode executar SDKs independentes OpenRouter/OpenAI-compatible e Anthropic,
+ou o AI Gateway. O backend escolhe o modelo sem colocar a chave no prompt.
+
+A assinatura ChatGPT não é uma chave OpenAI nem login de usuário do Atlas. O
+helper nativo `chatgpt()` só funciona no Eve local. Para usá-lo, o operador precisa
+habilitar `ATLAS_ALLOW_LOCAL_CHATGPT=1`, abrir `bash scripts/eve.sh dev` e concluir
+`/login` no fluxo oficial. Use uma conta de sistema dedicada ao Atlas; nunca copie
+credenciais da sessão Codex de desenvolvimento. A opção continua bloqueada por
+padrão e é recusada em produção. O painel não pede senha ou cookie ChatGPT.
+
+Os leitores API, Python e Eve compartilham o volume privado; o Next não o monta.
+Python mantém uma configuração fixa durante cada ingestão/reindexação, para não
+misturar modelos quando uma chave é trocada. Mais detalhes, exemplos de arquivos
+e comandos estão em [Configuração e deploy](CONFIGURACAO_E_DEPLOY.md).
+
+**Ao terminar:** saiba identificar a finalidade, a fonte de credencial e o estado
+de verificação. Não cole chaves no chat, no Git ou em capturas de tela.
+
+## 33. GitHub Actions, imagens e operação leve
+
+**Objetivo:** entender o que sai da VPS e o que continua obrigatório na Oracle.
+
+O PDF do hackathon exige OCI Object Storage para documentos originais e JSONs.
+OCI Compute é um diferencial opcional. O documento não obriga build na VM nem
+registro de imagens OCIR. Podemos construir em GitHub Actions e guardar imagens
+no GHCR. Não presumir que uma VM AMD de 4 GB pertence ao Always Free.
+
+![Build e entrega](diagrams/delivery.svg)
+
+O workflow **Atlas checks** executa testes, tipos, builds e smoke sem chaves reais.
+**Atlas container images** verifica imagens e publica no GHCR somente quando um
+operador dispara manualmente em `main` com a opção de publicação. Os jobs não
+recebem chaves de modelos, da OCI ou de SSH.
+
+### O que fazer na VPS
+
+1. Preparar Docker/Compose e o `.env` privado com identidades e quotas corretas.
+2. Escolher o repositório que publicou as imagens no GHCR.
+3. Definir `ATLAS_IMAGE_PREFIX` e o SHA completo em `ATLAS_IMAGE_TAG`.
+4. Executar `bash scripts/deploy-pull.sh`; para Eve, configurar o endereço interno
+   e acrescentar `--profile agents`.
+5. Conferir healthchecks e uma operação real. Rollback seleciona o SHA anterior.
+
+O script faz pull e `up --no-build --wait`. Não compila na VPS, não cria instâncias,
+não apaga volumes e não abre portas públicas. O envelope com Eve permanece em
+2560 MiB de limites; isso precisa ser medido com modelos e carga reais.
+
+| Lugar | O que guarda |
+| --- | --- |
+| GitHub | Código, documentação e workflows |
+| GHCR | Imagens Docker do software por SHA |
+| GitHub Artifacts | Pequenos relatórios de imagens/CI |
+| OCI Object Storage Always Free | Originais e JSONs educacionais com readback |
+| Volume privado | SQLite, cofre e estado de workflows, com backup separado |
+
+GHCR não substitui o bucket exigido nem backup dos dados. Confira visibilidade dos
+packages e cotas da conta. A primeira execução externa e o primeiro pull precisam
+ser acompanhados; validar YAML localmente não publica uma imagem.
+
+**Ao terminar:** explique por que build em Actions reduz carga da VPS e por que
+isso não elimina o armazenamento OCI obrigatório.
+
+## 34. O que falta para chamar de MVP
+
+**Objetivo:** distinguir o produto planejado da prova de aceite já executada.
+
+A auditoria compara a primeira spec versionada ao PDF de seis páginas reenviado
+em 24/10/2026. A tabela completa está em
+[Auditoria MVP e pós-MVP](AUDITORIA_MVP_POS_MVP.md).
+
+A experiência cotidiana não precisa de um serviço dedicado de embeddings:
+busca lexical, seções/documentos e classificação de relevância pelo Jev podem ser
+usados. Entretanto, o edital exige uma prova com embeddings e busca vetorial.
+Jev não gera vetores. Um endpoint gratuito pode servir se suas quotas, termos e
+política de dados forem adequados; não há modelo gratuito garantido pelo Atlas.
+
+### Bloqueios de aceite
+
+- Configurar e testar geração real com duas perspectivas de perfil e dois formatos.
+- Provar o caminho semântico opcional exigido pelo edital.
+- Guardar originais e JSONs no bucket OCI Always Free, com leitura de conferência.
+- Executar três cenários sobre o mesmo documento e revisar qualidade com a equipe.
+- Avaliar Dreamer com experiências consentidas e chamadas reais, sem fingir promoção.
+- Completar pré-requisitos pedagógicos e calibrar escolhas/estimativas.
+
+Os pacotes agora incluem termos extraídos de títulos/siglas das passagens citadas
+e tempo estimado de leitura/prática. A origem e a heurística são explicitadas.
+Pré-requisitos ainda são marcados como não inferidos, em vez de inventados.
+
+O comando `node scripts/acceptance.mjs` só passa com geração real, embeddings,
+suporte Jev e recibos OCI verificados. Ele executa três cenários e guarda o
+relatório em `data/reports`, fora do Git. Configure orçamento antes de executá-lo;
+a demonstração extrativa nunca é tratada como esse aceite.
+
+### Pós-MVP e publicação
+
+Autenticação, isolamento de chaves por pessoa e sessões seguras vêm antes de abrir
+o estúdio na Internet. Trilhas completas com missões, grafo físico/Obsidian,
+anotações no PDF/OCR, grupos moderados e memória coletiva consentida continuam no
+backlog. Não é necessário criar todos esses serviços para mostrar o MVP local.
+
+**Ao terminar:** apresente um exemplo de requisito implementado, um que exige
+credenciais reais e outro de pós-MVP, apontando a evidência em cada caso.

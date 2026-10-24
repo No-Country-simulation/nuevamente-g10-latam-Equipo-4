@@ -1,6 +1,6 @@
 # NovaMente Atlas — especificação de implementação v3.0
 
-A arquitetura operacional atual está em [SPEC_AGENT_FACTORY_V03.md](SPEC_AGENT_FACTORY_V03.md), que prevalece sobre os limites e o Dreamer descritos no kickoff abaixo.
+A arquitetura operacional atual está em [SPEC_AGENT_FACTORY_V03.md](SPEC_AGENT_FACTORY_V03.md) e [conexões/entrega 0.4](architecture/connections-and-delivery.md). A auditoria do PDF original e o estado MVP/pós-MVP estão em [AUDITORIA_MVP_POS_MVP.md](AUDITORIA_MVP_POS_MVP.md). As atualizações prevalecem sobre o kickoff abaixo.
 
 Estado: baseline de kickoff, 17/10/2026 (America/Sao_Paulo). A solicitação atual prevalece sobre as versões anexadas. O usuário autorizou iniciar a implementação depois desta consolidação; não há nova etapa de aprovação implícita.
 

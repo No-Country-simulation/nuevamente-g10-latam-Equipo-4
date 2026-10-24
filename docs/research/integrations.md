@@ -143,3 +143,33 @@ confirmado em `packages/core/src/v3/apiClient/index.ts`: POST
 `/api/v1/tasks/{taskId}/trigger`, payload e options.idempotencyKey. Guia self-host
 oficial pede 6+ GB webapp e 8+ GB worker; não colocar esse stack na VPS de 4 GB.
 Publicação/execução em conta Trigger real continuam pendentes de credenciais.
+
+
+## Atualização 24/10/2026 — modelo, credenciais e requisito de infraestrutura
+
+Foi lido o PDF oficial reenviado, seis páginas, SHA-256
+`eff0a6006a8461ddca95f44a6c915d605a9a7526a5344c8b7b26070d679ef011`.
+Ele exige Object Storage Always Free e prova de embeddings/vetores; Compute OCI
+é diferencial, não obrigação. Não exige OCIR nem build na VM. A matriz está em
+`docs/AUDITORIA_MVP_POS_MVP.md`.
+
+Eve 0.80.1: `node_modules/eve/docs/agent-config.md` e
+`docs/guides/dev-tui.md` comprovam modelo dinâmico e `/login`. Um objeto
+LanguageModel só pode retornar do resolver `step.started`, não de
+`session.started`. `chatgpt()` de `eve/models/openai` é local e falha em deployment.
+A assinatura não fornece uma API genérica para produção. O README oficial do Codex
+(`https://github.com/openai/codex`) e SDK TypeScript confirmam autenticação CLI e
+controle do ambiente; não executamos login nem importamos credenciais existentes.
+
+SDKs compatíveis com o provider 4.0.29 do AI SDK 7.0.143 instalado:
+`@ai-sdk/openai-compatible@3.0.71`, `@ai-sdk/anthropic@4.0.82` e
+`@ai-sdk/gateway@4.0.116`. Versões posteriores do provider adicionaram um finish
+reason incompatível com os tipos atuais; os pins foram escolhidos pelos manifests
+e compilação, sem casts para esconder o contrato. São SDKs diretos, não uma
+alegação de geração autenticada.
+
+Ações GitHub tiveram tags resolvidas com `git ls-remote` e foram fixadas por SHA.
+Workflows passaram por actionlint 1.7.7, cujo binário foi conferido com checksum da
+release oficial. Compose de deploy é localmente validado; Actions/GHCR/OCI reais
+continuam dependendo da conta e das permissões do operador. Nada foi cobrado ou
+provisionado por causa dessa pesquisa.

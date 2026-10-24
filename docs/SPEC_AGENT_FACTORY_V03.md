@@ -4,6 +4,8 @@ Especificação de execução, 20/10/2026 (America/Sao_Paulo). Complementa
 `SPEC.md`; o orçamento atual de 4 GB disponíveis prevalece sobre os 6 GB anteriores.
 Este documento descreve o alvo. Consulte `STATUS.md` para as evidências de execução.
 
+Atualização 0.4: o modelo Eve agora é resolvido dinamicamente por SDK/credencial de servidor, mantendo a factory e seus limites. Ver [conexões e entrega](architecture/connections-and-delivery.md), [configuração](CONFIGURACAO_E_DEPLOY.md) e [auditoria do edital](AUDITORIA_MVP_POS_MVP.md).
+
 ## 1. Entrega e Git
 
 O repositório Oracle e `No-Country-simulation/nuevamente-g10-latam-Equipo-4`
