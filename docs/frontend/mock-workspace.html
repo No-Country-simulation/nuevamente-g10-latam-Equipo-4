@@ -1,0 +1,2498 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>NovaMente Atlas — Estúdio de Aprendizagem (Fidelidade Real)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ==========================================================================
+   ATLAS DESIGN SYSTEM — ATELIER EDITION (100% IDENTICAL TO PRODUCTION CSS)
+   ========================================================================== */
+:root {
+  --canvas: #08090a;
+  --rail: #0c0d0f;
+  --surface: #111316;
+  --surface-2: #171a1e;
+  --surface-3: #1f2328;
+  --line: #22262b;
+  --line-strong: #343a42;
+  --text: #ededef;
+  --secondary: #a2a6ae;
+  --muted: #80858e;
+  --accent: #ff4f38;
+  --mint: #85e7b8;
+  --paper: #ebe7df;
+  --paper-ink: #292a27;
+  --serif: 'Instrument Serif', Georgia, serif;
+  --mono: 'JetBrains Mono', monospace;
+  --sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+  scrollbar-width: thin;
+  scrollbar-color: #343a42 transparent;
+}
+
+html, body {
+  margin: 0;
+  height: 100%;
+  background: var(--canvas);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 14px;
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+
+button, input, select, textarea {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+  border: 0;
+  background: none;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: .45;
+}
+
+button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible, summary:focus-visible {
+  outline: 2px solid #ff9a89;
+  outline-offset: 4px;
+}
+
+h1, h2, h3, h4, p {
+  margin-top: 0;
+}
+
+p {
+  line-height: 1.75;
+}
+
+h2 {
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+h3 {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+svg {
+  flex-shrink: 0;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+::selection {
+  background: #ff4f3844;
+}
+
+/* ==========================================================================
+   APP SHELL LAYOUT
+   ========================================================================== */
+.atlas-app {
+  display: flex;
+  height: 100dvh;
+  overflow: hidden;
+  position: relative;
+}
+
+/* ==========================================================================
+   SIDEBAR RAIL
+   ========================================================================== */
+.sidebar {
+  width: 246px;
+  flex: 0 0 246px;
+  background: var(--rail);
+  border-right: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.brand {
+  height: 68px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 22px;
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -.7px;
+  flex-shrink: 0;
+}
+
+.brand-symbol {
+  color: var(--accent);
+  display: grid;
+  place-items: center;
+  width: 29px;
+  height: 32px;
+}
+
+.brand-sub {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 2.3px;
+  display: block;
+  margin-top: 2px;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+
+.brand-version {
+  color: #9c9fa6;
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 16px;
+  margin-left: auto;
+  border: 1px solid var(--line-strong);
+  border-radius: 5px;
+  width: 23px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  opacity: .7;
+}
+
+.search-trigger {
+  min-height: 44px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  border-radius: 6px;
+  margin: 10px 15px 18px;
+  padding: 0 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color .15s;
+}
+
+.search-trigger:hover {
+  border-color: var(--line-strong);
+  color: var(--text);
+}
+
+.search-trigger kbd {
+  margin-left: auto;
+  font-family: var(--mono);
+  font-size: 11px;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  padding: 2px 4px;
+  color: var(--muted);
+}
+
+.sidebar nav {
+  padding: 0 12px 16px;
+  flex-shrink: 0;
+}
+
+.sidebar-label {
+  font-size: 11px;
+  color: var(--muted);
+  font-weight: 500;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 0 10px 12px;
+  display: flex;
+  align-items: center;
+}
+
+.nav-row {
+  min-height: 42px;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  width: 100%;
+  padding: 0 11px;
+  margin-bottom: 3px;
+  border-radius: 5px;
+  color: #b3b5bc;
+  text-align: left;
+  font-size: 13px;
+  transition: all .15s;
+  cursor: pointer;
+}
+
+.nav-row:hover {
+  background: var(--surface);
+  color: var(--text);
+}
+
+.nav-row.active {
+  background: #211916;
+  color: #ffb4a7;
+  font-weight: 500;
+}
+
+.nav-row.active svg {
+  color: var(--accent);
+}
+
+.nav-pip {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--accent);
+  margin-left: auto;
+}
+
+.sidebar-agents {
+  padding: 16px 12px 10px;
+  border-top: 1px solid var(--line);
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.roster-dots {
+  margin-left: auto;
+  letter-spacing: 2px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.agent-row {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 10px;
+  text-align: left;
+  padding: 8px 9px;
+  border-radius: 5px;
+  margin-bottom: 4px;
+  min-height: 54px;
+  cursor: pointer;
+  transition: all .15s;
+}
+
+.agent-row:hover {
+  background: var(--surface);
+}
+
+.agent-row.active {
+  background: var(--surface);
+  box-shadow: inset 2px 0 var(--accent);
+}
+
+.agent-orb-mini {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.agent-orb-mini::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, currentColor, transparent 75%);
+  opacity: .3;
+  filter: blur(2px);
+}
+
+.agent-row strong {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.agent-row small {
+  display: block;
+  max-width: 130px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.agent-status {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  margin-left: auto;
+  opacity: .85;
+}
+
+.sidebar-bottom {
+  margin-top: auto;
+  border-top: 1px solid var(--line);
+  padding: 14px 18px 18px;
+  flex-shrink: 0;
+}
+
+.custom-atlas-button {
+  width: 100%;
+  min-height: 42px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  border: 1px solid #37343f;
+  background: #19151f;
+  border-radius: 7px;
+  font-size: 12px;
+  color: #ededef;
+  padding: 8px 12px;
+  margin-bottom: 12px;
+  cursor: pointer;
+  transition: all .15s;
+}
+
+.custom-atlas-button:hover {
+  background: #231c2c;
+  border-color: #554f63;
+}
+
+.custom-atlas-button svg:last-child {
+  margin-left: auto;
+  color: var(--muted);
+}
+
+.calm-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--secondary);
+  width: 100%;
+  height: 38px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 14px;
+  padding: 0 0 10px;
+  cursor: pointer;
+}
+
+.calm-button>span:last-child {
+  margin-left: auto;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.calm-button.enabled {
+  color: var(--mint);
+}
+
+.local-user {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.local-user>svg {
+  margin-left: auto;
+  color: var(--muted);
+}
+
+.user-avatar {
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  background: #22201d;
+  border: 1px solid #36312b;
+  border-radius: 6px;
+  font-family: var(--serif);
+  font-size: 16px;
+  color: #d4bda0;
+}
+
+.local-user strong {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.local-user span {
+  display: block;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.progress-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--secondary);
+  margin-bottom: 7px;
+}
+
+.progress-track {
+  height: 3px;
+  background: #22262b;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: var(--mint);
+  width: 35%;
+  transition: width .4s ease;
+}
+
+.progress-footnote {
+  font-size: 11px;
+  display: block;
+  color: var(--muted);
+  margin-top: 7px;
+}
+
+/* ==========================================================================
+   WORKSPACE SHELL
+   ========================================================================== */
+.workspace-shell {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.topbar {
+  height: 58px;
+  flex: 0 0 58px;
+  background: var(--rail);
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 26px;
+  gap: 12px;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.between {
+  justify-content: space-between;
+}
+
+.breadcrumb {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.breadcrumb>span {
+  margin: 0 9px;
+  color: #484d55;
+}
+
+.breadcrumb strong {
+  font-weight: 600;
+  color: #c7c9cd;
+}
+
+.top-actions {
+  gap: 14px;
+}
+
+.edition-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: #9a9fa8;
+  border-right: 1px solid var(--line);
+  padding-right: 18px;
+}
+
+.tiny-square {
+  width: 5px;
+  height: 5px;
+  background: var(--accent);
+  display: inline-block;
+}
+
+.icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 5px;
+  min-width: 36px;
+  min-height: 36px;
+  color: var(--secondary);
+  padding: 6px;
+  flex-shrink: 0;
+  transition: all .15s;
+}
+
+.icon-button:hover {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+.icon-button.active {
+  color: var(--accent);
+  background: var(--surface-2);
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 38px;
+  padding: 8px 14px;
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: 5px;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.5;
+  white-space: nowrap;
+  transition: all .15s;
+}
+
+.button:hover {
+  background: var(--surface-2);
+  border-color: #555b66;
+}
+
+.button.primary {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+  box-shadow: 0 4px 14px rgba(255, 79, 56, .25);
+}
+
+.button.primary:hover {
+  background: #ec4933;
+  box-shadow: 0 6px 18px rgba(255, 79, 56, .35);
+  transform: translateY(-1px);
+}
+
+.text-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #c4c7cd;
+  font-size: 12px;
+  min-height: 32px;
+  padding: 5px 0;
+  cursor: pointer;
+}
+
+.text-button:hover {
+  color: #ff9a89;
+}
+
+.capability-bar {
+  height: 36px;
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 26px;
+  font-size: 12px;
+  color: #b5b8c0;
+  border-bottom: 1px solid var(--line);
+  background: #0c0e10;
+}
+
+.status-dot {
+  width: 6px;
+  height: 6px;
+  flex-shrink: 0;
+  background: #e1ad66;
+  border-radius: 50%;
+}
+
+.status-dot.online {
+  background: var(--mint);
+  box-shadow: 0 0 8px rgba(133, 231, 184, .5);
+}
+
+.capability-detail {
+  margin-left: auto;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+/* ==========================================================================
+   WORKSPACE BODY & MAIN AREA
+   ========================================================================== */
+.workspace-body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+}
+
+.main-area {
+  overflow-y: auto;
+  flex: 1;
+  min-width: 0;
+  outline: none;
+  padding: 36px 36px 20px;
+  background-image: radial-gradient(#ffffff09 .55px, transparent .55px);
+  background-size: 22px 22px;
+}
+
+.main-area > * {
+  max-width: 860px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.editorial-head {
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 24px;
+  margin-bottom: 26px;
+}
+
+.page-context {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--accent);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .5px;
+  margin-bottom: 12px;
+  text-transform: uppercase;
+}
+
+.section-rule {
+  width: 16px;
+  height: 1px;
+  background: var(--accent);
+}
+
+.editorial-head h1 {
+  font-family: var(--serif);
+  font-size: clamp(34px, 3.5vw, 46px);
+  font-weight: 400;
+  letter-spacing: -.5px;
+  line-height: 1.1;
+  margin-bottom: 12px;
+}
+
+.editorial-head > p {
+  color: var(--secondary);
+  font-size: 14px;
+  margin-bottom: 0;
+}
+
+/* ==========================================================================
+   STUDIO FORM & CONTROLS
+   ========================================================================== */
+.section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  gap: 10px;
+}
+
+.section-heading h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  margin: 0;
+  color: #c9ccd3;
+}
+
+.section-heading h2 svg {
+  color: #8b919c;
+}
+
+.document-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+  margin-bottom: 26px;
+}
+
+.document-chip {
+  display: flex;
+  align-items: center;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  border-radius: 6px;
+  padding: 4px 6px 4px 12px;
+  transition: all .15s;
+}
+
+.document-chip:hover {
+  border-color: var(--line-strong);
+}
+
+.document-chip.selected {
+  border-color: #525044;
+  background: #191a16;
+}
+
+.document-chip label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  min-height: 48px;
+}
+
+.document-chip input {
+  accent-color: var(--accent);
+  width: 15px;
+  height: 15px;
+  margin: 0;
+}
+
+.document-chip label > svg {
+  color: #c3b69d;
+}
+
+.document-chip strong {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  max-width: 220px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.document-chip small {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+  display: block;
+  margin-top: 2px;
+}
+
+.document-chip > .icon-button {
+  min-width: 28px;
+  margin-left: 6px;
+}
+
+/* CONTROL DECK MATRIX */
+.control-deck {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--rail);
+  overflow: hidden;
+  margin-bottom: 26px;
+}
+
+.deck-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--line);
+  padding: 13px 18px;
+  font-size: 13px;
+  color: #bfc2c8;
+}
+
+.deck-title .mono {
+  font-size: 11px;
+  color: var(--muted);
+  font-family: var(--mono);
+}
+
+.matrix {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  padding: 14px;
+  gap: 12px;
+}
+
+.choice-group {
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 10px;
+  background: var(--surface);
+  margin: 0;
+}
+
+.choice-group legend {
+  float: left;
+  width: 100%;
+  padding: 0 4px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .5px;
+}
+
+.choice-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  clear: both;
+}
+
+.choice {
+  min-height: 40px;
+  padding: 8px 10px;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  text-align: left;
+  color: #b5b8c0;
+  font-size: 12px;
+  line-height: 1.4;
+  cursor: pointer;
+  transition: all .15s;
+}
+
+.choice:hover {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+.choice.selected {
+  border-color: #3b3c3f;
+  background: #242426;
+  color: #f4eee7;
+  font-weight: 600;
+}
+
+.choice-copy strong {
+  display: block;
+  font-size: 12px;
+}
+
+.choice-copy small {
+  display: block;
+  font-size: 10px;
+  color: var(--muted);
+  font-weight: 400;
+}
+
+/* ADVANCED CONTROLS */
+.advanced {
+  border-top: 1px solid var(--line);
+  padding: 0 18px;
+}
+
+.advanced summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  list-style: none;
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--muted);
+  min-height: 42px;
+}
+
+.advanced summary::-webkit-details-marker {
+  display: none;
+}
+
+.advanced[open] summary svg {
+  transform: rotate(180deg);
+}
+
+.advanced-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  padding: 8px 0 16px;
+}
+
+.advanced-grid label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--secondary);
+}
+
+.advanced-grid select {
+  padding: 10px 12px;
+  font-size: 13px;
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: 6px;
+  color: var(--text);
+  outline: none;
+}
+
+.advanced > p {
+  font-size: 11px;
+  color: var(--muted);
+  margin-bottom: 14px;
+}
+
+/* AGENT STRIP */
+.tutor-heading {
+  margin-bottom: 14px;
+}
+
+.tutor-heading .small {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.agent-strip {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+  margin-bottom: 26px;
+}
+
+.agent-card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  padding: 14px 6px 14px;
+  min-width: 0;
+  min-height: 125px;
+  cursor: pointer;
+  transition: all .2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.agent-card:hover {
+  border-color: var(--line-strong);
+  transform: translateY(-2px);
+}
+
+.agent-card.selected {
+  border-color: color-mix(in srgb, var(--agent-color) 60%, #22262b);
+  background: color-mix(in srgb, var(--agent-color) 8%, #111316);
+  box-shadow: 0 4px 18px color-mix(in srgb, var(--agent-color) 15%, transparent);
+}
+
+.agent-card-orb {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  position: relative;
+  color: var(--agent-color);
+}
+
+.agent-card-orb::after {
+  content: "";
+  position: absolute;
+  inset: 2px;
+  border-radius: 50%;
+  background: radial-gradient(circle, currentColor, transparent 70%);
+  opacity: .35;
+  filter: blur(4px);
+}
+
+.agent-card strong {
+  font-size: 13px;
+  font-weight: 600;
+  margin: 8px 0 3px;
+}
+
+.agent-card > span {
+  display: block;
+  font-size: 11px;
+  color: var(--secondary);
+  text-align: center;
+  max-width: 100%;
+  line-height: 1.4;
+}
+
+.agent-check {
+  position: absolute;
+  right: 8px;
+  top: 8px;
+  color: var(--agent-color);
+}
+
+/* GOAL COMPOSER */
+.goal-composer {
+  border: 1px solid #3b3d42;
+  border-radius: 8px;
+  background: var(--surface);
+  padding: 18px;
+  margin-bottom: 28px;
+  transition: border-color .15s;
+}
+
+.goal-composer:focus-within {
+  border-color: var(--accent);
+}
+
+.goal-composer > label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 10px;
+  color: #d1d4dc;
+}
+
+.goal-composer textarea {
+  border: 0;
+  background: none;
+  width: 100%;
+  resize: vertical;
+  font-size: 14px;
+  line-height: 1.8;
+  padding: 0 0 12px;
+  min-height: 85px;
+  outline: none;
+  color: var(--text);
+  font-family: var(--sans);
+}
+
+.goal-composer > .row {
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+  gap: 12px;
+}
+
+.composer-hint {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* GENERATED PACKAGE ARTIFACT */
+.package {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  overflow: hidden;
+  margin-bottom: 24px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+  animation: fadeIn .3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.package-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--line);
+  padding: 12px 20px;
+  min-height: 48px;
+}
+
+.package-type {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #c4c8cd;
+}
+
+.package-body {
+  padding: 26px;
+}
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: #b7c7bd;
+  padding: 4px 8px;
+  background: #17211c;
+  border: 1px solid #2c3a31;
+  border-radius: 4px;
+}
+
+.package-body > h2 {
+  font-family: var(--serif);
+  font-size: 32px;
+  font-weight: 400;
+  line-height: 1.2;
+  margin-top: 14px;
+  margin-bottom: 12px;
+}
+
+.package-intro {
+  font-size: 14px;
+  color: #c3c6cd;
+  line-height: 1.85;
+}
+
+.learning-item {
+  padding-top: 22px;
+  margin-top: 22px;
+  border-top: 1px solid var(--line);
+}
+
+.learning-heading {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.item-number {
+  font-size: 13px;
+  color: var(--accent);
+  font-family: var(--mono);
+  font-weight: 700;
+}
+
+.learning-heading h3 {
+  font-size: 15px;
+  line-height: 1.6;
+  font-weight: 600;
+  margin: 0;
+}
+
+.learning-body {
+  font-size: 13px;
+  line-height: 1.9;
+  color: #c5c8d0;
+  margin-bottom: 16px;
+}
+
+.citations {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.citation {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 11px;
+  border: 1px solid #34392f;
+  border-radius: 5px;
+  background: #1b2018;
+  color: #bcc9af;
+  font-size: 11px;
+  cursor: pointer;
+  transition: all .15s;
+}
+
+.citation:hover {
+  border-color: #7b9364;
+  color: #e5f0dc;
+  background: #232c1e;
+}
+
+.citation > span:first-of-type {
+  max-width: 190px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 500;
+}
+
+.citation > span:last-of-type {
+  font-family: var(--mono);
+}
+
+.package-bottom {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-top: 1px solid var(--line);
+  background: var(--rail);
+  padding: 13px 20px;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.package-bottom > svg {
+  color: #a8b99c;
+}
+
+.package-bottom > p {
+  margin: 0;
+  flex: 1;
+}
+
+.package-bottom > span {
+  font-family: var(--mono);
+}
+
+.artifact-placeholder {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 28px 24px;
+  border: 1px dashed var(--line-strong);
+  border-radius: 8px;
+  opacity: .85;
+}
+
+.artifact-glyph {
+  width: 48px;
+  height: 48px;
+  border: 1px solid var(--line-strong);
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  color: var(--muted);
+}
+
+.artifact-placeholder h3 {
+  font-family: var(--serif);
+  font-size: 24px;
+  font-weight: 400;
+  margin-bottom: 6px;
+}
+
+.artifact-placeholder p {
+  font-size: 13px;
+  color: var(--muted);
+  margin: 0;
+}
+
+.workspace-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 12px;
+  color: var(--muted);
+  padding: 28px 0 24px;
+  margin-top: 30px;
+  border-top: 1px solid var(--line);
+}
+
+/* ==========================================================================
+   DESKTOP READER (RIGHT PANEL FOR SOURCES & EVIDENCE)
+   ========================================================================== */
+.reader {
+  flex: 0 0 348px;
+  width: 348px;
+  border-left: 1px solid var(--line);
+  background: var(--rail);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  transition: transform .25s ease;
+}
+
+.reader-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  min-height: 58px;
+  border-bottom: 1px solid var(--line);
+}
+
+.reader-heading > div {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: #b5b9c1;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.reader-tabs {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid var(--line);
+  padding: 10px 18px;
+}
+
+.reader-tabs > button {
+  font-size: 12px;
+  min-height: 32px;
+  flex: 1;
+  border: 1px solid transparent;
+  color: var(--muted);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all .15s;
+}
+
+.reader-tabs > button.active {
+  color: var(--text);
+  background: var(--surface-2);
+  border-color: var(--line);
+  font-weight: 600;
+}
+
+.reader-scroll {
+  padding: 20px 18px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.source-meta {
+  font-size: 11px;
+  color: var(--muted);
+  font-family: var(--mono);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.archival-paper {
+  background: var(--paper);
+  color: var(--paper-ink);
+  border-radius: 4px;
+  padding: 22px 20px 18px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  min-height: 410px;
+}
+
+.paper-kicker {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: #706b61;
+  text-transform: uppercase;
+  letter-spacing: .8px;
+  border-bottom: 1px solid #cfc8ba;
+  padding-bottom: 12px;
+  margin-bottom: 18px;
+}
+
+.archival-paper h2 {
+  font-family: var(--serif);
+  font-size: 28px;
+  font-weight: 400;
+  line-height: 1.1;
+  margin-bottom: 16px;
+  color: #141619;
+}
+
+.paper-rule {
+  width: 24px;
+  height: 1px;
+  background: #a9a295;
+  margin-bottom: 18px;
+}
+
+.paper-text {
+  font-family: Georgia, serif;
+  font-size: 13px;
+  line-height: 1.9;
+  white-space: pre-wrap;
+  color: #242629;
+}
+
+.paper-text mark {
+  background: #ccdfc5;
+  color: #1d2d16;
+  padding: 2px 3px;
+  border-bottom: 1px solid #8ba27e;
+  border-radius: 2px;
+}
+
+.paper-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px solid #ccc5b7;
+  padding-top: 14px;
+  margin-top: 24px;
+  color: #777066;
+  font-family: var(--mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: .3px;
+}
+
+.page-navigation {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 14px 0 20px;
+  font-size: 12px;
+  color: var(--muted);
+  font-family: var(--mono);
+}
+
+.evidence-note {
+  display: flex;
+  gap: 10px;
+  border-top: 1px solid var(--line);
+  padding-top: 16px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.evidence-note svg {
+  color: #9eac91;
+  margin-top: 2px;
+}
+
+.reader-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 14px 10px;
+  border-top: 1px solid var(--line);
+  font-size: 11px;
+  color: var(--muted);
+}
+
+/* ==========================================================================
+   OTHER VIEWS (CHAT, ATLAS, PRACTICE, COMMUNITY, MEMORY)
+   ========================================================================== */
+.view-panel {
+  display: none;
+}
+.view-panel.active {
+  display: block;
+}
+
+/* CHAT VIEW */
+.chat-view {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.agent-thread-heading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 18px;
+}
+
+.agent-thread-heading h2 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.agent-thread-heading p {
+  margin: 3px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.chat-welcome {
+  padding: 55px 10px 65px;
+  text-align: center;
+}
+
+.serif {
+  font-family: var(--serif);
+  font-size: 38px;
+}
+
+.chat-composer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+}
+
+.chat-composer > input {
+  border: 0;
+  background: none;
+  flex: 1;
+  min-width: 0;
+  padding: 8px 0;
+  font-size: 13px;
+  outline: none;
+  color: var(--text);
+}
+
+.chat-exchange .question {
+  max-width: 85%;
+  width: fit-content;
+  margin: 0 0 18px auto;
+  border: 1px solid #3c4149;
+  background: #1b1f25;
+  padding: 12px 18px;
+  border-radius: 8px;
+  font-size: 13px;
+  line-height: 1.8;
+}
+
+/* MODAL STYLES */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, .75);
+  backdrop-filter: blur(6px);
+  z-index: 100;
+  display: none;
+  place-items: center;
+}
+.modal-overlay.open {
+  display: grid;
+}
+
+.modal-content {
+  width: min(520px, calc(100vw - 32px));
+  max-height: 85dvh;
+  overflow-y: auto;
+  border: 1px solid var(--line-strong);
+  border-radius: 12px;
+  padding: 26px;
+  background: var(--rail);
+  box-shadow: 0 30px 100px rgba(0, 0, 0, .8);
+}
+</style>
+</head>
+<body>
+
+<div class="atlas-app" id="app">
+  <!-- ======================================================================
+       1. SIDEBAR (246px ATELIER RAIL)
+       ====================================================================== -->
+  <aside class="sidebar desktop-sidebar">
+    <div class="brand">
+      <div class="brand-symbol">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <circle cx="12" cy="12" r="9"/>
+          <path d="M12 3a9 9 0 0 1 9 9"/>
+        </svg>
+      </div>
+      <div>
+        <div style="line-height:1;">ATLAS</div>
+        <span class="brand-sub">NovaMente</span>
+      </div>
+      <span class="brand-version">v3</span>
+    </div>
+
+    <button class="search-trigger" onclick="alert('Busca rápida acionada (⌘K)')">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <span>Buscar uma fonte…</span>
+      <kbd>⌘ K</kbd>
+    </button>
+
+    <nav aria-label="Espaços de trabalho">
+      <div class="sidebar-label">Seu espaço</div>
+      <button class="nav-row" onclick="switchTab('chat')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        <span>Canais dos agentes</span>
+      </button>
+      <button class="nav-row active" onclick="switchTab('studio')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+        <span>Estúdio de adaptação</span>
+        <span class="nav-pip"></span>
+      </button>
+      <button class="nav-row" onclick="switchTab('atlas')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M2 12h3M19 12h3M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12"/></svg>
+        <span>Atlas de conhecimento</span>
+      </button>
+      <button class="nav-row" onclick="switchTab('practice')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        <span>Oficina & prática</span>
+      </button>
+      <button class="nav-row" onclick="switchTab('community')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        <span>Grupos de estudo</span>
+      </button>
+      <button class="nav-row" onclick="switchTab('memory')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a8 8 0 0 0-8 8c0 5.4 7.05 11.5 7.35 11.76a1 1 0 0 0 1.3 0C12.95 21.5 20 15.4 20 10a8 8 0 0 0-8-8zm0 11a3 3 0 1 1 0-6 3 3 0 0 1 0 6z"/></svg>
+        <span>Memória & Dreamer</span>
+      </button>
+    </nav>
+
+    <div class="sidebar-agents">
+      <div class="sidebar-label row between">
+        <span>Seus tutores</span>
+        <span class="roster-dots">•••</span>
+      </div>
+
+      <!-- NILO -->
+      <button class="agent-row" onclick="selectAgent('nilo', '#74D8F7')">
+        <div class="agent-orb-mini" style="color:#74D8F7;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8"/><path d="M12 8v8"/></svg>
+        </div>
+        <div>
+          <strong>Nilo</strong>
+          <small>Tutor paciente e metódico</small>
+        </div>
+        <span class="agent-status" style="background:#74D8F7;"></span>
+      </button>
+
+      <!-- LUMI (ACTIVE) -->
+      <button class="agent-row active" onclick="selectAgent('lumi', '#85E7B8')">
+        <div class="agent-orb-mini" style="color:#85E7B8;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15 8 21 9 17 14 18 20 12 17 6 20 7 14 3 9 9 8 12 2"/></svg>
+        </div>
+        <div>
+          <strong>Lumi</strong>
+          <small>Exploradora curiosa</small>
+        </div>
+        <span class="agent-status" style="background:#85E7B8;"></span>
+      </button>
+
+      <!-- PRISMA -->
+      <button class="agent-row" onclick="selectAgent('prisma', '#F4B46A')">
+        <div class="agent-orb-mini" style="color:#F4B46A;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 22 22 22"/></svg>
+        </div>
+        <div>
+          <strong>Prisma</strong>
+          <small>Revisor documental crítico</small>
+        </div>
+        <span class="agent-status" style="background:#F4B46A;"></span>
+      </button>
+
+      <!-- FIO -->
+      <button class="agent-row" onclick="selectAgent('fio', '#FA8C83')">
+        <div class="agent-orb-mini" style="color:#FA8C83;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+        </div>
+        <div>
+          <strong>Fio</strong>
+          <small>Criador de artefatos</small>
+        </div>
+        <span class="agent-status" style="background:#FA8C83;"></span>
+      </button>
+
+      <!-- SOMA -->
+      <button class="agent-row" onclick="selectAgent('soma', '#C5A7F5')">
+        <div class="agent-orb-mini" style="color:#C5A7F5;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+        </div>
+        <div>
+          <strong>Soma</strong>
+          <small>Coach acolhedor de ritmo</small>
+        </div>
+        <span class="agent-status" style="background:#C5A7F5;"></span>
+      </button>
+    </div>
+
+    <div class="sidebar-bottom">
+      <button class="custom-atlas-button" onclick="document.getElementById('modal-customizer').classList.add('open')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#ff4f38" stroke-width="2"><path d="M12 2l2.4 7.2h7.6l-6 4.8 2.4 7.2-6.4-4.8-6.4 4.8 2.4-7.2-6-4.8h7.6z"/></svg>
+        <span>Crie seu Atlas</span>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
+
+      <button class="calm-button" id="calm-btn" onclick="toggleCalm()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>
+        <span>Baixo estímulo</span>
+        <span id="calm-status">Off</span>
+      </button>
+
+      <div class="local-user">
+        <div class="user-avatar">A</div>
+        <div>
+          <strong>Meu aprendizado</strong>
+          <span>Workspace local</span>
+        </div>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      </div>
+
+      <div class="progress-label">
+        <span>Nível 1</span>
+        <span class="mono">0 XP</span>
+      </div>
+      <div class="progress-track">
+        <div class="progress-fill" id="xp-fill"></div>
+      </div>
+      <span class="progress-footnote">No seu ritmo, sempre.</span>
+    </div>
+  </aside>
+
+  <!-- ======================================================================
+       2. WORKSPACE MAIN SHELL
+       ====================================================================== -->
+  <div class="workspace-shell">
+    <!-- TOPBAR -->
+    <header class="topbar">
+      <div class="row">
+        <span class="breadcrumb">
+          Workspace <span>/</span> <strong id="breadcrumb-title">Estúdio de adaptação</strong>
+        </span>
+      </div>
+      <div class="row top-actions">
+        <span class="edition-label">
+          <span class="tiny-square"></span> Atelier
+        </span>
+        <button class="icon-button" id="focus-btn" onclick="toggleFocus()" title="Modo foco">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/></svg>
+        </button>
+        <button class="button source-toggle" onclick="toggleReader()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+          <span>Fontes</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- CAPABILITY BAR -->
+    <div class="capability-bar">
+      <span class="status-dot online"></span>
+      <span>Modo local: trechos das fontes</span>
+      <span class="capability-detail">Armazenamento local · Busca lexical de demonstração</span>
+    </div>
+
+    <!-- WORKSPACE BODY WITH DUAL COLUMNS -->
+    <div class="workspace-body">
+      <main class="main-area" id="workspace-main">
+
+        <!-- TAB: STUDIO -->
+        <div class="view-panel active" id="view-studio">
+          <div class="editorial-head">
+            <div class="page-context">
+              <span class="section-rule"></span> Estúdio de aprendizagem
+            </div>
+            <h1>Do documento à compreensão.</h1>
+            <p>Quatro passos: fontes, formato, tutor e objetivo. Cada citação aponta para a página original.</p>
+          </div>
+
+          <form id="studio-form" onsubmit="handleGenerate(event)">
+            <!-- 1. SUAS FONTES -->
+            <div class="section-heading">
+              <h2>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                Suas fontes
+              </h2>
+              <button type="button" class="text-button" onclick="alert('Selecione um arquivo PDF, Markdown ou TXT até 10 MiB.')">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Adicionar fonte
+              </button>
+            </div>
+
+            <div class="document-strip">
+              <!-- CHIP 1 (SELECTED) -->
+              <div class="document-chip selected">
+                <label>
+                  <input type="checkbox" checked onchange="this.closest('.document-chip').classList.toggle('selected')">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>
+                  <span>
+                    <strong>Biologia Celular</strong>
+                    <small>42 páginas · v1</small>
+                  </span>
+                </label>
+                <button type="button" class="icon-button" title="Abrir fonte" onclick="openReaderPage(42)">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                </button>
+              </div>
+
+              <!-- CHIP 2 -->
+              <div class="document-chip">
+                <label>
+                  <input type="checkbox" onchange="this.closest('.document-chip').classList.toggle('selected')">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>
+                  <span>
+                    <strong>Notas de aula — Genética</strong>
+                    <small>12 páginas · v1</small>
+                  </span>
+                </label>
+                <button type="button" class="icon-button" title="Abrir fonte" onclick="openReaderPage(1)">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                </button>
+              </div>
+
+              <!-- CHIP 3 -->
+              <div class="document-chip">
+                <label>
+                  <input type="checkbox" onchange="this.closest('.document-chip').classList.toggle('selected')">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>
+                  <span>
+                    <strong>Resumo Enzimas</strong>
+                    <small>5 páginas · v1</small>
+                  </span>
+                </label>
+                <button type="button" class="icon-button" title="Abrir fonte" onclick="openReaderPage(1)">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                </button>
+              </div>
+            </div>
+
+            <!-- 2. CONTROL DECK MATRIX -->
+            <div class="control-deck">
+              <div class="deck-title">
+                <span>Um material que faz sentido para você</span>
+                <span class="mono">Personalizar</span>
+              </div>
+              <div class="matrix">
+                <!-- SEU MOMENTO -->
+                <fieldset class="choice-group">
+                  <legend>Seu momento</legend>
+                  <div class="choice-grid">
+                    <button type="button" class="choice selected" onclick="pick(this)">
+                      <span class="choice-copy"><strong>Iniciante</strong><small>Passo a passo</small></span>
+                    </button>
+                    <button type="button" class="choice" onclick="pick(this)">
+                      <span class="choice-copy"><strong>Desenvolvedor</strong><small>Com exemplos</small></span>
+                    </button>
+                    <button type="button" class="choice" onclick="pick(this)">
+                      <span class="choice-copy"><strong>Arquiteto</strong><small>Visão sistêmica</small></span>
+                    </button>
+                    <button type="button" class="choice" onclick="pick(this)">
+                      <span class="choice-copy"><strong>Executivo</strong><small>Decisão rápida</small></span>
+                    </button>
+                  </div>
+                </fieldset>
+
+                <!-- COMO QUER APRENDER -->
+                <fieldset class="choice-group">
+                  <legend>Como quer aprender?</legend>
+                  <div class="choice-grid">
+                    <button type="button" class="choice selected" onclick="pick(this)">
+                      <span class="choice-copy"><strong>Guia prático</strong><small>Explicação guiada</small></span>
+                    </button>
+                    <button type="button" class="choice" onclick="pick(this)">
+                      <span class="choice-copy"><strong>Flashcards</strong><small>Revisão ativa</small></span>
+                    </button>
+                    <button type="button" class="choice" onclick="pick(this)">
+                      <span class="choice-copy"><strong>Quiz ativo</strong><small>Teste com feedback</small></span>
+                    </button>
+                    <button type="button" class="choice" onclick="pick(this)">
+                      <span class="choice-copy"><strong>Resumo executivo</strong><small>Síntese objetiva</small></span>
+                    </button>
+                  </div>
+                </fieldset>
+
+                <!-- CONTEXTO DE APLICAÇÃO -->
+                <fieldset class="choice-group">
+                  <legend>Contexto de aplicação</legend>
+                  <div class="choice-grid">
+                    <button type="button" class="choice selected" onclick="pick(this)">
+                      <span class="choice-copy"><strong>Geral</strong><small>Conceitos padrão</small></span>
+                    </button>
+                    <button type="button" class="choice" onclick="pick(this)">
+                      <span class="choice-copy"><strong>Fintech</strong><small>Casos de mercado</small></span>
+                    </button>
+                    <button type="button" class="choice" onclick="pick(this)">
+                      <span class="choice-copy"><strong>Saúde</strong><small>Bio & Clínico</small></span>
+                    </button>
+                    <button type="button" class="choice" onclick="pick(this)">
+                      <span class="choice-copy"><strong>E-commerce</strong><small>Escala & Produtos</small></span>
+                    </button>
+                  </div>
+                </fieldset>
+              </div>
+
+              <!-- ACCORDION CONTROLES AVANÇADOS -->
+              <details class="advanced">
+                <summary>
+                  <span>Controles avançados</span>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                </summary>
+                <div class="advanced-grid">
+                  <label>
+                    Método pedagógico
+                    <select id="method-select">
+                      <option value="auto">Escolha automática (Decision Model)</option>
+                      <option value="socratic">Socrático (Perguntas investigativas)</option>
+                      <option value="feynman">Feynman (Analogias de linguagem comum)</option>
+                      <option value="first_principles">Primeiros princípios (Desconstrução analítica)</option>
+                      <option value="warburg">Warburg (Atlas iconológico e relações)</option>
+                    </select>
+                  </label>
+                  <label>
+                    Estratégia de Recuperação (RAG)
+                    <select id="rag-select">
+                      <option value="auto">Escolha automática calibrada</option>
+                      <option value="hybrid">Híbrida (FTS + Vetores + RRF)</option>
+                      <option value="vector">Vetorial pura (Top-K semântico)</option>
+                      <option value="lm">Contexto documental integral (LM RAG)</option>
+                    </select>
+                  </label>
+                </div>
+                <p>O método muda a abordagem cognitiva. A personalidade do tutor continua a mesma.</p>
+              </details>
+            </div>
+
+            <!-- 3. QUEM VAI ACOMPANHAR VOCÊ (5 AGENTES) -->
+            <div class="section-heading tutor-heading">
+              <h2>Quem vai acompanhar você?</h2>
+              <span class="small">Cinco perspectivas, suas fontes</span>
+            </div>
+
+            <div class="agent-strip">
+              <!-- NILO -->
+              <button type="button" class="agent-card" style="--agent-color:#74D8F7;" onclick="selectStripAgent(this, 'Nilo')">
+                <div class="agent-card-orb">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8"/><path d="M12 8v8"/></svg>
+                </div>
+                <strong>Nilo</strong>
+                <span>Tutor paciente e preciso</span>
+              </button>
+
+              <!-- LUMI (SELECTED) -->
+              <button type="button" class="agent-card selected" style="--agent-color:#85E7B8;" onclick="selectStripAgent(this, 'Lumi')">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" class="agent-check"><polyline points="20 6 9 17 4 12"/></svg>
+                <div class="agent-card-orb">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15 8 21 9 17 14 18 20 12 17 6 20 7 14 3 9 9 8 12 2"/></svg>
+                </div>
+                <strong>Lumi</strong>
+                <span>Exploradora curiosa</span>
+              </button>
+
+              <!-- PRISMA -->
+              <button type="button" class="agent-card" style="--agent-color:#F4B46A;" onclick="selectStripAgent(this, 'Prisma')">
+                <div class="agent-card-orb">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 22 22 22"/></svg>
+                </div>
+                <strong>Prisma</strong>
+                <span>Revisor crítico</span>
+              </button>
+
+              <!-- FIO -->
+              <button type="button" class="agent-card" style="--agent-color:#FA8C83;" onclick="selectStripAgent(this, 'Fio')">
+                <div class="agent-card-orb">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                </div>
+                <strong>Fio</strong>
+                <span>Criador organizado</span>
+              </button>
+
+              <!-- SOMA -->
+              <button type="button" class="agent-card" style="--agent-color:#C5A7F5;" onclick="selectStripAgent(this, 'Soma')">
+                <div class="agent-card-orb">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                </div>
+                <strong>Soma</strong>
+                <span>Coach acolhedor</span>
+              </button>
+            </div>
+
+            <!-- 4. GOAL COMPOSER -->
+            <div class="goal-composer">
+              <label for="goal-text">O que você quer compreender?</label>
+              <textarea id="goal-text" placeholder="Ex.: explique os conceitos principais e como eles se conectam…" required>Quero compreender o processo de fotossíntese e as reações da fase fotoquímica na membrana dos tilacoides.</textarea>
+              <div class="row between">
+                <span class="composer-hint">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                  A partir das fontes selecionadas
+                </span>
+                <button type="submit" class="button primary" id="generate-submit-btn">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15 8 21 9 17 14 18 20 12 17 6 20 7 14 3 9 9 8 12 2"/></svg>
+                  <span>Criar meu material</span>
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                </button>
+              </div>
+            </div>
+          </form>
+
+          <!-- PACKAGE DISPLAY (ARTIFACT) -->
+          <div id="package-container">
+            <section class="package">
+              <div class="package-top">
+                <span class="package-type">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                  Material pedagógico adaptado
+                </span>
+                <button class="text-button" onclick="alert('Exportando pacote educacional JSON...')">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                  Exportar JSON
+                </button>
+              </div>
+
+              <div class="package-body">
+                <div class="row between">
+                  <span class="tag">Método Feynman</span>
+                  <span class="small" style="color:var(--muted)">Suporte documental avaliado</span>
+                </div>
+
+                <h2>Fotossíntese: Conversão Energética nos Tilacoides</h2>
+                <p class="package-intro">
+                  A fotossíntese funciona como uma usina solar biológica. Organismos fotossintetizantes utilizam complexos multiproteicos ancorados na membrana interna dos tilacoides para converter fótons solares em moeda energética celular (ATP e NADPH).
+                </p>
+
+                <!-- ITEM 1: TUTORIAL -->
+                <article class="learning-item">
+                  <div class="learning-heading">
+                    <span class="item-number">01</span>
+                    <h3>Fotólise da Água e Gradiente Quimiosmótico</h3>
+                  </div>
+                  <p class="learning-body">
+                    A energia capturada pela clorofila excita elétrons que percorrem uma cadeia de transporte até o NADP+. Concomitantemente, a molécula de água é cindida (liberando O₂), gerando uma concentração elevada de prótons dentro do lúmen tilacoidal. Esse gradiente de concentração aciona a turbina molecular da ATP sintase.
+                  </p>
+                  <div class="citations">
+                    <button class="citation" onclick="openReaderPage(42)" title="Ler evidência no manuscrito">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+                      <span>Biologia Celular</span>
+                      <span>p. 42</span>
+                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                    </button>
+                  </div>
+                </article>
+
+                <!-- ITEM 2: QUIZ INTERATIVO -->
+                <article class="learning-item">
+                  <div class="learning-heading">
+                    <span class="item-number">02</span>
+                    <h3>Verificação Ativa: Onde ocorre o acúmulo de prótons?</h3>
+                  </div>
+                  <div style="display:flex;flex-direction:column;gap:8px;margin:14px 0;" id="quiz-options-group">
+                    <button class="button" style="text-align:left;justify-content:flex-start;padding:12px 14px;" onclick="answerQuiz(this, false)">
+                      <strong style="margin-right:10px;font-family:var(--mono)">A</strong> No estroma do cloroplasto
+                    </button>
+                    <button class="button" style="text-align:left;justify-content:flex-start;padding:12px 14px;" onclick="answerQuiz(this, true)">
+                      <strong style="margin-right:10px;font-family:var(--mono)">B</strong> No lúmen dos tilacoides (espaço intratilacoidal)
+                    </button>
+                    <button class="button" style="text-align:left;justify-content:flex-start;padding:12px 14px;" onclick="answerQuiz(this, false)">
+                      <strong style="margin-right:10px;font-family:var(--mono)">C</strong> Na membrana externa mitocondrial
+                    </button>
+                  </div>
+                  <div id="quiz-feedback-box" style="display:none;padding:12px 14px;background:#15221a;border:1px solid #2d4c35;border-radius:6px;color:#a9d5b6;font-size:12px;">
+                    <strong>✓ Resposta exata!</strong> O bombeamento de prótons $H^+$ concentra íons no lúmen, criando a força próton-motriz verificada no capítulo 42 da sua fonte. <strong>+30 XP atribuídos.</strong>
+                  </div>
+                </article>
+              </div>
+
+              <div class="package-bottom">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                <p>Passagem validada deterministicamente por hash SHA-256 e ancorada em página auditável.</p>
+                <span class="mono">Salvo localmente</span>
+              </div>
+            </section>
+          </div>
+
+          <footer class="workspace-footer">
+            <span><span class="tiny-square"></span> Atlas by NovaMente</span>
+            <span>Aprenda com calma. Confira na fonte.</span>
+          </footer>
+        </div>
+
+        <!-- TAB: CHAT -->
+        <div class="view-panel" id="view-chat">
+          <div class="chat-view">
+            <div class="agent-thread-heading">
+              <div class="agent-orb-mini" id="chat-thread-orb" style="color:#85E7B8;width:38px;height:38px;">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15 8 21 9 17 14 18 20 12 17 6 20 7 14 3 9 9 8 12 2"/></svg>
+              </div>
+              <div>
+                <h2 id="chat-thread-name">Lumi</h2>
+                <p id="chat-thread-role">Exploradora curiosa · 1 fonte selecionada</p>
+              </div>
+            </div>
+
+            <div id="chat-history">
+              <div class="chat-exchange">
+                <div class="question">Como o ATP é sintetizado na membrana do tilacoide?</div>
+                <section class="package" style="margin-bottom:16px;">
+                  <div class="package-body">
+                    <p class="learning-body" style="margin:0;">
+                      Olá! Durante a fase de luz, a cadeia transportadora bombeia prótons para dentro do lúmen. A <strong>ATP sintase</strong> funciona como uma turbina rotativa que utiliza esse fluxo descendente de prótons de volta ao estroma para fosforilar ADP em ATP.
+                    </p>
+                    <div class="citations" style="margin-top:12px;">
+                      <button class="citation" onclick="openReaderPage(42)">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+                        <span>Biologia Celular</span>
+                        <span>p. 42</span>
+                      </button>
+                    </div>
+                  </div>
+                </section>
+              </div>
+            </div>
+
+            <form class="chat-composer" onsubmit="handleSendChat(event)">
+              <input type="text" id="chat-input-text" placeholder="Pergunte à Lumi sobre suas fontes…" required>
+              <button type="submit" class="icon-button" style="color:var(--accent);">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <!-- TAB: ATLAS (GRAPH) -->
+        <div class="view-panel" id="view-atlas">
+          <div class="editorial-head">
+            <div class="page-context"><span class="section-rule"></span> Atlas de conhecimento</div>
+            <h1>Ideias que encontram suas fontes.</h1>
+            <p>Explore relações documentais verificáveis, uma citação de cada vez.</p>
+          </div>
+          <div style="border:1px solid var(--line);border-radius:8px;background:var(--rail);overflow:hidden;padding:24px;text-align:center;">
+            <svg width="100%" height="280" viewBox="0 0 600 280">
+              <circle cx="300" cy="140" r="32" fill="#171a1e" stroke="#ff4f38" stroke-width="2"/>
+              <text x="300" y="145" fill="#ededef" text-anchor="middle" font-size="12" font-family="var(--sans)">Fotossíntese</text>
+              
+              <line x1="300" y1="140" x2="160" y2="70" stroke="#343a42" stroke-width="1.5"/>
+              <circle cx="160" cy="70" r="22" fill="#171a1e" stroke="#74D8F7" stroke-width="1.5"/>
+              <text x="160" y="74" fill="#a2a6ae" text-anchor="middle" font-size="10">Clorofila</text>
+
+              <line x1="300" y1="140" x2="440" y2="70" stroke="#343a42" stroke-width="1.5"/>
+              <circle cx="440" cy="70" r="22" fill="#171a1e" stroke="#85E7B8" stroke-width="1.5"/>
+              <text x="440" y="74" fill="#a2a6ae" text-anchor="middle" font-size="10">Tilacoides</text>
+
+              <line x1="300" y1="140" x2="300" y2="230" stroke="#343a42" stroke-width="1.5" stroke-dasharray="4 4"/>
+              <circle cx="300" cy="230" r="22" fill="#171a1e" stroke="#C5A7F5" stroke-width="1.5"/>
+              <text x="300" y="234" fill="#a2a6ae" text-anchor="middle" font-size="10">ATP Sintase</text>
+            </svg>
+            <p style="font-size:12px;color:var(--muted);margin-top:14px;">3 conexões ativas verificadas nas citações geradas nesta sessão.</p>
+          </div>
+        </div>
+
+        <!-- TAB: PRACTICE -->
+        <div class="view-panel" id="view-practice">
+          <div class="editorial-head">
+            <div class="page-context"><span class="section-rule"></span> Oficina & prática</div>
+            <h1>Conhecimento pede prática.</h1>
+            <p>Revise o que você criou e teste sua compreensão, no seu ritmo.</p>
+          </div>
+          <div style="padding:22px;background:var(--surface);border:1px solid var(--line);border-radius:8px;display:flex;align-items:center;gap:14px;margin-bottom:20px;">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--mint)" stroke-width="2"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/></svg>
+            <div>
+              <h2 style="margin:0 0 4px;font-size:14px;">1 atividade concluída</h2>
+              <p style="margin:0;font-size:12px;color:var(--muted);">Respostas verificadas pelo servidor alimentam seu progresso.</p>
+            </div>
+            <span style="margin-left:auto;font-family:var(--mono);color:var(--mint);font-size:16px;">30 XP</span>
+          </div>
+        </div>
+
+        <!-- TAB: COMMUNITY -->
+        <div class="view-panel" id="view-community">
+          <div class="editorial-head">
+            <div class="page-context"><span class="section-rule"></span> Grupos de estudo</div>
+            <h1>Aprender também é compartilhar.</h1>
+            <p>Grupos locais deste workspace. Sua biblioteca privada permanece sob seu controle.</p>
+          </div>
+          <div style="border:1px solid var(--line);border-radius:8px;background:var(--rail);padding:20px;">
+            <p style="font-size:13px;color:var(--secondary)">Nenhum grupo criado neste workspace local.</p>
+            <button class="button primary" onclick="alert('Funcionalidade de grupos locais habilitada!')">+ Criar grupo</button>
+          </div>
+        </div>
+
+        <!-- TAB: MEMORY & DREAMER -->
+        <div class="view-panel" id="view-memory">
+          <div class="editorial-head">
+            <div class="page-context"><span class="section-rule"></span> Memória & Dreamer</div>
+            <h1>Uma memória sob seu controle.</h1>
+            <p>Você decide o que lembrar. Cada mudança deixa um registro auditável.</p>
+          </div>
+          <div style="padding:20px;border:1px solid var(--line-strong);background:var(--surface);border-radius:8px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;">
+            <div>
+              <h2 style="font-size:14px;margin-bottom:4px;">Memória de aprendizagem</h2>
+              <p style="font-size:12px;color:var(--secondary);margin:0;">Permita registrar eventos de aprendizagem para calibrar políticas pedagógicas.</p>
+            </div>
+            <button class="button primary" style="background:#52684d;border-color:#52684d;" onclick="alert('Consentimento registrado com sucesso!')">Autorizada</button>
+          </div>
+        </div>
+
+      </main>
+
+      <!-- ======================================================================
+           3. DESKTOP READER (MANUSCRITO & PROVENIÊNCIA)
+           ====================================================================== -->
+      <aside class="reader desktop-reader" id="desktop-reader">
+        <div class="reader-heading">
+          <div>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+            <strong>Fontes & evidências</strong>
+          </div>
+          <button class="icon-button" style="display:none;" id="reader-close-btn" onclick="toggleReader()">✕</button>
+        </div>
+
+        <div class="reader-tabs">
+          <button class="active" id="tab-manuscrito" onclick="switchReaderTab('manuscrito')">Manuscrito</button>
+          <button id="tab-proveniencia" onclick="switchReaderTab('proveniencia')">Proveniência</button>
+        </div>
+
+        <div class="reader-scroll">
+          <!-- SUBVIEW: MANUSCRITO -->
+          <div id="reader-sub-manuscrito">
+            <div class="source-meta">
+              <span>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>
+                Biologia Celular
+              </span>
+              <span>p. 42/48</span>
+            </div>
+
+            <article class="archival-paper">
+              <div class="paper-kicker">
+                <span>Documento original</span>
+                <span>página 42</span>
+              </div>
+              <h2>Biologia Celular</h2>
+              <div class="paper-rule"></div>
+              <div class="paper-text">"As reações fotoquímicas ocorrem na membrana dos tilacoides nos cloroplastos. <mark>A fotólise da água libera oxigênio e elétrons de alta energia, promovendo o acúmulo de prótons H+ no lúmen tilacoidal e impulsionando a síntese de ATP pela ATP sintase.</mark> Esse mecanismo de gradiente transmembrana é o núcleo da fotofosforilação não-cíclica."</div>
+              <div class="paper-footer">
+                <span>Extraído da sua fonte</span>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              </div>
+            </article>
+
+            <div class="page-navigation">
+              <button class="icon-button" onclick="alert('Página anterior')">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+              </button>
+              <span>Página 42 de 48</span>
+              <button class="icon-button" onclick="alert('Próxima página')">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+              </button>
+            </div>
+
+            <div class="evidence-note">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              <p>O destaque em verde corresponde exatamente ao trecho citado no material adaptado. O contexto da página original está preservado.</p>
+            </div>
+          </div>
+
+          <!-- SUBVIEW: PROVENIÊNCIA -->
+          <div id="reader-sub-proveniencia" style="display:none;font-size:12px;">
+            <h3 style="font-family:var(--serif);font-size:24px;font-weight:400;margin-bottom:12px;">O caminho da evidência</h3>
+            <p style="color:var(--secondary);">Trechos literais extraídos de fontes validadas sem alucinação factual.</p>
+            <div style="border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:14px 0;margin:14px 0;display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+              <span style="color:var(--muted)">Método:</span><strong>Feynman</strong>
+              <span style="color:var(--muted)">Recuperação:</span><strong>Híbrida</strong>
+              <span style="color:var(--muted)">Judge:</span><strong>Apoiado</strong>
+              <span style="color:var(--muted)">Armazenamento:</span><strong>Local auditado</strong>
+            </div>
+            <div style="border:1px solid var(--line);border-radius:6px;padding:12px;background:var(--surface);">
+              <strong>Biologia Celular (v1)</strong>
+              <code style="display:block;font-size:10px;color:var(--muted);margin-top:6px;font-family:var(--mono);">sha256: 4a7fe81923b...</code>
+            </div>
+          </div>
+        </div>
+
+        <div class="reader-bottom">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          <span>Referências reais. Contexto sempre à mão.</span>
+        </div>
+      </aside>
+    </div>
+  </div>
+</div>
+
+<!-- ==========================================================================
+     MODAL DE PERSONALIZAÇÃO (ATLAS CUSTOMIZER)
+     ========================================================================== -->
+<div class="modal-overlay" id="modal-customizer">
+  <div class="modal-content">
+    <div class="row between" style="margin-bottom:18px;">
+      <h2 style="font-family:var(--serif);font-size:26px;margin:0;">Seu Atlas, do seu jeito</h2>
+      <button class="icon-button" onclick="document.getElementById('modal-customizer').classList.remove('open')">✕</button>
+    </div>
+    <p style="font-size:12px;color:var(--secondary);line-height:1.7;margin-bottom:20px;">
+      Personalize a identidade visual e a cor do seu companheiro neste navegador. Suas fontes e o consentimento do Dreamer continuam independentes.
+    </p>
+    <div style="display:flex;flex-direction:column;gap:14px;">
+      <label style="font-size:12px;font-weight:600;">
+        Nome do companheiro
+        <input type="text" value="Meu Atlas" style="width:100%;margin-top:6px;padding:10px;background:var(--surface);border:1px solid var(--line-strong);border-radius:6px;color:#fff;">
+      </label>
+      <label style="font-size:12px;font-weight:600;">
+        Cor do Orb
+        <div style="display:flex;gap:10px;margin-top:8px;">
+          <button style="width:32px;height:32px;border-radius:50%;background:#ff4f38;border:2px solid #fff;"></button>
+          <button style="width:32px;height:32px;border-radius:50%;background:#74D8F7;border:2px solid transparent;"></button>
+          <button style="width:32px;height:32px;border-radius:50%;background:#85E7B8;border:2px solid transparent;"></button>
+          <button style="width:32px;height:32px;border-radius:50%;background:#F4B46A;border:2px solid transparent;"></button>
+          <button style="width:32px;height:32px;border-radius:50%;background:#C5A7F5;border:2px solid transparent;"></button>
+        </div>
+      </label>
+      <button class="button primary" style="margin-top:12px;" onclick="document.getElementById('modal-customizer').classList.remove('open')">Salvar identidade</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==========================================================================
+     INTERACTIVE CONTROLLER JAVASCRIPT
+     ========================================================================== -->
+<script>
+let currentAgent = 'Lumi';
+let isReaderOpen = true;
+
+function pick(button) {
+  const group = button.closest('.choice-grid');
+  group.querySelectorAll('.choice').forEach(b => b.classList.remove('selected'));
+  button.classList.add('selected');
+}
+
+function selectStripAgent(card, name) {
+  document.querySelectorAll('.agent-strip .agent-card').forEach(c => {
+    c.classList.remove('selected');
+    const check = c.querySelector('.agent-check');
+    if (check) check.remove();
+  });
+  card.classList.add('selected');
+  const checkSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  checkSvg.setAttribute('width', '11');
+  checkSvg.setAttribute('height', '11');
+  checkSvg.setAttribute('viewBox', '0 0 24 24');
+  checkSvg.setAttribute('fill', 'none');
+  checkSvg.setAttribute('stroke', 'currentColor');
+  checkSvg.setAttribute('stroke-width', '3');
+  checkSvg.classList.add('agent-check');
+  checkSvg.innerHTML = '<polyline points="20 6 9 17 4 12"/>';
+  card.appendChild(checkSvg);
+  currentAgent = name;
+}
+
+function selectAgent(id, color) {
+  document.querySelectorAll('.agent-row').forEach(r => r.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+  const name = id.charAt(0).toUpperCase() + id.slice(1);
+  currentAgent = name;
+  document.getElementById('chat-thread-name').textContent = name;
+  document.getElementById('chat-thread-orb').style.color = color;
+  switchTab('chat');
+}
+
+function switchTab(tabId) {
+  document.querySelectorAll('.nav-row').forEach(r => r.classList.remove('active'));
+  event.currentTarget?.classList.add('active');
+
+  const titles = {
+    studio: 'Estúdio de adaptação',
+    chat: 'Canais dos agentes',
+    atlas: 'Atlas de conhecimento',
+    practice: 'Oficina & prática',
+    community: 'Grupos de estudo',
+    memory: 'Memória & Dreamer'
+  };
+  document.getElementById('breadcrumb-title').textContent = titles[tabId] || tabId;
+
+  document.querySelectorAll('.view-panel').forEach(p => p.classList.remove('active'));
+  const target = document.getElementById('view-' + tabId);
+  if (target) target.classList.add('active');
+}
+
+function toggleReader() {
+  const reader = document.getElementById('desktop-reader');
+  isReaderOpen = !isReaderOpen;
+  reader.style.display = isReaderOpen ? 'flex' : 'none';
+}
+
+function openReaderPage(p) {
+  const reader = document.getElementById('desktop-reader');
+  reader.style.display = 'flex';
+  isReaderOpen = true;
+  switchReaderTab('manuscrito');
+}
+
+function switchReaderTab(tab) {
+  document.getElementById('tab-manuscrito').classList.toggle('active', tab === 'manuscrito');
+  document.getElementById('tab-proveniencia').classList.toggle('active', tab === 'proveniencia');
+  document.getElementById('reader-sub-manuscrito').style.display = tab === 'manuscrito' ? 'block' : 'none';
+  document.getElementById('reader-sub-proveniencia').style.display = tab === 'proveniencia' ? 'block' : 'none';
+}
+
+function toggleFocus() {
+  const app = document.getElementById('app');
+  const btn = document.getElementById('focus-btn');
+  const sidebar = document.querySelector('.desktop-sidebar');
+  const reader = document.getElementById('desktop-reader');
+  const isFocus = app.classList.toggle('focus-mode');
+  btn.classList.toggle('active', isFocus);
+  if (isFocus) {
+    sidebar.style.display = 'none';
+    reader.style.display = 'none';
+  } else {
+    sidebar.style.display = 'flex';
+    reader.style.display = isReaderOpen ? 'flex' : 'none';
+  }
+}
+
+function toggleCalm() {
+  const btn = document.getElementById('calm-btn');
+  const status = document.getElementById('calm-status');
+  const isCalm = btn.classList.toggle('enabled');
+  status.textContent = isCalm ? 'Ativo' : 'Off';
+  document.body.style.filter = isCalm ? 'contrast(0.95) saturate(0.85)' : 'none';
+}
+
+function handleGenerate(e) {
+  e.preventDefault();
+  const btn = document.getElementById('generate-submit-btn');
+  btn.innerHTML = '<span>Adaptando material…</span>';
+  btn.disabled = true;
+
+  setTimeout(() => {
+    btn.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15 8 21 9 17 14 18 20 12 17 6 20 7 14 3 9 9 8 12 2"/></svg> <span>Criar meu material</span> <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>';
+    btn.disabled = false;
+    alert('Material gerado com citações verificadas a partir de Biologia Celular, pág. 42!');
+  }, 900);
+}
+
+function answerQuiz(btn, isCorrect) {
+  const group = document.getElementById('quiz-options-group');
+  group.querySelectorAll('button').forEach(b => {
+    b.disabled = true;
+    b.style.borderColor = 'var(--line-strong)';
+  });
+
+  if (isCorrect) {
+    btn.style.borderColor = 'var(--mint)';
+    btn.style.background = '#15221a';
+    document.getElementById('quiz-feedback-box').style.display = 'block';
+    document.getElementById('xp-fill').style.width = '70%';
+  } else {
+    btn.style.borderColor = 'var(--accent)';
+    btn.style.background = '#271815';
+    alert('Tentativa registrada. Confira o manuscrito na página 42 para encontrar a resposta exata.');
+  }
+}
+
+function handleSendChat(e) {
+  e.preventDefault();
+  const input = document.getElementById('chat-input-text');
+  const val = input.value.trim();
+  if (!val) return;
+
+  const history = document.getElementById('chat-history');
+  const userDiv = document.createElement('div');
+  userDiv.className = 'chat-exchange';
+  userDiv.innerHTML = `<div class="question">${val}</div>`;
+  history.appendChild(userDiv);
+  input.value = '';
+
+  setTimeout(() => {
+    const reply = document.createElement('section');
+    reply.className = 'package';
+    reply.style.marginBottom = '16px';
+    reply.innerHTML = `
+      <div class="package-body">
+        <p class="learning-body" style="margin:0;">
+          Compreendido! Analisando o manuscrito selecionado, encontramos passagem correlacionada na página 42, detalhando o mecanismo exato do complexo protéico.
+        </p>
+        <div class="citations" style="margin-top:12px;">
+          <button class="citation" onclick="openReaderPage(42)">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+            <span>Biologia Celular</span>
+            <span>p. 42</span>
+          </button>
+        </div>
+      </div>
+    `;
+    userDiv.appendChild(reply);
+    document.getElementById('workspace-main').scrollTop = document.getElementById('workspace-main').scrollHeight;
+  }, 700);
+}
+</script>
+</body>
+</html>
