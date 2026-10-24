@@ -865,7 +865,7 @@ preparação. O relatório `docs/research/integrations.md` registra a verificaç
 
 **Objetivo:** personalizar a companhia de estudo sem precisar configurar IA.
 
-A página inicial em `/` apresenta o produto. O estúdio continua em `/studio`.
+A página inicial em `/` apresenta o produto. A equipe acrescentou a entrada `/workspace`; `/studio` continua funcional.
 Você pode ir direto ao estúdio ou escolher primeiro uma identidade para um tutor.
 
 ### Criar, estudar e editar
@@ -923,7 +923,9 @@ você escolheu antes desse exercício.
 
 **Objetivo:** escolher um provedor sem espalhar chaves pelo projeto.
 
-Abra **Conexões e modelos** no estúdio, ou o caminho `/studio/settings`.
+Abra **Conexões e modelos** no estúdio. O painel fica em `/workspace/settings`
+ou no alias `/studio/settings`. A landing editorial preta/bege da equipe foi
+preservada, junto dos assets e do criador Seu Atlas.
 O painel separa geração, decisão Jev, pesquisa Firecrawl e embeddings opcionais.
 Uma chave de geração não configura automaticamente os outros recursos.
 

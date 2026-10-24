@@ -1,6 +1,6 @@
 # Atlas 0.4 — conexões, credenciais e entrega
 
-Atualização arquitetural de 24/10/2026. Complementa a Agent Factory 0.3 e incorpora landing Atlas, identidade pessoal, fontes de credenciais e build fora da VPS. O Dreamer continua núcleo. Agente, método, formato e provedor são escolhas independentes.
+Atualização arquitetural de 24/10/2026. A entrada `/workspace` e a landing editorial da equipe (`ca87c9e`) foram integradas; `/studio` continua como alias. O painel funciona em ambos os caminhos de estúdio, no sufixo `/settings`. Complementa a Agent Factory 0.3 e incorpora landing Atlas, identidade pessoal, fontes de credenciais e build fora da VPS. O Dreamer continua núcleo. Agente, método, formato e provedor são escolhas independentes.
 
 ```mermaid
 flowchart TD

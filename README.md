@@ -118,7 +118,7 @@ No seu computador local, abra o navegador em `http://127.0.0.1:3000` para conhec
 
 ### Conexões e modelos
 
-Abra `/studio/settings` ou **Conexões e modelos** na barra lateral. O painel separa geração, Jev, Firecrawl e embeddings opcionais. Aceita chaves gerenciadas por ambiente/arquivos ou chaves manuais criptografadas no servidor. `npm run init:vault` prepara a chave mestra em um checkout existente; reinicie os serviços depois. Não há chaves salvas no navegador.
+Abra `/workspace/settings` (também disponível em `/studio/settings`) ou **Conexões e modelos** na barra lateral. O painel separa geração, Jev, Firecrawl e embeddings opcionais. Aceita chaves gerenciadas por ambiente/arquivos ou chaves manuais criptografadas no servidor. `npm run init:vault` prepara a chave mestra em um checkout existente; reinicie os serviços depois. Não há chaves salvas no navegador.
 
 Eve pode chamar SDKs independentes OpenAI-compatible/OpenRouter e Anthropic, além do AI Gateway. O login por assinatura ChatGPT é opção de **desenvolvimento local**, mediante habilitação do operador e `/login` no terminal Eve; não é login de usuários do Atlas nem API de produção. Não há reutilização das credenciais do Codex desenvolvedor.
 
@@ -592,3 +592,10 @@ acesso/divergência antes de repetir. Não há transação atômica entre dois G
 O PDF permite GitHub Actions para build e GHCR para imagens Docker. OCI Compute é opcional; OCI Object Storage é obrigatório para originais e JSONs. Os workflows `Atlas checks` e `Atlas container images` não recebem chaves dos modelos nem da OCI. A publicação no GHCR é manual em `main`, com tags pelo SHA completo.
 
 `compose.deploy.yaml` e `scripts/deploy-pull.sh` usam imagens prontas: pull e `up --no-build`. Isso evita compilação nos 4 GB disponíveis. Confira a configuração, permissões do registry, cotas, saúde e os passos em [CONFIGURACAO_E_DEPLOY.md](docs/CONFIGURACAO_E_DEPLOY.md). Não houve provisionamento de VM, cobrança Oracle nem publicação automática do estúdio.
+
+
+A integração da equipe `ca87c9e` foi preservada: landing editorial preta/bege,
+assets e entrada `/workspace`. `/studio` continua como alias funcional. O criador
+**Seu Atlas** permanece na landing e os dois caminhos do estúdio levam ao painel
+de conexões correspondente. Os mockups/textos promocionais da landing não são
+prova de métricas de usuários nem substituem a auditoria do MVP.

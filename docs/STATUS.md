@@ -7,6 +7,10 @@ O MVP completo continua dependendo de integrações reais e autenticação públ
 
 ## Conexões, auditoria e entrega — 24/10/2026
 
+O redesign da equipe `ca87c9e` foi integrado sem force push, preservando a
+landing editorial, assets e `/workspace`. `/studio` continua funcional e ambos
+os estúdios têm `/settings`; o criador Seu Atlas foi mantido na landing.
+
 O PDF oficial foi conferido: Object Storage e prova vetorial são obrigatórios;
 Compute OCI é diferencial. Build Actions/GHCR é permitido. A matriz de pendências
 está em [AUDITORIA_MVP_POS_MVP.md](AUDITORIA_MVP_POS_MVP.md); arquitetura em
@@ -79,7 +83,7 @@ os assets públicos; não foi necessário adicionar dependências ou serviços.
 | Operação | Compose de 4 serviços com limites somando 2560 MiB; Qdrant local opcional acrescenta 512 MiB |
 | Biblioteca | Metadados pré-calculados e índices por workspace/documento; listar fontes não carrega seus textos integrais no Python |
 | Ambiente | Scripts preservam credenciais/variáveis injetadas e completam apenas ausências com `.env`; exemplos sem segredos |
-| Documentação | README detalhado e guia didático PDF com 31 capítulos, fontes Markdown e diagramas editáveis |
+| Documentação | README detalhado e guia didático PDF com 34 capítulos, fontes Markdown e diagramas editáveis |
 
 A interface Atelier, upload PDF/MD/TXT, três estratégias RAG, quatro formatos,
 citações canônicas, quiz/XP idempotente, chat individual e grupos locais continuam
@@ -106,7 +110,7 @@ lexical, explicitamente identificada. Não há debate, score ou melhoria fictíc
 - PyMongo 4.19.0 instalado; queries de projeção verificadas com driver controlado,
   sem MongoDB remoto. SDK/task Trigger 4.7.6 com instalação congelada e typecheck;
   despacho verificado com HTTP controlado, sem conta externa provisionada.
-- PDF atualizado: 37 páginas e 31 entradas de sumário, extração de texto, links locais conferidos,
+- PDF na edição anterior 1.2: 37 páginas e 31 entradas de sumário, extração de texto, links locais conferidos,
   renderização visual dos capítulos novos e nenhuma palavra fora da página.
 
 Testes controlados demonstram mecanismos e contratos. Não comprovam qualidade de

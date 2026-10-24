@@ -11,7 +11,7 @@ Leia docs/SPEC_AGENT_FACTORY_V03.md, docs/SPEC.md, docs/STATUS.md, docs/architec
 - OCI Object Storage é obrigatório para encerrar o MVP. Sempre verificar upload com readback. Não provisionar recursos pagos nem presumir que AMD/4GB disponíveis está em Always Free.
 - Alvo AMD64/4GB disponíveis: inferência externa, um parser isolado, backpressure, sem banco/broker pesado. Memória e agentes podem ser movidos para outra VM via contrato autenticado; frontend permanece sem credenciais.
 - Não publicar na Internet antes de autenticação/isolamento multiusuário. Esta primeira versão é um workspace local em loopback.
-- A landing segue o book Atlas enviado pelo usuário: fundo escuro, Instrument Serif/Plus Jakarta Sans, laranja, órbitas e escultura/globo. O estúdio em /studio preserva a estrutura Atelier, o leitor de fontes e as opções de foco/baixo estímulo. Personalizar nome/aparência não concede memória, ferramentas ou muda métodos.
+- A landing preserva a direção Atlas e o redesign editorial da equipe (ca87c9e): preto/bege, assets de marca e Instrument Serif/Plus Jakarta Sans. O estúdio em /workspace, com alias /studio, preserva a estrutura Atelier, o leitor de fontes e as opções de foco/baixo estímulo. Personalizar nome/aparência não concede memória, ferramentas ou muda métodos.
 - Validar mudanças importantes com testes de comportamento, typecheck/build e smoke real. Skills instaladas são ferramentas selecionáveis; não aplicar todas simultaneamente nem sobrepor requisitos explícitos do usuário.
 
 - Credenciais manuais são criptografadas no servidor; nunca retornar chaves na API, localStorage ou estado durável Eve. Variáveis `_FILE` têm prioridade e falham fechadas. Next não monta o cofre.

@@ -11,7 +11,7 @@ bash scripts/setup.sh
 npm run dev
 ```
 
-Em outro terminal, confirme com `npm run smoke`. A landing está em `http://127.0.0.1:3000`, o estúdio em `/studio` e o novo painel em `/studio/settings`. Em uma máquina remota, use a prévia/encaminhamento privado da porta 3000 oferecida pela plataforma. Não altere para exposição pública sem autenticação.
+Em outro terminal, confirme com `npm run smoke`. A landing está em `http://127.0.0.1:3000`, o estúdio em `/workspace` (alias `/studio`) e o novo painel em `/workspace/settings` (alias `/studio/settings`). Em uma máquina remota, use a prévia/encaminhamento privado da porta 3000 oferecida pela plataforma. Não altere para exposição pública sem autenticação.
 
 O script usa `.venv/bin/uvicorn` para Python e inicia Nest/Next. Sem chaves, a demonstração usa passagens reais, recuperação lexical e marca que não houve geração por LLM. Ela permite ver e testar o produto, mas não encerra o checklist do edital.
 

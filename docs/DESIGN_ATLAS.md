@@ -41,3 +41,14 @@ Sincronização por conta, nomes reconhecidos na autoapresentação do modelo, a
 A imagem é local e não depende de um CDN externo. `infra/Dockerfile.node` inclui `apps/web/public` no estágio web. O restante da landing é renderizado no servidor; navegação e criador usam pequenos componentes interativos. Não há novas dependências de runtime, banco, worker ou serviço de IA.
 
 Uma landing pronta não torna o estúdio apto a publicação pública: a exigência de autenticação e isolamento multiusuário permanece.
+
+
+## Integração da equipe — 24/10/2026
+
+O commit `ca87c9e` acrescentou landing editorial preta/bege, marca/avatares em
+`public/brand`, mockups e a entrada `/workspace`. Essas alterações foram
+preservadas no merge, junto do estúdio Atelier e leitor de fontes. `/studio`
+continua funcional; `/workspace/settings` e `/studio/settings` apresentam o mesmo
+painel de conexões. A seção **Seu Atlas** usa o criador existente e segue para
+`/workspace`, mantendo nome/cor/tutor-base locais. O conteúdo visual/mockups da
+landing não constitui evidência das métricas de marketing ou integrações reais.
