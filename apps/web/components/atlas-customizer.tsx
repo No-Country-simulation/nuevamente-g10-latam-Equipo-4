@@ -16,9 +16,11 @@ import { AtlasOrb } from "./atlas-orb";
 export default function AtlasCustomizer({
   inStudio = false,
   onComplete,
+  destination = "/studio",
 }: {
   inStudio?: boolean;
   onComplete?: () => void;
+  destination?: "/studio" | "/workspace";
 }) {
   const router = useRouter();
   const identity = useAtlasIdentity();
@@ -42,7 +44,7 @@ export default function AtlasCustomizer({
     try {
       saveIdentity({ version: 1, name: name.trim(), color, agentId });
       if (inStudio) onComplete?.();
-      else router.push("/studio");
+      else router.push(destination);
     } catch {
       setError(
         "Não foi possível salvar neste navegador. Confira o nome e permita o armazenamento local para tentar novamente.",

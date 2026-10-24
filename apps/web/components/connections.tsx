@@ -61,7 +61,7 @@ const variables: Record<Slot, string> = {
   decision: "TYPESAFE_API_KEY",
   search: "FIRECRAWL_API_KEY",
 };
-export default function Connections() {
+export default function Connections({studioHref="/studio"}:{studioHref?:"/studio"|"/workspace"}={}) {
   const [state, setState] = useState<State | null>(null),
     [slot, setSlot] = useState<Slot>("generation"),
     [mode, setMode] = useState<"server" | "manual" | "local_login">("server");
@@ -132,7 +132,7 @@ export default function Connections() {
         <Link href="/" aria-label="Atlas, início">
           <AtlasLogo />
         </Link>
-        <Link href="/studio">
+        <Link href={studioHref}>
           <ArrowLeft size={16} />
           Voltar ao estúdio
         </Link>

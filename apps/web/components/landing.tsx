@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import AtlasCustomizer from './atlas-customizer';
 import {
   ArrowRight,
   Play,
@@ -204,6 +205,7 @@ export default function Landing() {
             <a href="#agentes" className="clone-nav-link">Agentes</a>
             <a href="#recursos" className="clone-nav-link">Recursos</a>
             <a href="#sobre" className="clone-nav-link">Sobre</a>
+            <a href="#seu-atlas" className="clone-nav-link">Seu Atlas</a>
           </nav>
 
           {/* Action Buttons */}
@@ -699,6 +701,15 @@ export default function Landing() {
                 </div>
               ))}
             </div>
+          </div>
+        </section>
+
+        <section id="seu-atlas" className="clone-customizer-section section-dark" aria-labelledby="custom-atlas-title">
+          <div className="clone-container">
+            <div className="clone-kicker"><span className="clone-kicker-dash"/><span>SEU COMPANHEIRO DE APRENDIZAGEM</span></div>
+            <h2 id="custom-atlas-title">Crie seu próprio Atlas.</h2>
+            <p>Escolha um nome, uma cor e uma perspectiva para começar. Você pode mudar depois, no seu ritmo.</p>
+            <AtlasCustomizer destination="/workspace"/>
           </div>
         </section>
 

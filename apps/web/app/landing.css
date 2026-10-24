@@ -1643,3 +1643,8 @@ html {
     display: none;
   }
 }
+
+/* Preserve companion creation alongside the team's editorial landing. */
+.clone-customizer-section{padding-block:80px;scroll-margin-top:100px}
+.clone-customizer-section h2{font:400 clamp(38px,5vw,58px)/1.1 var(--font-serif);margin:18px 0}
+.clone-customizer-section>.clone-container>p{color:var(--text-sub);max-width:560px;font-size:14px;line-height:1.8;margin-bottom:35px}
