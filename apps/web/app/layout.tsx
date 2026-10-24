@@ -8,5 +8,14 @@ import '@fontsource/instrument-serif/400-italic.css';
 import '@fontsource/jetbrains-mono/400.css';
 import './globals.css';
 import '@/components/atlas-identity.css';
-export const metadata: Metadata = {title: 'NovaMente Atlas — seu estúdio de aprendizagem', description: 'Transforme suas fontes em aprendizagem, com cinco tutores e evidências à mão.'};
-export default function RootLayout({children}: Readonly<{children: React.ReactNode}>) {return <html lang="pt-BR"><body>{children}</body></html>;}
+import './landing.css';
+
+export const metadata: Metadata = {
+  title: 'Atlas — IA Agents For Education',
+  description:
+    'Conheça o Atlas, por NovaMente: tutores de IA, materiais de aprendizagem e referências ligadas às suas fontes.',
+};
+
+export default function RootLayout({children}: Readonly<{children: React.ReactNode}>) {
+  return <html lang="pt-BR"><body>{children}</body></html>;
+}

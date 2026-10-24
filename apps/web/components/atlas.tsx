@@ -5,7 +5,8 @@ import {AnimatePresence, motion, MotionConfig, useReducedMotion} from 'motion/re
 import {animate} from 'animejs';
 import * as Dialog from '@radix-ui/react-dialog';
 import {ThemeProvider, createTheme, CircularProgress, LinearProgress} from '@mui/material';
-import {ArrowDownToLine, ArrowRight, BookOpen, Check, CheckCheck, ChevronDown, ChevronLeft, ChevronRight, CircleHelp, Focus, GitBranch, Layers3, LayoutGrid, Menu, MessageSquare, Network, Plus, RotateCcw, Search, Send, ShieldCheck, Sparkles, Trash2, Upload, Users, X, BrainCircuit, FileText, ExternalLink, Leaf, Settings2} from 'lucide-react';
+import Image from 'next/image';
+import {ArrowDownToLine, ArrowRight, BookMarked, BookOpen, Briefcase, Building2, Check, CheckCheck, ChevronDown, ChevronLeft, ChevronRight, CircleHelp, Code2, Focus, GitBranch, GraduationCap, Layers3, ListChecks, Menu, MessageSquare, Network, PenLine, Plus, RotateCcw, ScrollText, Search, Send, ShieldCheck, Sparkles, Trash2, Upload, Users, Wand2, X, BrainCircuit, FileText, ExternalLink, Leaf, Settings2, type LucideIcon} from 'lucide-react';
 import type {Agent, AgentId, Bootstrap, Citation, Document, DreamStatus, EducationalPackage, Format, GenerationInput, Group, GroupMessage, LearningItem, Method, Profile, Progress, RagMode} from '@atlas/contracts';
 import {api, post} from '@/lib/api';
 import Link from 'next/link';
@@ -13,11 +14,23 @@ import {useAtlasIdentity} from '@/lib/atlas-identity';
 import {AtlasLogo, AtlasOrb} from './atlas-orb';
 import AtlasCustomizer from './atlas-customizer';
 
-const theme = createTheme({palette:{mode:'dark', primary:{main:'#ff4f38'}, background:{default:'#08090a', paper:'#111316'}}, typography:{fontFamily:'"Plus Jakarta Sans", sans-serif'}, shape:{borderRadius:6}});
+const theme = createTheme({palette:{mode:'dark', primary:{main:'#ff6700', contrastText:'#08090a'}, background:{default:'var(--canvas)', paper:'var(--surface)'}}, typography:{fontFamily:'var(--sans)'}, shape:{borderRadius:6}});
 const nav = [
-  {id:'studio', label:'Estúdio de adaptação', icon:LayoutGrid}, {id:'chat', label:'Canais dos agentes', icon:MessageSquare}, {id:'atlas', label:'Atlas de conhecimento', icon:Network}, {id:'practice', label:'Oficina & prática', icon:Layers3}, {id:'community', label:'Grupos de estudo', icon:Users}, {id:'memory', label:'Memória & Dreamer', icon:BrainCircuit}
+  {group:'Aprendizagem', id:'chat', label:'Canais dos agentes', icon:MessageSquare}, {group:'Aprendizagem', id:'studio', label:'Estúdio de adaptação', icon:Wand2}, {group:'Aprendizagem', id:'atlas', label:'Atlas de conhecimento', icon:Network}, {group:'Aprendizagem', id:'practice', label:'Oficina & prática', icon:Layers3}, {group:'Workspace', id:'community', label:'Grupos de estudo', icon:Users}, {group:'Workspace', id:'memory', label:'Memória & Dreamer', icon:BrainCircuit}
 ] as const;
 type Tab = typeof nav[number]['id'];
+const profileOptions: Record<Profile,{label:string; icon:LucideIcon; hint:string}> = {
+  beginner:{label:'Iniciante', icon:GraduationCap, hint:'Passo a passo'},
+  developer:{label:'Desenvolvedor', icon:Code2, hint:'Com exemplos'},
+  architect:{label:'Arquiteto', icon:Building2, hint:'Visão de sistema'},
+  executive:{label:'Executivo', icon:Briefcase, hint:'Decisão rápida'},
+};
+const formatOptions: Record<Format,{label:string; icon:LucideIcon; hint:string}> = {
+  tutorial:{label:'Guia prático', icon:BookMarked, hint:'Explicação guiada'},
+  flashcards:{label:'Flashcards', icon:Layers3, hint:'Revisão ativa'},
+  quiz:{label:'Quiz ativo', icon:ListChecks, hint:'Teste com feedback'},
+  summary:{label:'Resumo executivo', icon:ScrollText, hint:'Síntese objetiva'},
+};
 const profileLabels: Record<Profile,string> = {beginner:'Iniciante', developer:'Desenvolvedor', architect:'Arquiteto', executive:'Executivo'};
 const formatLabels: Record<Format,string> = {tutorial:'Guia prático', flashcards:'Flashcards', quiz:'Quiz ativo', summary:'Resumo executivo'};
 const methodLabels: Record<Method,string> = {auto:'Escolha automática', socratic:'Socrático', feynman:'Feynman', first_principles:'Primeiros princípios', warburg:'Warburg'};
@@ -25,15 +38,22 @@ const cycleLabels: Record<string,string> = {canceled:'Ciclo cancelado', cancelle
 type Source = {id:string; title:string; pages:{number:number; text:string}[]};
 type Attempt = {correct:boolean; feedback:string; xp_awarded:number; progress:Progress};
 
-function AgentMark({id, color, small=false, custom=false}:{id:AgentId; color:string; small?:boolean; custom?:boolean}) {
-  if(custom)return <AtlasOrb color={color}/>;
-  return <svg width={small?32:42} height={small?32:42} viewBox="0 0 48 48" fill="none" aria-hidden="true" className="agent-mark" style={{color}}>
-    {id==='nilo' && <><path d="M10 19a14 14 0 0 1 28 0v16H10Z" fill="currentColor" fillOpacity=".13" stroke="currentColor"/><path d="M7 26h3m28 0h3M18 9l-2-4m14 4 2-4" stroke="currentColor"/><path d="M17 23v4m14-4v4" stroke="currentColor" strokeWidth="3" strokeLinecap="round"/><path d="M20 32h8" stroke="currentColor" strokeLinecap="round"/></>}
-    {id==='lumi' && <><path d="m24 5 17 18-7 17H14L7 23Z" fill="currentColor" fillOpacity=".13" stroke="currentColor"/><path d="m17 21 3 3-3 3m14-6-3 3 3 3M20 33h8" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/><path d="M24 5v8M7 23h6m22 0h6" stroke="currentColor"/></>}
-    {id==='prisma' && <><path d="m24 5 18 31H6Z" fill="currentColor" fillOpacity=".13" stroke="currentColor"/><path d="M17 25h5m4 0h5" stroke="currentColor" strokeWidth="3" strokeLinecap="round"/><path d="M20 32h8M12 40h24" stroke="currentColor"/></>}
-    {id==='fio' && <><rect x="9" y="11" width="30" height="28" rx="8" fill="currentColor" fillOpacity=".13" stroke="currentColor"/><path d="M24 11V5m-4 0h8M5 22h4m30 0h4M17 23v4m14-4v4" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/><path d="M19 33q5 4 10 0" stroke="currentColor"/></>}
-    {id==='soma' && <><circle cx="24" cy="25" r="16" fill="currentColor" fillOpacity=".13" stroke="currentColor"/><path d="M12 15 8 9m28 6 4-6M16 23l4 2m12-2-4 2M19 32q5 4 10 0" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/><circle cx="24" cy="5" r="2" fill="currentColor"/></>}
-  </svg>;
+const agentMarks: Record<AgentId, string> = {
+  nilo: '/brand/agent-nilo.png',
+  lumi: '/brand/agent-lumi.png',
+  prisma: '/brand/agent-prisma.png',
+  fio: '/brand/agent-fio.png',
+  soma: '/brand/agent-soma.png',
+};
+
+function AgentMark({id, color, small=false, custom=false}:{id:AgentId; color?:string; small?:boolean; custom?:boolean}) {
+  if (custom && color) return <AtlasOrb color={color} />;
+  const size = small ? 32 : 42;
+  const src = agentMarks[id];
+  if (src) {
+    return <Image src={src} width={size} height={size} alt="" aria-hidden="true" className="agent-mark" />;
+  }
+  return <AtlasOrb color={color || '#ff7043'} />;
 }
 function Modal({open,onOpenChange,title,description,children}:{open:boolean; onOpenChange:(v:boolean)=>void; title:string; description:string; children:ReactNode}) {
   return <Dialog.Root open={open} onOpenChange={onOpenChange}><Dialog.Portal><Dialog.Overlay className="dialog-overlay"/><Dialog.Content className="dialog-content"><div className="row between"><Dialog.Title>{title}</Dialog.Title><Dialog.Close className="icon-button" aria-label="Fechar"><X size={18}/></Dialog.Close></div><Dialog.Description>{description}</Dialog.Description>{children}</Dialog.Content></Dialog.Portal></Dialog.Root>;
@@ -41,6 +61,13 @@ function Modal({open,onOpenChange,title,description,children}:{open:boolean; onO
 function Choices<T extends string>({label,value,options,onChange}:{label:string;value:T; options:Record<T,string>;onChange:(v:T)=>void}) {
   return <fieldset className="choice-group"><legend>{label}</legend><div className="choice-grid">{Object.entries<string>(options).map(([key,name])=><button type="button" key={key} onClick={()=>onChange(key as T)} aria-pressed={value===key} className={value===key?'choice selected':'choice'}>{name}</button>)}</div></fieldset>;
 }
+function IconChoices<T extends string>({label,value,options,onChange}:{label:string;value:T; options:Record<T,{label:string; icon:LucideIcon; hint:string}>;onChange:(v:T)=>void}) {
+  return <fieldset className="choice-group choice-group-rich"><legend>{label}</legend><div className="choice-grid rich">{(Object.entries(options) as [T,{label:string; icon:LucideIcon; hint:string}][]).map(([key,option])=>{const Icon=option.icon;return <button type="button" key={key} onClick={()=>onChange(key)} aria-pressed={value===key} className={value===key?'choice choice-rich selected':'choice choice-rich'}><Icon size={15} strokeWidth={1.75} aria-hidden="true"/><span className="choice-copy"><strong>{option.label}</strong><small>{option.hint}</small></span></button>;})}</div></fieldset>;
+}
+function StudioStep({index,title,hint,action,children}:{index:string; title:string; hint:string; action?:ReactNode; children:ReactNode}) {
+  return <section className="studio-step"><header className="studio-step-head"><span className="studio-step-index" aria-hidden="true">{index}</span><div className="studio-step-copy"><h2>{title}</h2><p>{hint}</p></div>{action}</header>{children}</section>;
+}
+function docKind(title:string){if(/\.pdf$/i.test(title)||title.toLowerCase().includes('pdf'))return 'PDF';if(/\.(md|markdown)$/i.test(title))return 'MD';if(/\.txt$/i.test(title))return 'TXT';return 'DOC';}
 
 export default function Atlas() {
   const [boot,setBoot]=useState<Bootstrap|null>(null);
@@ -134,8 +161,8 @@ export default function Atlas() {
   const levelStart=(level-1)**2*100;
   const levelEnd=level**2*100;
   const levelPercent=Math.max(0,Math.min(100,(xp-levelStart)/(levelEnd-levelStart)*100));
-  const heading={studio:'Seu próximo jeito de aprender.',chat:`Uma conversa com ${agent?.name||'seu tutor'}.`,atlas:'Ideias que encontram suas fontes.',practice:'Conhecimento pede prática.',community:'Aprender também é compartilhar.',memory:'Uma memória sob seu controle.'}[tab];
-  const subtitle={studio:'Escolha uma fonte. Traga uma pergunta. Encontre clareza.',chat:agent?.description||'Selecione um tutor e converse a partir das suas fontes.',atlas:'Explore relações documentais verificáveis, uma citação de cada vez.',practice:'Revise o que você criou e teste sua compreensão, no seu ritmo.',community:'Crie um grupo local e mantenha a conversa em um só lugar.',memory:'Você decide o que lembrar. Cada mudança deixa um registro.'}[tab];
+  const heading={studio:'Do documento à compreensão.',chat:`Uma conversa com ${agent?.name||'seu tutor'}.`,atlas:'Ideias que encontram suas fontes.',practice:'Conhecimento pede prática.',community:'Aprender também é compartilhar.',memory:'Uma memória sob seu controle.'}[tab];
+  const subtitle={studio:'Quatro passos: fontes, formato, tutor e objetivo. Cada citação aponta para a página original.',chat:agent?.description||'Selecione um tutor e converse a partir das suas fontes.',atlas:'Explore relações documentais verificáveis, uma citação de cada vez.',practice:'Revise o que você criou e teste sua compreensão, no seu ritmo.',community:'Crie um grupo local e mantenha a conversa em um só lugar.',memory:'Você decide o que lembrar. Cada mudança deixa um registro.'}[tab];
 
   return <ThemeProvider theme={theme}><MotionConfig reducedMotion={calm?'always':'user'}><div className={`atlas-app ${focus?'focus-mode':''} ${calm?'calm-mode':''}`}>
     <a className="skip-link" href="#workspace">Ir ao conteúdo</a>
@@ -148,7 +175,7 @@ export default function Atlas() {
       <div className="workspace-body">
       <main id="workspace" className="main-area" tabIndex={-1}>
         <div className="editorial-head"><div className="page-context"><span className="section-rule"/>{tab==='studio'?'Estúdio de aprendizagem':nav.find(n=>n.id===tab)?.label}</div><h1>{heading}</h1><p>{subtitle}</p></div>
-        {error&&<div className="notice error" role="alert"><CircleHelp size={17}/><span>{error}</span>{!boot&&<button className="text-button" onClick={()=>void load()}>Tentar novamente</button>}<button className="icon-button" onClick={()=>setError('')} aria-label="Dispensar erro"><X size={15}/></button></div>}
+        {error&&!uploadOpen&&!groupOpen&&!eraseOpen&&<div className="notice error" role="alert"><CircleHelp size={17}/><span>{error}</span>{!boot&&<button className="text-button" onClick={()=>void load()}>Tentar novamente</button>}<button className="icon-button" onClick={()=>setError('')} aria-label="Dispensar erro"><X size={15}/></button></div>}
         {loading?<div className="loading-state"><CircularProgress size={24}/><p>Abrindo suas fontes…</p></div>:!boot?<div className="empty-state"><BookOpen size={30}/><h2>Seu workspace está aguardando conexão.</h2><p>Inicie os serviços do Atlas e tente novamente para acessar seus documentos.</p><button className="button" onClick={()=>void load()}><RotateCcw size={15}/>Tentar novamente</button></div>:<>
         {tab==='studio'&&<>
           <form onSubmit={generate} className="studio-form">
@@ -160,7 +187,7 @@ export default function Atlas() {
             <div className="section-heading tutor-heading"><h2>Quem vai acompanhar você?</h2><span className="muted small">Cinco perspectivas, suas fontes</span></div><div className="agent-strip">{agents?.map(a=><button type="button" key={a.id} className={`agent-card ${agentId===a.id?'selected':''}`} style={{'--agent-color':a.color} as CSSProperties} aria-pressed={agentId===a.id} onClick={()=>setAgentId(a.id)}><AgentMark id={a.id} color={a.color} custom={identity?.agentId===a.id}/><strong>{a.name}</strong><span>{a.role}</span>{agentId===a.id&&<Check size={11} className="agent-check"/>}</button>)}</div>
             <div className="goal-composer"><label htmlFor="goal">O que você quer compreender?</label><textarea id="goal" value={goal} onChange={e=>setGoal(e.target.value)} minLength={3} maxLength={2000} required placeholder="Ex.: explique os conceitos principais e como eles se conectam…" rows={2}/><div className="row between"><span className="composer-hint"><ShieldCheck size={13}/>A partir das fontes selecionadas</span><button className="button primary" disabled={!!busy||!selected.length||!goal.trim()}>{busy==='generate'?<CircularProgress size={15} color="inherit"/>:<Sparkles size={15}/>}Criar meu material<ArrowRight size={15}/></button></div></div>
           </form>
-          <div ref={completion}>{pkg?<PackageView pkg={pkg} cite={cite} attempt={attempt} onExport={exportPackage}/>:<div className="artifact-placeholder"><div className="artifact-glyph"><Layers3 size={23}/></div><div><h3>Seu próximo aprendizado começa aqui.</h3><p>O material e suas referências aparecem neste espaço.</p></div></div>}</div>
+          <div ref={completion}>{pkg?<PackageView pkg={pkg} cite={cite} attempt={attempt} onExport={exportPackage}/>:<div className="artifact-placeholder"><div className="artifact-glyph"><Wand2 size={22} strokeWidth={1.5}/></div><div><h3>Seu próximo aprendizado começa aqui.</h3><p>Depois de criar, o material e as citações aparecem neste espaço.</p></div></div>}</div>
         </>}
         {tab==='chat'&&<div className="chat-view"><div className="agent-thread-heading"><AgentMark id={agentId} color={agent?.color||'#74D8F7'} custom={identity?.agentId===agentId}/><div><h2>{agent?.name}</h2><p>{agent?.role}</p></div><span className="tag">{selected.length} {selected.length===1?'fonte selecionada':'fontes selecionadas'}</span></div>{chats.filter(c=>c.agentId===agentId).length===0&&<div className="chat-welcome"><span className="serif">Por onde começamos?</span><p>Faça uma pergunta sobre suas fontes. Você pode trocar de tutor na barra lateral.</p><button className="button" onClick={()=>setChatInput('Quais são as ideias principais deste documento?')}>Quais são as ideias principais?</button></div>}{chats.filter(c=>c.agentId===agentId).map((chat,i)=><div className="chat-exchange" key={i}><div className="question">{chat.question}</div><PackageView pkg={chat.response} cite={cite} attempt={attempt}/></div>)}<form className="chat-composer" onSubmit={sendChat}><label className="sr-only" htmlFor="chat-message">Mensagem para {agent?.name}</label><input id="chat-message" value={chatInput} onChange={e=>setChatInput(e.target.value)} minLength={3} maxLength={2000} placeholder={`Pergunte a ${agent?.name} sobre suas fontes…`} required/><button className="icon-button primary" aria-label="Enviar mensagem" disabled={!!busy||!selected.length}>{busy==='chat'?<CircularProgress size={17} color="inherit"/>:<Send size={17}/>}</button></form><p className="muted small">{boot.capabilities.llm==='extractive_demo'?'Sem LLM configurado: o tutor retorna trechos reais das fontes.':'O tutor responde com geração remota e referências às fontes.'}</p></div>}
         {tab==='atlas'&&<DocumentGraph documents={boot.documents} packages={packages} onDocument={id=>{void openSource(id);setReaderOpen(true);}}/>}
@@ -168,7 +195,7 @@ export default function Atlas() {
         {tab==='community'&&<div className="community-view"><div className="notice"><Users size={17}/><span>Grupos deste workspace local. Sua biblioteca privada não é compartilhada automaticamente.</span></div><div className="section-heading"><h2>Seus grupos</h2><button className="button" onClick={()=>setGroupOpen(true)}><Plus size={15}/>Criar grupo</button></div><div className="group-layout"><div className="group-list">{boot.groups.map(group=><button className={`group-card ${groupId===group.id?'selected':''}`} key={group.id} onClick={()=>setGroupId(group.id)}><Users size={18}/><strong>{group.name}</strong><span>{group.topic}</span></button>)}{!boot.groups.length&&<p className="muted">Crie o primeiro grupo para iniciar uma conversa.</p>}</div><div className="group-chat">{groupId?<><div className="group-chat-title">{boot.groups.find(g=>g.id===groupId)?.name}</div>{groupLoading?<CircularProgress size={20}/>:groupError?<div role="alert" className="notice error">{groupError}</div>:<div className="group-messages">{!messages.length&&<p className="muted">A conversa começa com a sua primeira mensagem.</p>}{messages.map(message=><div className="group-message" key={message.id}><div><strong>{message.author}</strong><time>{new Date(message.created_at).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</time></div><p>{message.text}</p></div>)}</div>}<form className="chat-composer" onSubmit={event=>{event.preventDefault();void action('group-message',async()=>{const result=await post<GroupMessage>(`groups/${groupId}/messages`,{text:groupInput});setMessages(previous=>[...previous,result]);setGroupInput('');});}}><input aria-label="Mensagem ao grupo" required maxLength={2000} value={groupInput} onChange={e=>setGroupInput(e.target.value)} placeholder="Compartilhe uma ideia…"/><button className="icon-button primary" aria-label="Enviar ao grupo" disabled={!!busy||!groupInput.trim()}><Send size={16}/></button></form></>:<div className="empty-state"><MessageSquare size={26}/><h3>Um espaço para pensar junto.</h3><p>Selecione ou crie um grupo.</p></div>}</div></div></div>}
         {tab==='memory'&&<div className="dream-view">{dreamError&&<div className="notice error" role="alert">{dreamError}<button className="text-button" onClick={()=>void loadDream()}>Tentar novamente</button></div>}{!dream&&!dreamError?<CircularProgress size={24}/>:dream&&<><div className="memory-consent"><div className="row"><BrainCircuit size={26}/><div><h2>Memória de aprendizagem</h2><p>Permita registrar eventos de aprendizagem para consolidar preferências pedagógicas neste workspace.</p></div></div><button className={`switch ${dream.consent?'enabled':''}`} role="switch" aria-checked={dream.consent} aria-label="Consentir memória de aprendizagem" disabled={!!busy} onClick={()=>void updateDream('consent',{enabled:!dream.consent})}><span/></button></div><p className="muted small">{dream.consent?'Memória autorizada. Você pode desligar e apagar os registros quando quiser.':'Memória desligada. Novos eventos não serão registrados para consolidação.'} A memória coletiva não é ativada por este consentimento.</p><div className="memory-summary"><div><span>Política ativa</span><strong>v{dream.active_version}</strong></div><div><span>Eventos consentidos</span><strong>{dream.events}</strong></div><div><span>Ciclos registrados</span><strong>{dream.cycles.length}</strong></div></div><div className="section-heading"><h2>Ciclos do Dreamer</h2><button className="button" disabled={!!busy||!dream.consent} onClick={()=>void updateDream('cycles',{})}>{busy==='dream'?<CircularProgress size={15}/>:<GitBranch size={15}/>}Iniciar ciclo</button></div><p className="muted">Cada ciclo propõe uma revisão pedagógica, compara baseline e candidato e registra o resultado. Sem gerador e avaliador configurados, a proposta aguarda avaliação e não é promovida.</p>{dream.cycles.length?<div className="timeline">{dream.cycles.map(cycle=><article key={cycle.id}><span className="timeline-dot"/><div className="row between"><strong>{cycleLabels[cycle.status]||cycle.status}</strong><time>{new Date(cycle.created_at).toLocaleDateString('pt-BR')}</time></div><p>{cycle.reason}</p><span className="mono muted small">{cycle.id}</span></article>)}</div>:<div className="empty-inline">Nenhum ciclo registrado. Autorize a memória e inicie um ciclo quando desejar.</div>}<div className="section-heading"><h2>Versões de política</h2></div>{dream.policies.map(policy=><div className="policy-row" key={policy.version}><div><strong>Versão {policy.version} {policy.version===dream.active_version&&<span className="tag">Ativa</span>}</strong><p>{policyInstruction(policy.instruction)}</p><span className="muted small">{policy.status}</span></div>{policy.version!==dream.active_version&&policy.status==='archived'&&<button className="button" disabled={!!busy} onClick={()=>void updateDream('rollback',{version:policy.version})}><RotateCcw size={14}/>Restaurar</button>}</div>)}{dream.active_version>0&&<button className="button" disabled={!!busy} onClick={()=>void updateDream('rollback',{version:0})}><RotateCcw size={14}/>Restaurar política inicial</button>}<div className="danger-zone"><div><h3>Apagar memórias</h3><p>Exclua eventos e memórias consentidas deste workspace.</p></div><button className="button danger" onClick={()=>setEraseOpen(true)}><Trash2 size={14}/>Apagar memórias</button></div></>}</div>}
         </>}
-        <footer className="workspace-footer"><span><span className="tiny-square"/>NovaMente Atlas</span><span>Aprenda com calma. Confira na fonte.</span></footer>
+        <footer className="workspace-footer"><span><span className="tiny-square"/>Atlas by NovaMente</span><span>Aprenda com calma. Confira na fonte.</span></footer>
       </main>
       <aside className={`reader desktop-reader ${readerOpen?'reader-open':''}`} aria-label="Inspeção de fonte"><Reader/></aside>
       </div>

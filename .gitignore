@@ -18,3 +18,5 @@ artifacts/
 *.tsbuildinfo
 
 .venv-docs/
+.refact/
+/*.png
