@@ -4,9 +4,9 @@ export const dynamic = 'force-dynamic';
 const MAX_FILE = 10 * 1024 * 1024;
 const MAX_BODY = MAX_FILE + 64 * 1024;
 const routes: Record<string, RegExp[]> = {
-  GET: [/^bootstrap$/, /^documents$/, /^documents\/[a-zA-Z0-9_-]+\/source$/, /^progress$/, /^groups$/, /^groups\/[a-zA-Z0-9_-]+\/messages$/, /^dreamer\/status$/],
-  POST: [/^documents$/, /^generations$/, /^chat$/, /^quiz\/[a-zA-Z0-9_-]+\/attempt$/, /^groups$/, /^groups\/[a-zA-Z0-9_-]+\/messages$/, /^dreamer\/(consent|cycles|rollback)$/],
-  DELETE: [/^documents\/[a-zA-Z0-9_-]+$/, /^dreamer\/memory$/]
+  GET: [/^connections$/, /^bootstrap$/, /^documents$/, /^documents\/[a-zA-Z0-9_-]+\/source$/, /^progress$/, /^groups$/, /^groups\/[a-zA-Z0-9_-]+\/messages$/, /^dreamer\/status$/],
+  POST: [/^connections\/(generation|embeddings)\/test$/, /^connections\/(generation|embeddings|decision|search)$/, /^documents$/, /^generations$/, /^chat$/, /^quiz\/[a-zA-Z0-9_-]+\/attempt$/, /^groups$/, /^groups\/[a-zA-Z0-9_-]+\/messages$/, /^dreamer\/(consent|cycles|rollback)$/],
+  DELETE: [/^connections\/(generation|embeddings|decision|search)$/, /^documents\/[a-zA-Z0-9_-]+$/, /^dreamer\/memory$/]
 };
 async function proxy(request: NextRequest, context: {params: Promise<{path: string[]}>}) {
   const {path} = await context.params;

@@ -8,7 +8,7 @@ export const policyOutput=z.object({preferred_method:z.enum(['socratic','feynman
 export const learningOutput=z.object({title:z.string().min(1).max(200),introduction:z.string().max(2000),items:z.array(z.object({title:z.string().min(1).max(200),body:z.string().min(1).max(6000),evidence_ids:z.array(z.string().min(1)).min(1).max(8),front:z.string().max(3000).nullable().optional(),back:z.string().max(3000).nullable().optional(),options:z.array(z.string()).min(2).max(4).nullable().optional(),correct_index:z.number().int().min(0).max(3).nullable().optional()}).strict()).min(1).max(6)}).strict();
 export type FactoryTask=z.infer<typeof factoryInput>;
 export interface TeamSelection {winner:'a'|'b'|'abstain';source:'typesafe'|'policy'}
-export interface CompetitionOptions {enabled:boolean;select(question:string,evidence:string,a:unknown,b:unknown):Promise<TeamSelection>}
+export interface CompetitionOptions {enabled:boolean|(()=>boolean);select(question:string,evidence:string,a:unknown,b:unknown):Promise<TeamSelection>}
 export interface AgentRuntime {run(task:FactoryTask,ticket:string,signal:AbortSignal):Promise<{data:unknown;session_id:string}>}
 export function eveRuntime(host:string):AgentRuntime {
   return {async run(task,ticket,signal){
@@ -61,7 +61,7 @@ export function createAgentFactory(tenant:string,secret:string,actions:ActionEng
     try {
       let result;
       let debate:Record<string,unknown>|undefined;
-      if(competition?.enabled&&task.purpose==='learning'){
+      if(competition&&(typeof competition.enabled==='function'?competition.enabled():competition.enabled)&&task.purpose==='learning'){
         // Only the Python domain can submit this canonical evidence context.
         const context=z.object({objective:z.string().max(2000),evidence:z.string().max(28000),authorized_evidence_ids:z.array(z.string()).min(1).max(8)}).passthrough().parse(JSON.parse(task.prompt));
         const allowed=new Set(context.authorized_evidence_ids);
@@ -123,5 +123,5 @@ export function createAgentFactory(tenant:string,secret:string,actions:ActionEng
     state.budget.webCalls++;
     return actions.invoke(input.capability,input.input,brainPrincipal(tenant,grant.agent));
   }
-  return {run,invokeTool,catalog:()=>({runtime:'eve',catalog_version:catalogVersion,personas,purposes:['learning','dreamer_replay','dreamer_policy'],max_concurrent:1,competition:{enabled:!!competition?.enabled,teams:[{id:'a',members:['nilo','lumi']},{id:'b',members:['fio','soma']}],max_turns:5}})};
+  return {run,invokeTool,isBusy:()=>busy,catalog:()=>({runtime:'eve',catalog_version:catalogVersion,personas,purposes:['learning','dreamer_replay','dreamer_policy'],max_concurrent:1,competition:{enabled:typeof competition?.enabled==='function'?competition.enabled():!!competition?.enabled,teams:[{id:'a',members:['nilo','lumi']},{id:'b',members:['fio','soma']}],max_turns:5}})};
 }

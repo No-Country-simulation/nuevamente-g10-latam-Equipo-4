@@ -7,7 +7,7 @@ from contextlib import asynccontextmanager
 from fastapi import BackgroundTasks, Depends, FastAPI, File, Header, HTTPException, UploadFile
 from fastapi.responses import JSONResponse
 from starlette.concurrency import run_in_threadpool
-from . import providers
+from . import providers, credentials
 from .dreamer import Dreamer
 from .jobs import Jobs
 from .learning import generate, attempt
@@ -41,14 +41,14 @@ async def limited(function, *args):
     if work.locked():
         raise HTTPException(429, "Há uma tarefa em andamento. Aguarde a conclusão e tente novamente.")
     async with work:
-        return await run_in_threadpool(function, *args)
+        return await run_in_threadpool(credentials.scoped, function, *args)
 
 async def dream_worker():
     while True:
         if os.getenv("ATLAS_JOB_RUNNER", "local") == "local":
             job = await run_in_threadpool(jobs.claim)
             if job:
-                await run_in_threadpool(jobs.execute, dreamer, job)
+                await run_in_threadpool(credentials.scoped, jobs.execute, dreamer, job)
         await asyncio.sleep(2)
 
 async def dream_schedule():
@@ -57,7 +57,7 @@ async def dream_schedule():
         tenant = os.getenv("ATLAS_TENANT_ID", "local-workspace")
         try:
             state = dreamer.status(tenant)
-            if state["consent"] and state["events"] >= 3 and providers.llm_ready() and os.getenv("TYPESAFE_API_KEY"):
+            if state["consent"] and state["events"] >= 3 and providers.llm_ready() and credentials.configured("decision"):
                 job = await run_in_threadpool(jobs.enqueue, tenant, "scheduled:" + now()[:10])
                 if os.getenv("ATLAS_JOB_RUNNER", "local") == "trigger":
                     await run_in_threadpool(providers.dispatch_job, job)
@@ -120,7 +120,7 @@ def health():
 
 @app.get("/v1/bootstrap")
 def bootstrap(tenant=Depends(identity)):
-    return {"agents": AGENTS, "documents": store.documents(tenant), "progress": store.progress(tenant), "groups": store.groups(tenant), "capabilities": {"llm": "remote" if providers.llm_ready() else "extractive_demo", "embeddings": "remote" if os.getenv("EMBEDDING_API_KEY") else "local_hash_demo", "web_search": bool(os.getenv("FIRECRAWL_API_KEY")), "storage": os.getenv("STORAGE_PROVIDER", "local"), "deployment": "local"}}
+    return {"agents": AGENTS, "documents": store.documents(tenant), "progress": store.progress(tenant), "groups": store.groups(tenant), "capabilities": {"llm": "remote" if providers.llm_ready() else "extractive_demo", "embeddings": "remote" if credentials.configured("embeddings") else "local_hash_demo", "web_search": credentials.configured("search"), "storage": os.getenv("STORAGE_PROVIDER", "local"), "deployment": "local"}}
 
 @app.get("/v1/documents")
 def documents(tenant=Depends(identity)):
@@ -223,7 +223,7 @@ def rollback(request: Rollback, tenant=Depends(identity)):
 
 @app.post("/v1/dreamer/cycles", status_code=202)
 def cycle(idempotency_key: str = Header(default=""), tenant=Depends(identity)):
-    if not providers.llm_ready() or not os.getenv("TYPESAFE_API_KEY"):
+    if not providers.llm_ready() or not credentials.configured("decision"):
         return dreamer.cycle(tenant)
     if len(idempotency_key) > 100:
         raise ValueError("Chave de idempotência acima de 100 caracteres.")

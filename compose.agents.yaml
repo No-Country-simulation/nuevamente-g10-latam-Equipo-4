@@ -13,15 +13,16 @@ services:
       target: eve
       secrets: [atlas_ca]
       args:
-        EVE_MODEL: ${EVE_MODEL:?Configure o modelo Eve no servidor}
+        EVE_MODEL: ${EVE_MODEL:-}
         EVE_MODEL_CONTEXT_WINDOW: ${EVE_MODEL_CONTEXT_WINDOW:-}
     env_file: .env
     environment:
+      ATLAS_DATA_DIR: /data
       ATLAS_API_URL: http://api:4000
-      EVE_MODEL: ${EVE_MODEL:?Configure o modelo Eve no servidor}
+      EVE_MODEL: ${EVE_MODEL:-}
       EVE_MODEL_CONTEXT_WINDOW: ${EVE_MODEL_CONTEXT_WINDOW:-}
       NODE_OPTIONS: --max-old-space-size=640
-    volumes: [eve-workflow:/app/apps/api/.eve/.workflow-data]
+    volumes: [eve-workflow:/app/apps/api/.eve/.workflow-data, atlas-data:/data]
     healthcheck:
       test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:2000/eve/v1/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
       interval: 10s

@@ -12,6 +12,8 @@ import { generationSchema, judge, selectTeam, evaluateEvidence } from './policy.
 import {createActionEngines, controlPrincipal} from './orchestration/actions.js';
 import {createBrains} from './orchestration/brains.js';
 import {createAgentFactory,eveRuntime} from './orchestration/factory.js';
+import {probeConnection} from './connections/probe.js';
+import {connection,publicConnections,saveConnection,removeConnection,slots} from './connections/vault.js';
 
 config({path:process.env.ATLAS_ENV_FILE || '../../.env',quiet:true});
 const token = process.env.ATLAS_INTERNAL_TOKEN;
@@ -32,8 +34,8 @@ async function cognition(path:string, method='GET', body?:unknown, memory=false,
 }
 
 const actions=createActionEngines(tenant,{cognition,judge,remoteMemory:!!process.env.MEMORY_SERVICE_URL,async search(query,signal){
-    if (!process.env.FIRECRAWL_API_KEY) throw Object.assign(new Error('Configure FIRECRAWL_API_KEY no servidor para pesquisar na web.'),{status:503});
-    const response = await fetch('https://api.firecrawl.dev/v2/search',{method:'POST',headers:{Authorization:`Bearer ${process.env.FIRECRAWL_API_KEY}`,'content-type':'application/json'},body:JSON.stringify({query:query,limit:3}),signal});
+    if (!connection('search').key) throw Object.assign(new Error('Configure FIRECRAWL_API_KEY no servidor para pesquisar na web.'),{status:503});
+    const response = await fetch('https://api.firecrawl.dev/v2/search',{method:'POST',headers:{Authorization:`Bearer ${connection('search').key}`,'content-type':'application/json'},body:JSON.stringify({query:query,limit:3}),signal});
     if (!response.ok) throw Object.assign(new Error('Busca web indisponível. Nenhuma chave foi enviada ao navegador.'),{status:503});
     const data = await response.json();
     const results = Array.isArray(data.data) ? data.data : data.data?.web || [];
@@ -43,10 +45,20 @@ const actions=createActionEngines(tenant,{cognition,judge,remoteMemory:!!process
 }});
 const brains=createBrains(tenant,actions);
 const control=controlPrincipal(tenant);
-const factory=createAgentFactory(tenant,process.env.EVE_SERVICE_TOKEN||token,actions,eveRuntime(process.env.EVE_URL||'http://127.0.0.1:2000'),{enabled:process.env.ATLAS_TEAM_DEBATE!=='0'&&!!process.env.TYPESAFE_API_KEY,select:selectTeam});
+const factory=createAgentFactory(tenant,process.env.EVE_SERVICE_TOKEN||token,actions,eveRuntime(process.env.EVE_URL||'http://127.0.0.1:2000'),{enabled:()=>process.env.ATLAS_TEAM_DEBATE!=='0'&&!!connection('decision').key,select:selectTeam});
 
 @Controller('v1')
 class AtlasController {
+  @Get('connections') connections(){return publicConnections();}
+  @Post('connections/:slot/test') testConnection(@Param('slot') raw:string){return probeConnection(z.enum(slots).parse(raw));}
+  @Post('connections/:slot') saveConnection(@Param('slot') raw:string,@Req() req:Request){
+    if(factory.isBusy())throw Object.assign(new Error('Aguarde o agente terminar antes de trocar credenciais.'),{status:409});
+    return saveConnection(z.enum(slots).parse(raw),req.body);
+  }
+  @Delete('connections/:slot') deleteConnection(@Param('slot') raw:string){
+    if(factory.isBusy())throw Object.assign(new Error('Aguarde o agente terminar antes de trocar credenciais.'),{status:409});
+    return removeConnection(z.enum(slots).parse(raw));
+  }
   @Get('bootstrap') async bootstrap(){return cognition('bootstrap');}
   @Get('documents') async documents(){return cognition('documents');}
   @Get('documents/:id/source') async source(@Param('id') id:string){return cognition(`documents/${encodeURIComponent(id)}/source`);}

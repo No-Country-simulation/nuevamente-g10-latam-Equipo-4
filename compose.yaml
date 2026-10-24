@@ -25,7 +25,9 @@ services:
     environment:
       ATLAS_BIND_ADDRESS: 0.0.0.0
       COGNITION_URL: http://cognition:8000
+      ATLAS_DATA_DIR: /data
       NODE_OPTIONS: --max-old-space-size=256
+    volumes: [atlas-data:/data]
     depends_on:
       cognition: {condition: service_healthy}
     healthcheck:

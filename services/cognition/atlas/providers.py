@@ -4,6 +4,7 @@ import os
 from contextvars import ContextVar
 from urllib.parse import urlsplit
 import httpx
+from . import credentials
 
 class ProviderError(RuntimeError):
     status_code = 503
@@ -21,7 +22,7 @@ def runtime_mode():
 
 def llm_ready():
     mode = runtime_mode()
-    return bool(os.getenv("EVE_URL")) if mode == "eve" else bool(mode == "direct" and os.getenv("LLM_BASE_URL") and os.getenv("LLM_API_KEY") and os.getenv("LLM_MODEL"))
+    return bool(os.getenv("EVE_URL") and (credentials.configured("generation") or (credentials.connection("generation").get("provider")=="chatgpt_local" and os.getenv("ATLAS_ALLOW_LOCAL_CHATGPT")=="1" and os.getenv("NODE_ENV")!="production"))) if mode == "eve" else bool(mode == "direct" and credentials.configured("generation"))
 
 def last_execution():
     return _execution.get()
@@ -49,9 +50,12 @@ def complete(system, prompt, *, agent_id="nilo", purpose="learning"):
             raise ProviderError("O runtime Eve não concluiu a geração. Verifique sua configuração no servidor.") from exc
         except (httpx.HTTPError, ValueError, KeyError) as exc:
             raise ProviderError("O runtime Eve não concluiu a geração. Verifique sua configuração no servidor.") from exc
-    base = safe_base(os.environ["LLM_BASE_URL"])
-    headers = {"Authorization": "Bearer " + os.environ["LLM_API_KEY"]}
-    payload = {"model": os.environ["LLM_MODEL"], "messages": [{"role": "system", "content": system}, {"role": "user", "content": prompt}], "temperature": 0.2, "max_tokens": 2500, "response_format": {"type": "json_object"}}
+    profile = credentials.connection("generation")
+    if profile.get("provider") == "anthropic":
+        raise ProviderError("Anthropic direto requer o SDK do runtime Eve. Use ATLAS_AGENT_RUNTIME=eve.")
+    base = safe_base(profile["base_url"])
+    headers = {"Authorization": "Bearer " + profile["key"]}
+    payload = {"model": profile["model"], "messages": [{"role": "system", "content": system}, {"role": "user", "content": prompt}], "temperature": 0.2, "max_tokens": 2500, "response_format": {"type": "json_object"}}
     try:
         response = httpx.post(base + "/chat/completions", json=payload, headers=headers, timeout=60, follow_redirects=False)
         response.raise_for_status()
@@ -62,11 +66,12 @@ def complete(system, prompt, *, agent_id="nilo", purpose="learning"):
         raise ProviderError("A geração remota falhou ou retornou um formato inválido. Seus documentos foram preservados.") from exc
 
 def embed(texts):
-    if not os.getenv("EMBEDDING_API_KEY"):
+    profile = credentials.connection("embeddings")
+    if not profile.get("key"):
         return None
-    base = safe_base(os.environ["EMBEDDING_BASE_URL"])
+    base = safe_base(profile["base_url"])
     try:
-        response = httpx.post(base + "/embeddings", json={"model": os.environ["EMBEDDING_MODEL"], "input": texts}, headers={"Authorization": "Bearer " + os.environ["EMBEDDING_API_KEY"]}, timeout=40, follow_redirects=False)
+        response = httpx.post(base + "/embeddings", json={"model": profile["model"], "input": texts}, headers={"Authorization": "Bearer " + profile["key"]}, timeout=40, follow_redirects=False)
         response.raise_for_status()
         records = sorted(response.json()["data"], key=lambda item: item["index"])
         vectors = [item["embedding"] for item in records]
@@ -81,7 +86,7 @@ def embed(texts):
 
 def judge(question, evidence, answer):
     """Use Nest's verified TypeSafe SDK adapter, not an invented native API payload."""
-    if not os.getenv("TYPESAFE_API_KEY"):
+    if not credentials.configured("decision"):
         return {"verdict": "not_evaluated", "score": None}
     if len(evidence) > 28000 or len(answer) > 18000:
         raise ProviderError("A resposta excedeu o orçamento de avaliação integral. Nenhum trecho foi cortado ou publicado como verificado.")
@@ -98,7 +103,7 @@ def judge(question, evidence, answer):
 
 def rank_evidence(question, passages):
     """One bounded TypeSafe decision batch after retrieval; never fabricate scores."""
-    if not passages or not os.getenv("TYPESAFE_API_KEY"):
+    if not passages or not credentials.configured("decision"):
         return passages
     try:
         response = httpx.post(os.getenv("ATLAS_API_URL", "http://127.0.0.1:4000") + "/v1/internal/evidence", json={"question":question,"passages":[{"id":p["id"],"text":p["text"]} for p in passages]}, headers={"Authorization":"Bearer " + os.environ["ATLAS_INTERNAL_TOKEN"]}, timeout=35, follow_redirects=False)
