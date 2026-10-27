@@ -66,7 +66,10 @@ class AtlasController {
   @UseInterceptors(FileInterceptor('file',{limits:{fileSize:10*1024*1024,files:1,fields:0}}))
   async upload(@UploadedFile() file:Express.Multer.File) {
     if (!file) throw Object.assign(new Error('Selecione PDF, Markdown ou TXT.'),{status:400});
-    const form = new FormData();form.append('file',new Blob([new Uint8Array(file.buffer)],{type:file.mimetype}),file.originalname);
+    const fixed = Buffer.from(file.originalname,'latin1').toString('utf8');
+    const name = fixed.includes('\uFFFD') ? file.originalname : fixed;
+    const form = new FormData();
+    form.append('file',new Blob([new Uint8Array(file.buffer)],{type:file.mimetype}),name);
     return cognition('documents','POST',form);
   }
   @Post('generations') async generate(@Req() req:Request){
