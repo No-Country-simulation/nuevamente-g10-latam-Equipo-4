@@ -24,7 +24,7 @@
     "dotenv": "^16.5.0",
     "eve": "0.80.1",
     "just-bash": "^3.6.0",
-    "multer": "^2.0.0",
+    "multer": "2.5.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2",
     "zod": "^4.0.0"

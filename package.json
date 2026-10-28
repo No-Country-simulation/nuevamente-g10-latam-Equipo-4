@@ -12,15 +12,31 @@
     "dev:api": "npm run dev -w @atlas/api",
     "build": "npm run build -w @atlas/api && npm run build -w @atlas/web",
     "typecheck": "npm run typecheck --workspaces --if-present",
-    "test": "npm run test -w @atlas/api && .venv/bin/python -m unittest discover -s services/cognition/tests -v",
+    "test": "npm run test -w @atlas/api && .venv/bin/python -m unittest discover -s services/cognition/tests -v && node --test scripts/env-loader.test.mjs",
     "smoke": "node scripts/smoke.mjs",
     "check:eve": "node scripts/check-eve.mjs",
-    "init:vault": "node scripts/init-vault.mjs"
+    "init:vault": "node scripts/init-vault.mjs",
+    "test:e2e": "playwright test",
+    "check:env": "node scripts/check-env.mjs",
+    "quality:setup": "bash scripts/quality/setup.sh",
+    "quality": "node --test scripts/quality/*.test.mjs && node scripts/quality/check.mjs",
+    "test:runtime": "node scripts/check-runtime.mjs"
   },
   "engines": {
     "node": ">=24 <25"
   },
   "overrides": {
-    "guarded-fetch": "0.1.6"
+    "guarded-fetch": {
+      ".": "0.1.6",
+      "undici": "7.30.1"
+    },
+    "eve": {
+      "undici": "8.12.2"
+    },
+    "body-parser": "2.4.0",
+    "multer": "2.5.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.58.2"
   }
 }
