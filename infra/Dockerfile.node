@@ -10,15 +10,24 @@ COPY apps ./apps
 COPY packages ./packages
 RUN npm run build
 
+FROM build AS api-runtime-deps
+# Omit dev/web workspace; dependencies required transitively by Eve remain.
+RUN --mount=type=secret,id=atlas_ca \
+    if [ -s /run/secrets/atlas_ca ]; then \
+      NODE_EXTRA_CA_CERTS=/run/secrets/atlas_ca npm ci --omit=dev --workspace=@atlas/api --workspace=@atlas/contracts --include-workspace-root=false; \
+    else npm ci --omit=dev --workspace=@atlas/api --workspace=@atlas/contracts --include-workspace-root=false; fi \
+    && mkdir -p apps/api/node_modules
+
 FROM node:24-bookworm-slim AS api
 ENV NODE_ENV=production
 WORKDIR /app
-COPY --from=build --chown=node:node /repo/node_modules ./node_modules
+COPY --from=api-runtime-deps --chown=10001:10001 /repo/node_modules ./node_modules
+COPY --from=api-runtime-deps --chown=10001:10001 /repo/apps/api/node_modules ./apps/api/node_modules
 COPY --from=build --chown=node:node /repo/apps/api/package.json ./apps/api/package.json
 COPY --from=build --chown=node:node /repo/apps/api/dist ./apps/api/dist
 COPY --from=build --chown=node:node /repo/packages ./packages
 COPY --chown=node:node scripts/check-eve.mjs ./scripts/check-eve.mjs
-RUN useradd --uid 10001 --create-home atlas
+RUN useradd --uid 10001 --create-home atlas && mkdir -p /data && chown atlas:atlas /data
 USER atlas
 CMD ["node", "apps/api/dist/main.js"]
 
@@ -45,6 +54,6 @@ ENV NODE_ENV=production NODE_OPTIONS=--max-old-space-size=640 HOST=0.0.0.0 PORT=
 WORKDIR /app/apps/api
 COPY --from=eve-build --chown=10001:10001 /repo/apps/api/.output ./.output
 COPY --from=eve-build --chown=10001:10001 /repo/packages/contracts /app/node_modules/@atlas/contracts
-RUN useradd --uid 10001 --create-home atlas && mkdir -p .eve/.workflow-data && chown -R atlas:atlas .eve
+RUN useradd --uid 10001 --create-home atlas && mkdir -p .eve/.workflow-data /data && chown -R atlas:atlas .eve && chown atlas:atlas /data
 USER atlas
 CMD ["node", ".output/server/index.mjs"]
