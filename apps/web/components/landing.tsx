@@ -37,7 +37,7 @@ import {
 const AGENTS = [
   {
     id: 'nilo',
-    name: 'Nilo',
+    name: 'Guia',
     role: 'Tutor',
     description: 'Explica conceitos, esclarece dúvidas e orienta o seu estudo.',
     color: '#ff7043',
@@ -45,7 +45,7 @@ const AGENTS = [
   },
   {
     id: 'lumi',
-    name: 'Lumi',
+    name: 'Faísca',
     role: 'Exploradora',
     description: 'Encontra informações relevantes e conecta ideias.',
     color: '#85e7b8',
@@ -61,7 +61,7 @@ const AGENTS = [
   },
   {
     id: 'fio',
-    name: 'Fio',
+    name: 'Trama',
     role: 'Criador',
     description: 'Transforma ideias em resumos, mapas mentais e materiais.',
     color: '#ef5350',
@@ -69,8 +69,8 @@ const AGENTS = [
   },
   {
     id: 'soma',
-    name: 'Soma',
-    role: 'Coach',
+    name: 'Elo',
+    role: 'Mentor',
     description: 'Acompanha o seu progresso e motiva a sua evolução.',
     color: '#ab47bc',
     avatar: '/brand/agent-soma.png',
@@ -81,7 +81,7 @@ const FEATURES = [
   {
     icon: ShieldCheck,
     title: 'Conteúdo confiável',
-    description: 'Baseado em fontes acadêmicas e materiais verificados.',
+    description: 'Cada citação permite voltar ao trecho do documento.',
   },
   {
     icon: Zap,
@@ -127,25 +127,25 @@ const STEPS = [
   },
 ];
 
-const TESTIMONIALS = [
+const STUDY_SCENARIOS = [
   {
-    quote: '“O Atlas ajudou-me a entender matérias que achava muito difíceis. Os agentes são incríveis!”',
-    name: 'João Silva',
-    role: 'Estudante Universitário',
+    quote: 'Comece por uma explicação curta e volte à fonte quando surgir uma dúvida.',
+    name: 'Entender um conceito',
+    role: 'Cenário ilustrativo de estudo',
     avatar: '/landing/avatar-joao.png',
     stars: 5,
   },
   {
-    quote: '“Gosto da forma como me dá explicações simples e com fontes. Sinto-me mais confiante nos meus estudos.”',
-    name: 'Ana Costa',
-    role: 'Estudante do Ensino Médio',
+    quote: 'Transforme suas anotações em cartões e pratique com perguntas sobre o documento.',
+    name: 'Revisar para uma prova',
+    role: 'Cenário ilustrativo de estudo',
     avatar: '/landing/avatar-ana.png',
     stars: 5,
   },
   {
-    quote: '“É como ter um tutor, um professor e um organizador no mesmo lugar. Recomendo a todos!”',
-    name: 'Carlos Mendes',
-    role: 'Estudante Universitário',
+    quote: 'Siga uma trilha, converse sobre as ideias e conecte o que aprendeu.',
+    name: 'Conectar o aprendizado',
+    role: 'Cenário ilustrativo de estudo',
     avatar: '/landing/avatar-carlos.png',
     stars: 5,
   },
@@ -262,10 +262,10 @@ export default function Landing() {
                     <Image src="/landing/avatar-joao.png" alt="Estudante" width={28} height={28} className="stack-avatar" />
                     <Image src="/landing/avatar-ana.png" alt="Estudante" width={28} height={28} className="stack-avatar" />
                     <Image src="/landing/avatar-carlos.png" alt="Estudante" width={28} height={28} className="stack-avatar" />
-                    <div className="stack-avatar stack-more">+10k</div>
+                    <div className="stack-avatar stack-more">MVP</div>
                   </div>
                   <span className="clone-social-proof-text">
-                    Mais de 10.000 estudantes já estão no Atlas
+                    Um projeto em construção com a comunidade do hackathon
                   </span>
                 </div>
               </div>
@@ -291,11 +291,11 @@ export default function Landing() {
 
                       <div className="tablet-agents-list">
                         <small className="tablet-agents-title">AGENTES</small>
-                        <div className="tablet-agent-row"><span className="pip pip-blue" /> Nilo</div>
-                        <div className="tablet-agent-row active"><span className="pip pip-green" /> Lumi</div>
+                        <div className="tablet-agent-row"><span className="pip pip-blue" /> Guia</div>
+                        <div className="tablet-agent-row active"><span className="pip pip-green" /> Faísca</div>
                         <div className="tablet-agent-row"><span className="pip pip-amber" /> Prisma</div>
-                        <div className="tablet-agent-row"><span className="pip pip-red" /> Fio</div>
-                        <div className="tablet-agent-row"><span className="pip pip-purple" /> Soma</div>
+                        <div className="tablet-agent-row"><span className="pip pip-red" /> Trama</div>
+                        <div className="tablet-agent-row"><span className="pip pip-purple" /> Elo</div>
                       </div>
                     </div>
 
@@ -304,9 +304,9 @@ export default function Landing() {
                       {/* Chat Header */}
                       <div className="tablet-chat-header">
                         <div className="tablet-agent-profile">
-                          <Image src="/brand/agent-lumi.png" alt="Lumi" width={28} height={28} className="tablet-agent-pic" />
+                          <Image src="/brand/agent-lumi.png" alt="Faísca" width={28} height={28} className="tablet-agent-pic" />
                           <div>
-                            <strong>Lumi</strong>
+                            <strong>Faísca</strong>
                             <small>Exploradora</small>
                           </div>
                         </div>
@@ -320,10 +320,10 @@ export default function Landing() {
                           <p>{chatQuestion}</p>
                         </div>
 
-                        {/* Lumi message */}
+                        {/* Faísca message */}
                         <div className="tablet-msg agent-msg">
                           {isTyping ? (
-                            <div className="typing-dots" aria-label="Lumi está a escrever...">
+                            <div className="typing-dots" aria-label="Faísca está a escrever...">
                               <span className="typing-dot" />
                               <span className="typing-dot" />
                               <span className="typing-dot" />
@@ -559,11 +559,11 @@ export default function Landing() {
                       </div>
                       <div className="mockup-agents-dots">
                         <small>AGENTES</small>
-                        <div className="dot-row"><span className="pip pip-blue" /> Nilo</div>
-                        <div className="dot-row active"><span className="pip pip-green" /> Lumi</div>
+                        <div className="dot-row"><span className="pip pip-blue" /> Guia</div>
+                        <div className="dot-row active"><span className="pip pip-green" /> Faísca</div>
                         <div className="dot-row"><span className="pip pip-amber" /> Prisma</div>
-                        <div className="dot-row"><span className="pip pip-red" /> Fio</div>
-                        <div className="dot-row"><span className="pip pip-purple" /> Soma</div>
+                        <div className="dot-row"><span className="pip pip-red" /> Trama</div>
+                        <div className="dot-row"><span className="pip pip-purple" /> Elo</div>
                       </div>
                     </div>
 
@@ -573,7 +573,7 @@ export default function Landing() {
                         <div className="agent-meta">
                           <Image src="/brand/agent-lumi.png" alt="" width={22} height={22} />
                           <div>
-                            <strong>Lumi</strong>
+                            <strong>Faísca</strong>
                             <small>Exploradora</small>
                           </div>
                         </div>
@@ -620,7 +620,7 @@ export default function Landing() {
                           className={`drawer-tab ${activeTab === 'resumo' ? 'active' : ''}`}
                           onClick={() => setActiveTab('resumo')}
                         >
-                          Resumo Fio
+                          Resumo Trama
                         </button>
                         <button
                           type="button"
@@ -666,18 +666,18 @@ export default function Landing() {
         </section>
 
         {/* ====================================================================
-            7. SECÇÃO 6: O QUE DIZEM OS ESTUDANTES (FUNDO BEGE ARCHIVAL)
+            7. SECÇÃO 6: CAMINHOS PARA EXPLORAR (FUNDO BEGE ARCHIVAL)
             ==================================================================== */}
         <section className="clone-testimonials-section section-beige">
           <div className="clone-container">
             <div className="clone-kicker">
               <span className="clone-kicker-dash" />
-              <span>O QUE DIZEM OS ESTUDANTES</span>
+              <span>CAMINHOS PARA EXPLORAR</span>
             </div>
-            <h2 className="testimonials-title">Histórias reais, resultados reais.</h2>
+            <h2 className="testimonials-title">Três jeitos de começar a aprender.</h2>
 
             <div className="testimonials-grid">
-              {TESTIMONIALS.map((item, idx) => (
+              {STUDY_SCENARIOS.map((item, idx) => (
                 <div key={idx} className="testimonial-card">
                   <div className="testimonial-user-top">
                     <Image
@@ -693,11 +693,7 @@ export default function Landing() {
                     <strong>{item.name}</strong>
                     <small>{item.role}</small>
                   </div>
-                  <div className="testimonial-stars" aria-label="5 de 5 estrelas">
-                    {[...Array(item.stars)].map((_, sIdx) => (
-                      <Star key={sIdx} size={14} fill="#ff7043" stroke="#ff7043" />
-                    ))}
-                  </div>
+                  <p className="small">Experiência a validar com estudantes.</p>
                 </div>
               ))}
             </div>

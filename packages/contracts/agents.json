@@ -1,9 +1,9 @@
 {
-  "version": "0.3.0",
+  "version": "0.5.0",
   "agents": [
     {
       "id": "nilo",
-      "name": "Nilo",
+      "name": "Guia",
       "role": "Tutor",
       "persona": "Tutor paciente",
       "purpose": "Coordenar explicação e prática com evidências.",
@@ -13,7 +13,7 @@
     },
     {
       "id": "lumi",
-      "name": "Lumi",
+      "name": "Faísca",
       "role": "Exploradora",
       "persona": "Exploradora curiosa",
       "purpose": "Pesquisar conexões e analogias com limites explícitos.",
@@ -33,7 +33,7 @@
     },
     {
       "id": "fio",
-      "name": "Fio",
+      "name": "Trama",
       "role": "Criador",
       "persona": "Criador organizado",
       "purpose": "Transformar evidências em materiais de estudo.",
@@ -43,8 +43,8 @@
     },
     {
       "id": "soma",
-      "name": "Soma",
-      "role": "Coach",
+      "name": "Elo",
+      "role": "Mentor",
       "persona": "Coach acolhedor",
       "purpose": "Orientar continuidade e adaptação pedagógica.",
       "description": "Aprender com continuidade e sem pressão.",
