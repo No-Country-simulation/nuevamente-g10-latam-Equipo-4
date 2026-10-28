@@ -1,0 +1,315 @@
+{
+  "createdAt": "2026-10-28T15:46:42.218Z",
+  "base": "3a58543be83239cd42f48edd9398a18b17f26140",
+  "candidate": "c3534f252617393d79cdf905b426f35f237093de",
+  "scope": "working tree; not release or human approval",
+  "sourceDigest": "e0820f8887a8cf07a6235984fb1d01b297c640af2bfd0bc9db02531bd61d919c",
+  "policyDigest": "fc97002c0917206cb568e9157b85e2e99ae7b492490357ae0fb5b92dd48330bc",
+  "engineRevision": "d9b145878d2f3d1d9956edb82a1ecbbbd50a4862",
+  "algorithms": {
+    "typescript": "eslint@10.11.0:complexity-classic+sonarjs@4.2.1:cognitive",
+    "python": "radon-6.0.1-cyclomatic+python-ast-sha256"
+  },
+  "architecture": {
+    "id": "ARCH-NO-RUNTIME-CYCLES",
+    "status": "PASS",
+    "enforcement": "ENFORCED",
+    "summary": "0 new / 0 total runtime cycle(s) in the full graph.",
+    "findings": [],
+    "unresolved": 0,
+    "edges": 96
+  },
+  "decision": "PASS",
+  "notExecuted": [
+    "human policy approval",
+    "remote CI/release assessment",
+    "SAST/SBOM",
+    "mutation testing",
+    "pedagogical efficacy"
+  ],
+  "measuredSymbols": 616,
+  "findings": [
+    {
+      "language": "typescript",
+      "file": "apps/api/src/connections/vault.ts",
+      "name": "envConnection",
+      "line": 161,
+      "metric": "cyclomatic",
+      "value": 14,
+      "baseline": 14,
+      "status": "LEGACY_DEBT"
+    },
+    {
+      "language": "typescript",
+      "file": "apps/api/src/connections/vault.ts",
+      "name": "saveConnection",
+      "line": 232,
+      "metric": "cyclomatic",
+      "value": 18,
+      "baseline": 18,
+      "status": "LEGACY_DEBT"
+    },
+    {
+      "language": "typescript",
+      "file": "apps/api/src/connections/probe.ts",
+      "name": "probeConnection",
+      "line": 3,
+      "metric": "cyclomatic",
+      "value": 13,
+      "baseline": 13,
+      "status": "LEGACY_DEBT"
+    },
+    {
+      "language": "typescript",
+      "file": "apps/api/src/context.ts",
+      "name": "cognition",
+      "line": 17,
+      "metric": "cyclomatic",
+      "value": 18,
+      "baseline": 18,
+      "status": "LEGACY_DEBT"
+    },
+    {
+      "language": "typescript",
+      "file": "apps/api/src/orchestration/factory.ts",
+      "name": "createAgentFactory>run",
+      "line": 42,
+      "metric": "cyclomatic",
+      "value": 25,
+      "baseline": 25,
+      "status": "LEGACY_DEBT"
+    },
+    {
+      "language": "typescript",
+      "file": "apps/api/src/orchestration/factory.ts",
+      "name": "createAgentFactory>run",
+      "line": 42,
+      "metric": "cognitive",
+      "value": 32,
+      "baseline": 32,
+      "status": "LEGACY_DEBT"
+    },
+    {
+      "language": "typescript",
+      "file": "apps/web/components/connections.tsx",
+      "name": "Connections",
+      "line": 64,
+      "metric": "cyclomatic",
+      "value": 47,
+      "baseline": 47,
+      "status": "LEGACY_DEBT"
+    },
+    {
+      "language": "typescript",
+      "file": "apps/web/components/connections.tsx",
+      "name": "Connections",
+      "line": 64,
+      "metric": "cognitive",
+      "value": 32,
+      "baseline": 32,
+      "status": "LEGACY_DEBT"
+    },
+    {
+      "language": "typescript",
+      "file": "apps/web/components/atlas.tsx",
+      "name": "Atlas",
+      "line": 75,
+      "metric": "cyclomatic",
+      "value": 86,
+      "baseline": 88,
+      "status": "LEGACY_DEBT"
+    },
+    {
+      "language": "typescript",
+      "file": "apps/web/components/atlas.tsx",
+      "name": "Atlas",
+      "line": 75,
+      "metric": "cognitive",
+      "value": 75,
+      "baseline": 75,
+      "status": "LEGACY_DEBT"
+    },
+    {
+      "language": "typescript",
+      "file": "apps/web/components/atlas.tsx",
+      "name": "Atlas>Reader",
+      "line": 213,
+      "metric": "cyclomatic",
+      "value": 16,
+      "baseline": 16,
+      "status": "LEGACY_DEBT"
+    },
+    {
+      "language": "typescript",
+      "file": "apps/web/components/atlas.tsx",
+      "name": "Atlas>Reader",
+      "line": 213,
+      "metric": "cognitive",
+      "value": 39,
+      "baseline": 39,
+      "status": "LEGACY_DEBT"
+    },
+    {
+      "language": "typescript",
+      "file": "apps/web/components/atlas.tsx",
+      "name": "LearningCard",
+      "line": 221,
+      "metric": "cyclomatic",
+      "value": 16,
+      "baseline": 16,
+      "status": "LEGACY_DEBT"
+    },
+    {
+      "language": "python",
+      "file": "services/cognition/atlas/dreamer.py",
+      "name": "cycle",
+      "line": 61,
+      "metric": "cyclomatic",
+      "value": 35,
+      "baseline": 35,
+      "status": "LEGACY_DEBT"
+    },
+    {
+      "language": "python",
+      "file": "services/cognition/atlas/dreamer.py",
+      "name": "cycle",
+      "line": 61,
+      "metric": "cyclomatic",
+      "value": 35,
+      "baseline": 35,
+      "status": "LEGACY_DEBT"
+    },
+    {
+      "language": "python",
+      "file": "services/cognition/atlas/learning.py",
+      "name": "generate",
+      "line": 35,
+      "metric": "cyclomatic",
+      "value": 37,
+      "baseline": 37,
+      "status": "LEGACY_DEBT"
+    },
+    {
+      "language": "python",
+      "file": "services/cognition/atlas/providers.py",
+      "name": "embed",
+      "line": 68,
+      "metric": "cyclomatic",
+      "value": 12,
+      "baseline": 12,
+      "status": "LEGACY_DEBT"
+    },
+    {
+      "language": "python",
+      "file": "services/cognition/atlas/providers.py",
+      "name": "rank_evidence",
+      "line": 104,
+      "metric": "cyclomatic",
+      "value": 15,
+      "baseline": 15,
+      "status": "LEGACY_DEBT"
+    },
+    {
+      "language": "python",
+      "file": "services/cognition/atlas/rag.py",
+      "name": "parse",
+      "line": 47,
+      "metric": "cyclomatic",
+      "value": 11,
+      "baseline": 17,
+      "status": "LEGACY_DEBT"
+    },
+    {
+      "language": "python",
+      "file": "services/cognition/atlas/rag.py",
+      "name": "ingest",
+      "line": 73,
+      "metric": "cyclomatic",
+      "value": 19,
+      "baseline": 19,
+      "status": "LEGACY_DEBT"
+    },
+    {
+      "language": "python",
+      "file": "services/cognition/atlas/rag.py",
+      "name": "retrieve",
+      "line": 127,
+      "metric": "cyclomatic",
+      "value": 36,
+      "baseline": 38,
+      "status": "LEGACY_DEBT"
+    },
+    {
+      "language": "python",
+      "file": "services/cognition/atlas/reindex.py",
+      "name": "_reindex",
+      "line": 13,
+      "metric": "cyclomatic",
+      "value": 11,
+      "baseline": 11,
+      "status": "LEGACY_DEBT"
+    },
+    {
+      "language": "python",
+      "file": "services/cognition/atlas/replay.py",
+      "name": "simulate",
+      "line": 32,
+      "metric": "cyclomatic",
+      "value": 17,
+      "baseline": 17,
+      "status": "LEGACY_DEBT"
+    },
+    {
+      "language": "python",
+      "file": "services/cognition/atlas/rollout.py",
+      "name": "online_rollout",
+      "line": 6,
+      "metric": "cyclomatic",
+      "value": 20,
+      "baseline": 20,
+      "status": "LEGACY_DEBT"
+    },
+    {
+      "language": "python",
+      "file": "services/cognition/atlas/store.py",
+      "name": "event",
+      "line": 109,
+      "metric": "cyclomatic",
+      "value": 20,
+      "baseline": 20,
+      "status": "LEGACY_DEBT"
+    },
+    {
+      "language": "python",
+      "file": "services/cognition/atlas/store.py",
+      "name": "event",
+      "line": 109,
+      "metric": "cyclomatic",
+      "value": 20,
+      "baseline": 20,
+      "status": "LEGACY_DEBT"
+    },
+    {
+      "language": "python",
+      "file": "services/cognition/atlas/vector_index.py",
+      "name": "search",
+      "line": 59,
+      "metric": "cyclomatic",
+      "value": 16,
+      "baseline": 16,
+      "status": "LEGACY_DEBT"
+    },
+    {
+      "language": "python",
+      "file": "services/cognition/atlas/vector_index.py",
+      "name": "search",
+      "line": 59,
+      "metric": "cyclomatic",
+      "value": 16,
+      "baseline": 16,
+      "status": "LEGACY_DEBT"
+    }
+  ],
+  "parseErrors": [],
+  "boundaryFailures": []
+}
