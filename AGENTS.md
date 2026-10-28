@@ -18,3 +18,15 @@ Leia docs/SPEC_AGENT_FACTORY_V03.md, docs/SPEC.md, docs/STATUS.md, docs/architec
 - ChatGPT por assinatura usa o helper nativo do Eve somente em dev local habilitado; não é API de produção e não reutiliza a identidade do Codex desenvolvedor.
 - O fluxo cotidiano usa recuperação lexical/seções e Jev opcional, sem exigir serviço dedicado de embeddings. Preserve o caminho semântico opcional para provar o requisito explícito do edital.
 - Buildar imagens em GitHub Actions e usar GHCR é permitido pelo PDF; documentos e JSONs continuam obrigatoriamente no OCI Object Storage Always Free. Deploy na VPS usa pull por SHA, sem build e sem publicar o estúdio antes de autenticação.
+
+## Entrega atual — branch obrigatória
+
+- Leia docs/entrega-2026-10-28/SPEC.md, ARQUITETURA.md, GUIA_TECNICO.md e docs/quality/README.md.
+- Trabalhar na branch feat/andre-pos-mvp-quality-20261028; não atualizar main nesta entrega. scripts/push-branch-both.sh verifica os dois remotes. Não usar push-both.sh.
+- Proibido bypass para testes verdes: não remover/skippiar testes críticos, afrouxar asserts, mudar expectativas para combinar com bug ou reduzir gates/baseline. Corrigir código e repetir regressão. Achados externos sem evidência permanecem pendentes.
+- Novas regras de negócio devem ficar no backend; usar as gavetas commands/modules/trails/community/attempts/progression. UI usa projeções e pede comandos.
+- Recibos: normalizar segmentos estáticos/slash sem alterar case de IDs; expirar conteúdo fora de transação de reserva que pode falhar; consent/rollback/exclusão também são comandos idempotentes. Esquecer invalida recibos privados antes de exclusão externa.
+- Nomes públicos Guia/Faísca/Prisma/Trama/Elo; IDs nilo/lumi/prisma/fio/soma permanecem.
+- Analisadores rodam apenas em desenvolvimento/CI. Ratchet também na UI; dívida legada explícita, nenhuma piora acima dos limites. Revisão por agente não é aprovação humana ou produção.
+
+- Após revisão independente, commits desta entrega com no máximo 400 linhas textuais alteradas por commit; PDFs binários separados. Todo commit deve explicar o porquê no corpo. Conferir taylam/backend e registrar conflitos/decisões antes da publicação.

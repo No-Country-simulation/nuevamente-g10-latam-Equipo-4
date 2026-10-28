@@ -12,6 +12,27 @@ Arquitetura atual: [Agent Factory 0.3](docs/SPEC_AGENT_FACTORY_V03.md) + [Conex�
 
 **Revisão de requisitos:** [Matriz MVP e pós-MVP](docs/AUDITORIA_MVP_POS_MVP.md), conferida com o PDF do hackathon. **Configuração:** [chaves, login local, SDKs e deploy por GitHub Actions/GHCR](docs/CONFIGURACAO_E_DEPLOY.md). O edital exige Object Storage e prova vetorial; OCI Compute é opcional.
 
+## Entrega 0.5 em branch — 28/10/2026
+
+A evolução está em `feat/andre-pos-mvp-quality-20261028`, sem atualizar `main`.
+[Pacote da entrega](docs/entrega-2026-10-28/README.md): arquitetura modular,
+recibos de comandos, trilhas persistentes, regras de progresso no backend,
+novos nomes dos tutores preservando IDs e testes de interação/HTTP.
+
+- [Suas ações pendentes](docs/entrega-2026-10-28/SUA_PARTE.md) e [roadmap de três semanas](docs/entrega-2026-10-28/ROADMAP_3_SEMANAS.md).
+- [Specs do backlog](docs/entrega-2026-10-28/BACKLOG_E_SPECS.md) e [CSV para o board](docs/entrega-2026-10-28/BACKLOG.csv).
+- [Arquitetura atualizada](docs/entrega-2026-10-28/ARQUITETURA.md), [guia técnico do código em PDF](docs/entrega-2026-10-28/Atlas_Guia_Tecnico_Codigo.pdf) e [pitch PDF](docs/entrega-2026-10-28/Atlas_Pitch.pdf).
+- [Configuração completa](docs/entrega-2026-10-28/ENV.md), [quality gates](docs/quality/README.md) e [parecer independente](docs/entrega-2026-10-28/REVISAO_INDEPENDENTE.md).
+
+Após `npm run build`, `npm run test:e2e` usa os artefatos de produção
+em um workspace isolado, sem chamadas pagas.
+`npm run test:runtime` verifica a árvore de dependências de produção e processos
+Node/Python compilados. `npm run quality:setup` instala analisadores de
+desenvolvimento; `npm run quality` bloqueia novas violações e regressões inclusive
+na UI. [Regras e limites](docs/quality/README.md). Não reduzir gates para passar.
+Para publicar esta entrega, use `bash scripts/push-branch-both.sh`; o script antigo
+`push-both.sh` publica main e não deve ser usado nesta tarefa.
+
 ## Por onde começar
 
 | Seu objetivo | Leitura recomendada |

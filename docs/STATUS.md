@@ -1,3 +1,31 @@
+# Incremento 0.5 — branch de revisão, 28/10/2026
+
+A entrega atual está em `feat/andre-pos-mvp-quality-20261028`; não foi enviada
+a main. [Índice e relatório](entrega-2026-10-28/README.md) incluem specs,
+roadmap de três semanas, tarefas do responsável, arquitetura e PDFs novos.
+Os registros 0.4/0.3 abaixo são históricos, não evidência renovada de release.
+
+Implementado: módulos Nest por responsabilidade; módulos Python de trilhas e
+comunidade; nível/XP no backend; trilhas locais persistentes com gates; recibos
+duráveis de comandos e eventos de quiz; normalização de rotas/expiração/erasure;
+RAG de seções sem carregar páginas inteiras; hash de upload antes do parser.
+Catálogo Guia/Faísca/Prisma/Trama/Elo preserva IDs. Landing sem contagem/depoimentos
+sem comprovação. Dependências de produção em estágio próprio na imagem API.
+
+Validação local:42 testes API +45 Python +3 loader de ambiente, cinco controles dos gates,
+14 cenários E2E/HTTP em Chromium desktop/mobile sobre build real, types/builds
+Next/Nest/Eve e ensaio de dependências/procesos de produção. Auditoria npm
+runtime sem vulnerabilidades conhecidas no momento da consulta. Ratchet inclui
+UI; não reduzir asserts/thresholds ou baseline para obter verde. Consulte
+RELATORIO e parecer para evidência final e limites.
+
+MVP real, autenticação/isolamento público, carga4GiB, restauração, planejador
+LLM, comunidade coletiva, anotações/OCR/Obsidian e avaliação com alunos não
+foram declarados concluídos. O plano P01–P15 e ações U01–U16 discriminam
+as dependências. Não houve provisionamento, publish GHCR ou deploy público.
+
+---
+
 # Estado do Atlas 0.4
 
 A camada de agentes foi ampliada segundo [SPEC_AGENT_FACTORY_V03.md](SPEC_AGENT_FACTORY_V03.md).
