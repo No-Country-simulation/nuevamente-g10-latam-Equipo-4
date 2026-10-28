@@ -33,13 +33,20 @@ def cosine(a, b):
     denominator = math.sqrt(sum(x*x for x in a) * sum(x*x for x in b))
     return sum(x*y for x, y in zip(a, b)) / denominator if denominator else 0.0
 
-def parse(filename, data):
+def validate_upload(filename, data):
     suffix = Path(filename).suffix.lower()
-    if suffix not in (".pdf", ".md", ".txt") or not data or len(data) > 10 * 1024**2:
+    if suffix not in (".pdf", ".md", ".markdown", ".txt") or not data or len(data) > 10 * 1024**2:
         raise ValueError("Envie PDF, Markdown ou TXT de até 10 MiB.")
     if suffix == ".pdf":
         if not data.startswith(b"%PDF-"):
             raise ValueError("O arquivo não contém um PDF válido.")
+    elif data.startswith(b"%PDF-") or b"\x00" in data:
+        raise ValueError("O conteúdo não corresponde a texto UTF-8.")
+    return suffix
+
+def parse(filename, data):
+    suffix = validate_upload(filename, data)
+    if suffix == ".pdf":
         with tempfile.NamedTemporaryFile(suffix=".pdf") as file:
             file.write(data); file.flush()
             try:
@@ -55,9 +62,7 @@ def parse(filename, data):
             text = data.decode("utf-8-sig")
         except UnicodeDecodeError as exc:
             raise ValueError("Use um documento de texto UTF-8.") from exc
-        if "\x00" in text or data.startswith(b"%PDF-"):
-            raise ValueError("O conteúdo não corresponde a texto UTF-8.")
-        pages, mime = [{"number": 1, "text": text}], "text/markdown" if suffix == ".md" else "text/plain"
+        pages, mime = [{"number": 1, "text": text}], "text/markdown" if suffix in (".md", ".markdown") else "text/plain"
     size = sum(len(page["text"]) for page in pages)
     if not size or not any(page["text"].strip() for page in pages):
         raise ValueError("Não encontrei texto selecionável. Use PDF textual ou envie uma transcrição; OCR ainda não está disponível.")
@@ -66,12 +71,13 @@ def parse(filename, data):
     return pages, mime
 
 def ingest(store, tenant, filename, data):
-    pages, mime = parse(filename, data)
+    validate_upload(filename, data)
     digest = hashlib.sha256(data).hexdigest()
     with store.db() as db:
         existing = db.execute("SELECT * FROM documents WHERE tenant=? AND hash=?", (tenant, digest)).fetchone()
         if existing:
             return store.document_meta(existing)
+    pages, mime = parse(filename, data)
     doc_id = uid("doc")
     filename = Path(filename.replace("\\", "/")).name[:150]
     passages = []
@@ -108,8 +114,18 @@ def ingest(store, tenant, filename, data):
     result["metadata_projection"] = project(tenant,result)
     return result
 
+def source_metadata(store, tenant, document_ids):
+    catalog = {doc["id"]: doc for doc in store.documents(tenant)}
+    if any(doc_id not in catalog for doc_id in document_ids):
+        raise LookupError("Fonte não encontrada neste workspace.")
+    return [catalog[doc_id] for doc_id in dict.fromkeys(document_ids)]
+
+def full_context(store, tenant, sources):
+    documents = [store.source(tenant, source["id"]) for source in sources]
+    return "\n\n".join(f"DOCUMENT {source['id']} — PAGE {p['number']}\n{p['text']}" for source in documents for p in source["pages"])
+
 def retrieve(store, tenant, document_ids, query, mode):
-    sources = [store.source(tenant, doc_id) for doc_id in dict.fromkeys(document_ids)]
+    sources = source_metadata(store, tenant, document_ids)
     placeholders = ",".join("?" for _ in document_ids)
     qdrant = vector_index.enabled()
     fields = "tenant,doc_id,id,page,text,json_object('model',json_extract(vector,'$.model'),'collection',json_extract(vector,'$.collection')) AS vector" if qdrant else "*"
@@ -155,7 +171,7 @@ def retrieve(store, tenant, document_ids, query, mode):
             ranks[row["id"]] = ranks.get(row["id"], 0) + 1 / (60 + rank)
     selected = sorted([row for row in rows if row["id"] in ranks], key=lambda row: ranks[row["id"]], reverse=True)[:6]
     selected = providers.rank_evidence(query, selected)
-    full = "\n\n".join(f"DOCUMENT {source['id']} — PAGE {p['number']}\n{p['text']}" for source in sources for p in source["pages"])
+    full = full_context(store, tenant, sources) if mode == "lm" else ""
     context_budget = int(os.getenv("LM_CONTEXT_CHAR_BUDGET", "24000"))
     citation_map = "\n\nAVAILABLE CITATION IDS:\n" + "\n".join(f"{r['id']} | {r['doc_id']} p.{r['page']} | {r['text'][:100]}" for r in selected)
     if mode == "lm" and len(full + citation_map) > context_budget:
