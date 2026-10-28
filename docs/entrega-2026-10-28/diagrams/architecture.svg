@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE svg
+  PUBLIC '-//W3C//DTD SVG 1.0//EN'
+  'http://www.w3.org/TR/2001/REC-SVG-20010904/DTD/svg10.dtd'>
+<svg width="480" height="315" preserveAspectRatio="xMinYMin meet" viewBox="0 0 480 315" xmlns="http://www.w3.org/2000/svg" version="1.0" fill-rule="evenodd" xmlns:xlink="http://www.w3.org/1999/xlink">
+	<title>...</title>
+	<desc>...</desc>
+	<clipPath id="clip">
+		<rect x="0" y="0" width="480" height="315"/>
+	</clipPath>
+	<g id="group" transform="scale(1,-1) translate(0,-315)" style="clip-path: url(#clip)">
+		<g transform="">
+			<rect x="0" y="260" width="140" height="45" rx="5" ry="5" style="stroke: rgb(85%,87%,89%); stroke-linecap: butt; stroke-width: 0.7; fill: rgb(94%,95%,96%); fill-rule: evenodd;"/>
+			<text x="33.74" y="288.5" style="font-family: Helvetica-Bold; font-size: 10px;fill: rgb(9%,13%,17%); stroke:none;" transform="translate(0,577) scale(1,-1)">Interface + BFF</text>
+			<text x="28.191199999999995" y="271.5" style="font-family: Helvetica; font-size: 8.8px;fill: rgb(32%,38%,42%); stroke:none;" transform="translate(0,543) scale(1,-1)">Next / mesma origem</text>
+			<rect x="170" y="260" width="140" height="45" rx="5" ry="5" style="stroke: rgb(85%,87%,89%); stroke-linecap: butt; stroke-width: 0.7; fill: rgb(94%,95%,96%); fill-rule: evenodd;"/>
+			<text x="193.46" y="288.5" style="font-family: Helvetica-Bold; font-size: 10px;fill: rgb(9%,13%,17%); stroke:none;" transform="translate(0,577) scale(1,-1)">Comandos + brains</text>
+			<text x="213.0984" y="271.5" style="font-family: Helvetica; font-size: 8.8px;fill: rgb(32%,38%,42%); stroke:none;" transform="translate(0,543) scale(1,-1)">Nest / Invokta</text>
+			<rect x="340" y="260" width="140" height="45" rx="5" ry="5" style="stroke: rgb(85%,87%,89%); stroke-linecap: butt; stroke-width: 0.7; fill: rgb(94%,95%,96%); fill-rule: evenodd;"/>
+			<text x="387.49" y="288.5" style="font-family: Helvetica-Bold; font-size: 10px;fill: rgb(9%,13%,17%); stroke:none;" transform="translate(0,577) scale(1,-1)">Personas</text>
+			<text x="373.80559999999997" y="271.5" style="font-family: Helvetica; font-size: 8.8px;fill: rgb(32%,38%,42%); stroke:none;" transform="translate(0,543) scale(1,-1)">Eve / SDK externo</text>
+			<rect x="0" y="135" width="230" height="62" rx="5" ry="5" style="stroke: rgb(85%,87%,89%); stroke-linecap: butt; stroke-width: 0.7; fill: rgb(94%,95%,96%); fill-rule: evenodd;"/>
+			<text x="59.435" y="172.0" style="font-family: Helvetica-Bold; font-size: 10px;fill: rgb(9%,13%,17%); stroke:none;" transform="translate(0,344) scale(1,-1)">Aprendizagem / Python</text>
+			<text x="37.604" y="155.0" style="font-family: Helvetica; font-size: 8.8px;fill: rgb(32%,38%,42%); stroke:none;" transform="translate(0,310) scale(1,-1)">RAG + trilhas + comunidade + Dreamer</text>
+			<rect x="290" y="135" width="190" height="62" rx="5" ry="5" style="stroke: rgb(85%,87%,89%); stroke-linecap: butt; stroke-width: 0.7; fill: rgb(94%,95%,96%); fill-rule: evenodd;"/>
+			<text x="334.705" y="172.0" style="font-family: Helvetica-Bold; font-size: 10px;fill: rgb(9%,13%,17%); stroke:none;" transform="translate(0,344) scale(1,-1)">Recibos persistentes</text>
+			<text x="331.936" y="155.0" style="font-family: Helvetica; font-size: 8.8px;fill: rgb(32%,38%,42%); stroke:none;" transform="translate(0,310) scale(1,-1)">reserva / replay / expiracao</text>
+			<rect x="0" y="15" width="230" height="62" rx="5" ry="5" style="stroke: rgb(85%,87%,89%); stroke-linecap: butt; stroke-width: 0.7; fill: rgb(94%,95%,96%); fill-rule: evenodd;"/>
+			<text x="59.84" y="52.0" style="font-family: Helvetica-Bold; font-size: 10px;fill: rgb(9%,13%,17%); stroke:none;" transform="translate(0,104) scale(1,-1)">SQLite + objetos locais</text>
+			<text x="48.48079999999999" y="35.0" style="font-family: Helvetica; font-size: 8.8px;fill: rgb(32%,38%,42%); stroke:none;" transform="translate(0,70) scale(1,-1)">dados canonicos / volume privado</text>
+			<rect x="290" y="15" width="190" height="62" rx="5" ry="5" style="stroke: rgb(85%,87%,89%); stroke-linecap: butt; stroke-width: 0.7; fill: rgb(94%,95%,96%); fill-rule: evenodd;"/>
+			<text x="339.155" y="52.0" style="font-family: Helvetica-Bold; font-size: 10px;fill: rgb(9%,13%,17%); stroke:none;" transform="translate(0,104) scale(1,-1)">OCI Object Storage</text>
+			<text x="332.3012" y="35.0" style="font-family: Helvetica; font-size: 8.8px;fill: rgb(32%,38%,42%); stroke:none;" transform="translate(0,70) scale(1,-1)">original + JSON / readback</text>
+			<path d="M 140,282 L 170,282 Z" style="stroke: rgb(84%,26%,17%); stroke-linecap: butt; stroke-width: 1.2;"/>
+			<polygon points="170 282, 164.8038 285, 164.8038 279" style="stroke: rgb(84%,26%,17%); stroke-linecap: butt; stroke-width: 1; fill: rgb(84%,26%,17%); fill-rule: evenodd;"/>
+			<path d="M 310,282 L 340,282 Z" style="stroke: rgb(84%,26%,17%); stroke-linecap: butt; stroke-width: 1.2;"/>
+			<polygon points="340 282, 334.8038 285, 334.8038 279" style="stroke: rgb(84%,26%,17%); stroke-linecap: butt; stroke-width: 1; fill: rgb(84%,26%,17%); fill-rule: evenodd;"/>
+			<path d="M 205,260 L 115,197 Z" style="stroke: rgb(84%,26%,17%); stroke-linecap: butt; stroke-width: 1.2;"/>
+			<polygon points="115 197, 120.9772 197.5221, 117.5365 202.4375" style="stroke: rgb(84%,26%,17%); stroke-linecap: butt; stroke-width: 1; fill: rgb(84%,26%,17%); fill-rule: evenodd;"/>
+			<path d="M 275,260 L 385,197 Z" style="stroke: rgb(84%,26%,17%); stroke-linecap: butt; stroke-width: 1.2;"/>
+			<polygon points="385 197, 381.982 202.1857, 379 196.9792" style="stroke: rgb(84%,26%,17%); stroke-linecap: butt; stroke-width: 1; fill: rgb(84%,26%,17%); fill-rule: evenodd;"/>
+			<path d="M 115,135 L 115,77 Z" style="stroke: rgb(84%,26%,17%); stroke-linecap: butt; stroke-width: 1.2;"/>
+			<polygon points="115 77, 118 82.19615, 112 82.19615" style="stroke: rgb(84%,26%,17%); stroke-linecap: butt; stroke-width: 1; fill: rgb(84%,26%,17%); fill-rule: evenodd;"/>
+			<path d="M 230,155 L 290,65 Z" style="stroke: rgb(84%,26%,17%); stroke-linecap: butt; stroke-width: 1.2;"/>
+			<polygon points="290 65, 289.6138 70.98756, 284.6215 67.65936" style="stroke: rgb(84%,26%,17%); stroke-linecap: butt; stroke-width: 1; fill: rgb(84%,26%,17%); fill-rule: evenodd;"/>
+		</g>
+	</g>
+</svg>
