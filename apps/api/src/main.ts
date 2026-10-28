@@ -62,6 +62,10 @@ class AtlasController {
   @Get('bootstrap') async bootstrap(){return cognition('bootstrap');}
   @Get('documents') async documents(){return cognition('documents');}
   @Get('documents/:id/source') async source(@Param('id') id:string){return cognition(`documents/${encodeURIComponent(id)}/source`);}
+  @Delete('documents/:id') async removeDocument(@Param('id') id:string){
+  const docId = z.string().regex(/^doc_[a-f0-9]{20}$/).parse(id);
+  return cognition(`documents/${docId}`, 'DELETE');
+}
   @Post('documents')
   @UseInterceptors(FileInterceptor('file',{limits:{fileSize:10*1024*1024,files:1,fields:0}}))
   async upload(@UploadedFile() file:Express.Multer.File) {
