@@ -1,0 +1,15 @@
+{
+  "scope": "production dependency tree + Node/Python processes, no containers/Eve inference or 4GiB load proof",
+  "apiRSSKiB": 126104,
+  "cognitionRSSKiB": 43856,
+  "nodeModulesBytes": 206128916,
+  "mode": "extractive_demo",
+  "checks": [
+    "bootstrap",
+    "group replay",
+    "grounded quiz",
+    "attempt replay",
+    "XP once"
+  ],
+  "status": "PASS"
+}

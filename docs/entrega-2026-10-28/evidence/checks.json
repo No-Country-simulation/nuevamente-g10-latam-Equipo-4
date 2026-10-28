@@ -1,0 +1,27 @@
+{
+  "scope": "local worktree, extractive fixtures, no external inference or deployment",
+  "apiTests": 42,
+  "pythonTests": 45,
+  "environmentLoaderTests": 3,
+  "gateCalibrationTests": 5,
+  "e2eHttpTests": 14,
+  "e2eRetries": 0,
+  "skipped": 0,
+  "browser": "Chromium 154.0.8037.57 built on Debian GNU/Linux 13 (trixie)",
+  "runtimeNpmAuditVulnerabilities": 0,
+  "envReferences": 62,
+  "pdfPages": {
+    "architecture": 7,
+    "technicalGuide": 9,
+    "pitch": 6
+  },
+  "pdfTextBounds": "PASS",
+  "notExecuted": [
+    "external provider acceptance",
+    "OCI readback",
+    "4GiB peak load",
+    "remote CI",
+    "image build this increment",
+    "human release review"
+  ]
+}
