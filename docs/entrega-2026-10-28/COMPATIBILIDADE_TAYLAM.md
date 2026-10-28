@@ -34,3 +34,13 @@ git diff main...origin/taylam/backend
 npm test
 npm run typecheck
 ```
+
+## Atualização para o PR #1
+
+A consulta posterior encontrou `68f6c25390a2925ef095be46ff553c821d45fecc`.
+A Taylam já reverteu a paralelização em `8d99053`; o ponto anterior está resolvido.
+Também adicionou testes TypeSafe e uma rota DELETE sem correspondente no Python.
+A revisão atual reconcilia os históricos, preserva os testes com falha de SDK
+determinística e não porta a rota incompleta. Veja
+[parecer do PR](REVISAO_TAYLAM_PR.md). A análise anterior registra o estado
+histórico, não uma pendência atribuída à colega depois do revert.
