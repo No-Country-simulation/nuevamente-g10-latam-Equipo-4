@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "base": "3a58543be83239cd42f48edd9398a18b17f26140",
+  "qualityEngineRevision": "d9b145878d2f3d1d9956edb82a1ecbbbd50a4862",
+  "cyclomaticMax": 10,
+  "cognitiveMax": 15,
+  "mode": "enforce-new-and-regressions",
+  "declarativeUi": "same-ratchet-enforced-legacy-debt-explicit",
+  "notReleaseCertification": true
+}

@@ -19,4 +19,6 @@ artifacts/
 
 .venv-docs/
 .refact/
+.venv-quality/
+.quality-tools/
 /*.png
