@@ -12,8 +12,11 @@ export interface GenerationInput {document_ids: string[]; goal: string; profile:
 export interface LearningItem {id: string; type: Format; title: string; body: string; citations: Citation[]; front?: string; back?: string; options?: {id: string; text: string}[]}
 export interface LearningMetadata {perfil_aplicado: Profile; formato_gerado: Format; tempo_estimado_estudo_minutos: number; estimativa_metodo: string; conceitos_chave: string[]; conceitos_origem: string; pre_requisitos: string[]; pre_requisitos_status: 'nao_inferidos'}
 export interface EducationalPackage {metadados?: LearningMetadata; id: string; schema_version: '1.0'; status: 'ready' | 'abstained'; mode: 'extractive_demo' | 'remote'; document_refs: {id: string; title: string; version: number; hash: string}[]; decision: Decision; conteudo_adaptado: {titulo: string; introducao_contextualizada: string; itens: LearningItem[]}; quality: {judge_verdict: 'not_evaluated' | 'supported' | 'insufficient_evidence' | 'contradicted'; schema_valid: boolean; limitations: string[]}; storage: StorageReceipt; agent_trace: {agent_id: AgentId; action: string; summary: string; kind: 'handoff' | 'tool' | 'review'}[]; created_at: string}
-export interface Progress {xp: number; level: number; completed: number}
+export interface Progress {xp: number; level: number; completed: number; level_start: number; level_end: number; level_percent: number}
 export interface Group {id: string; name: string; topic: string; member_count: number; created_at: string}
 export interface GroupMessage {id: string; group_id: string; author: string; text: string; created_at: string}
 export interface Bootstrap {agents: Agent[]; documents: Document[]; progress: Progress; capabilities: {llm: 'extractive_demo' | 'remote'; embeddings: string; web_search: boolean; storage: 'local' | 'oci'; deployment: 'local'}; groups: Group[]}
 export interface DreamStatus {consent: boolean; events: number; active_version: number; policies: {version: number; instruction: string; status: string}[]; cycles: {id: string; status: string; reason: string; created_at: string}[]}
+
+export interface TrailStep {id:string; title:string; goal:string; format:Format; status:"pending"|"completed"; package_id:string|null; completion_evidence:"user_acknowledgement"|"server_verified_quiz"|null; unlocked:boolean}
+export interface Trail {id:string; goal:string; profile:Profile; agent_id:AgentId; planner:"local_template_v1"; document_refs:EducationalPackage["document_refs"]; steps:TrailStep[]; completed_steps:number; created_at:string}
