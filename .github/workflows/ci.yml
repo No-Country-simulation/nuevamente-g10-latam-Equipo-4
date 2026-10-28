@@ -19,6 +19,8 @@ jobs:
       ATLAS_TENANT_ID: ci-workspace
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0 # Ratchet needs the baseline commit for show/archive.
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: "24"
@@ -30,11 +32,32 @@ jobs:
           cache-dependency-path: services/cognition/requirements.lock
       - run: npm ci
       - run: python -m venv .venv && .venv/bin/pip install -r services/cognition/requirements.lock
+      - run: npm run check:env
       - run: npm run typecheck
       - run: npm test
       - run: npm run build
+      - name: Verify the production API dependency tree and real compiled runtime
+        run: npm run test:runtime
+      - name: Install pinned structural analyzers (development only)
+        run: npm run quality:setup
+      - run: npm run quality
+      - name: Audit runtime dependencies
+        run: npm audit --omit=dev --audit-level=high
       - name: Compile native Eve workflows without provider credentials
         run: npm run agent:build -w @atlas/api
+      - name: Install Chromium for interaction tests
+        run: npx playwright install --with-deps chromium
+      - name: Browser and HTTP journeys in isolated extractive workspace
+        run: npm run test:e2e
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: atlas-quality-e2e
+          path: |
+            artifacts/quality
+            artifacts/e2e-report
+            artifacts/e2e-results
+          retention-days: 7
       - name: Exercise real local services in extractive mode
         env:
           ATLAS_AGENT_RUNTIME: extractive
