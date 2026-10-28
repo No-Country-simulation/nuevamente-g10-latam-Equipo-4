@@ -1,12 +1,12 @@
 import hashlib
 import json
-import math
 import os
 import sqlite3
 import uuid
 from contextlib import contextmanager
 from datetime import datetime, timezone
 from pathlib import Path
+from .progression import progress
 
 def now():
     return datetime.now(timezone.utc).isoformat()
@@ -25,7 +25,10 @@ class Store:
                 CREATE TABLE IF NOT EXISTS passages(tenant TEXT,doc_id TEXT,id TEXT,page INTEGER,text TEXT,vector TEXT,PRIMARY KEY(tenant,id));
                 CREATE VIRTUAL TABLE IF NOT EXISTS passages_fts USING fts5(tenant UNINDEXED,doc_id UNINDEXED,id UNINDEXED,text);
                 CREATE TABLE IF NOT EXISTS packages(tenant TEXT,id TEXT,payload TEXT,answers TEXT,input TEXT,PRIMARY KEY(tenant,id));
+                CREATE TABLE IF NOT EXISTS quiz_attempts(tenant TEXT,event_id TEXT,package_id TEXT,item_id TEXT,option_id TEXT,response TEXT,PRIMARY KEY(tenant,event_id));
                 CREATE TABLE IF NOT EXISTS xp(tenant TEXT,key TEXT,amount INTEGER,created_at TEXT,PRIMARY KEY(tenant,key));
+                CREATE TABLE IF NOT EXISTS trails(tenant TEXT,id TEXT,payload TEXT,created_at TEXT,PRIMARY KEY(tenant,id));
+                CREATE INDEX IF NOT EXISTS trails_by_date ON trails(tenant,created_at);
                 CREATE TABLE IF NOT EXISTS groups(tenant TEXT,id TEXT,name TEXT,topic TEXT,created_at TEXT,PRIMARY KEY(tenant,id));
                 CREATE TABLE IF NOT EXISTS messages(tenant TEXT,id TEXT,group_id TEXT,text TEXT,created_at TEXT,PRIMARY KEY(tenant,id));
                 CREATE TABLE IF NOT EXISTS consent(tenant TEXT PRIMARY KEY,enabled INTEGER);
@@ -89,7 +92,7 @@ class Store:
     def progress(self, tenant):
         with self.db() as db:
             row = db.execute("SELECT COALESCE(SUM(amount),0) xp,COUNT(*) completed FROM xp WHERE tenant=?", (tenant,)).fetchone()
-        return dict(row) | {"level": math.floor(math.sqrt(row["xp"] / 100)) + 1}
+        return progress(row["xp"], row["completed"])
 
     def memory_state(self, tenant):
         if os.getenv("MEMORY_SERVICE_URL"):

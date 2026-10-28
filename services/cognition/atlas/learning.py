@@ -106,23 +106,5 @@ def generate(store, tenant, request: Generation, memory_snapshot=None):
         store.event(tenant, "generation", {"package_id": package_id, "method": decision.method, "profile": request.profile, "format": request.format, "execution": execution, "dream_world": dream_world, "replay": {"input": request.model_dump(), "package": package}}, memory_snapshot["revision"])
     return package
 
-def attempt(store, tenant, package_id, submission):
-    memory_snapshot = store.memory_state(tenant)
-    row = store.package(tenant, package_id)
-    answers = json.loads(row["answers"])
-    expected = answers.get(submission.item_id)
-    if not expected:
-        raise ValueError("Questão não encontrada neste material.")
-    package = json.loads(row["payload"])
-    question = next(item for item in package["conteudo_adaptado"]["itens"] if item["id"] == submission.item_id)
-    if submission.option_id not in {option["id"] for option in question.get("options", [])}:
-        raise ValueError("Alternativa inválida.")
-    correct = expected["correct"] == submission.option_id
-    awarded = 0
-    if correct:
-        with store.db() as db:
-            cursor = db.execute("INSERT OR IGNORE INTO xp VALUES(?,?,?,?)", (tenant, f"{package_id}:{submission.item_id}", 15, now()))
-            awarded = 15 if cursor.rowcount else 0
-    if memory_snapshot["enabled"]:
-        store.event(tenant, "attempt", {"package_id": package_id, "item_id": submission.item_id, "correct": correct, "method": package["decision"]["method"]}, memory_snapshot["revision"])
-    return {"correct": correct, "feedback": expected["feedback"] if correct else "Ainda não. Reabra a fonte e procure a afirmação literal antes de tentar novamente.", "xp_awarded": awarded, "progress": store.progress(tenant)}
+# Backward-compatible public import; quiz commands live in their own module.
+from .attempts import attempt

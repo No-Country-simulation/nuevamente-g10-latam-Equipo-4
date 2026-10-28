@@ -11,7 +11,7 @@ from . import providers, credentials
 from .dreamer import Dreamer
 from .jobs import Jobs
 from .learning import generate, attempt
-from .models import Generation, Attempt, Consent, GroupInput, MessageInput, Rollback, Experience
+from .models import Generation, Attempt, Consent, Rollback, Experience
 from .rag import ingest
 from .store import Store, uid, now
 
@@ -100,7 +100,7 @@ app = FastAPI(title="Atlas Cognition & Dreamer", version="0.1.0", lifespan=lifes
 
 @app.exception_handler(ValueError)
 async def validation_error(request, exc):
-    return JSONResponse(status_code=400, content={"detail": str(exc)[:500]})
+    return JSONResponse(status_code=getattr(exc, "status_code", 400), content={"detail": str(exc)[:500]})
 
 @app.exception_handler(LookupError)
 async def missing(request, exc):
@@ -164,31 +164,14 @@ def submit(package_id: str, request: Attempt, tenant=Depends(identity)):
 def progress(tenant=Depends(identity)):
     return store.progress(tenant)
 
-@app.get("/v1/groups")
-def groups(tenant=Depends(identity)):
-    return store.groups(tenant)
+from .community.http import router as community_router
+from .trails.http import router as trails_router
+app.include_router(community_router(store, identity))
+app.include_router(trails_router(store, identity))
 
-@app.post("/v1/groups", status_code=201)
-def create_group(request: GroupInput, tenant=Depends(identity)):
-    group_id = uid("group")
-    with store.db() as db:
-        db.execute("INSERT INTO groups VALUES(?,?,?,?,?)", (tenant, group_id, request.name, request.topic, now()))
-    return next(group for group in store.groups(tenant) if group["id"] == group_id)
-
-@app.get("/v1/groups/{group_id}/messages")
-def messages(group_id: str, tenant=Depends(identity)):
-    store.group_exists(tenant, group_id)
-    with store.db() as db:
-        rows = db.execute("SELECT id,group_id,text,created_at FROM (SELECT * FROM messages WHERE tenant=? AND group_id=? ORDER BY created_at DESC LIMIT 100) ORDER BY created_at", (tenant, group_id)).fetchall()
-    return [dict(row) | {"author": "Você"} for row in rows]
-
-@app.post("/v1/groups/{group_id}/messages", status_code=201)
-def message(group_id: str, request: MessageInput, tenant=Depends(identity)):
-    store.group_exists(tenant, group_id)
-    result = {"id": uid("msg"), "group_id": group_id, "text": request.text, "created_at": now(), "author": "Você"}
-    with store.db() as db:
-        db.execute("INSERT INTO messages VALUES(?,?,?,?,?)", (tenant, result["id"], group_id, request.text, result["created_at"]))
-    return result
+@app.get("/v1/packages/{package_id}")
+def package(package_id: str, tenant=Depends(identity)):
+    return json.loads(store.package(tenant, package_id)["payload"])
 
 @app.get("/v1/dreamer/status")
 def dream_status(tenant=Depends(identity)):
