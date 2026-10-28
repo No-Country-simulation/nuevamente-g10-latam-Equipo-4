@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 cd "$(dirname "$0")/.."
-test -f .env || { echo 'Execute bash scripts/setup.sh primeiro.'; exit 1; }
 if [ "${ATLAS_ENV_READY:-0}" != "1" ]; then
+  test -r "${ATLAS_ENV_FILE:-.env}" || { echo 'Execute scripts/setup.sh ou configure um ATLAS_ENV_FILE legível.'; exit 1; }
   exec node scripts/with-env.mjs bash scripts/dev.sh "$@"
 fi
 task_root="$PWD"
