@@ -1,4 +1,4 @@
-FROM python:3.12-slim
+FROM python:3.12-slim AS cognition
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 NODE_ENV=production
 WORKDIR /app
 COPY services/cognition/requirements.lock services/cognition/requirements-mongo.lock ./
@@ -13,5 +13,6 @@ RUN --mount=type=secret,id=atlas_ca \
 COPY --chown=10001:10001 services/cognition/atlas ./atlas
 COPY --chown=10001:10001 packages/contracts ./packages/contracts
 RUN useradd --uid 10001 --create-home atlas && mkdir /data && chown atlas:atlas /data
+ENV ATLAS_DATA_DIR=/data
 USER atlas
 CMD ["uvicorn", "atlas.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1"]

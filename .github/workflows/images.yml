@@ -53,8 +53,9 @@ jobs:
         with:
           context: .
           file: ${{ matrix.target == 'cognition' && 'infra/Dockerfile.cognition' || 'infra/Dockerfile.node' }}
-          target: ${{ matrix.target == 'cognition' && '' || matrix.target }}
+          target: ${{ matrix.target }}
           platforms: linux/amd64
+          load: ${{ matrix.target == 'cognition' && !(github.event_name == 'workflow_dispatch' && inputs.publish && github.ref == 'refs/heads/main') }}
           push: ${{ github.event_name == 'workflow_dispatch' && inputs.publish && github.ref == 'refs/heads/main' }}
           tags: ghcr.io/${{ steps.names.outputs.repository }}/atlas-${{ matrix.target }}:${{ github.sha }}
           cache-from: type=gha,scope=atlas-${{ matrix.target }}
@@ -63,6 +64,20 @@ jobs:
             org.opencontainers.image.source=https://github.com/${{ github.repository }}
             org.opencontainers.image.revision=${{ github.sha }}
           provenance: mode=min
+      - name: Verify cognition startup and HTTP authentication in the built image
+        if: matrix.target == 'cognition'
+        env:
+          ATLAS_TEST_IMAGE: ghcr.io/${{ steps.names.outputs.repository }}/atlas-cognition:${{ github.sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if ! docker image inspect "$ATLAS_TEST_IMAGE" > /dev/null 2>&1; then
+            docker pull "$ATLAS_TEST_IMAGE"
+          fi
+          docker run --rm --network none --interactive --entrypoint python \
+            -e ATLAS_INTERNAL_TOKEN=ci-image-only-token-not-for-production \
+            -e ATLAS_APP_MODE=local -e ATLAS_SEED_DEMO=0 \
+            "$ATLAS_TEST_IMAGE" - < scripts/check-cognition-image.py
       - name: Record immutable image identifier
         env:
           ATLAS_IMAGE: ghcr.io/${{ steps.names.outputs.repository }}/atlas-${{ matrix.target }}:${{ github.sha }}
