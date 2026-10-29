@@ -6,6 +6,7 @@ import {pathToFileURL} from 'node:url';
 import {createHash} from 'node:crypto';
 import {boundaryViolations} from './boundaries.mjs';
 import {matchBaseline} from './ratchet.mjs';
+import {sourceFiles} from '../source-files.mjs';
 
 const root=process.cwd();
 const policy=JSON.parse(readFileSync('docs/quality/policy.json','utf8'));
@@ -17,7 +18,7 @@ const {measure}=await import(pathToFileURL(join(engine,'src/adapters/eslint-metr
 const {dependencyEdges}=await import(pathToFileURL(join(engine,'src/adapters/depgraph.ts')).href);
 const {evaluateCycles}=await import(pathToFileURL(join(engine,'src/domain/graph.ts')).href);
 const {default:ts}=await import(pathToFileURL(join(engine,'node_modules/typescript/lib/typescript.js')).href);
-const paths=execFileSync('rg',['--files','apps/api/src','apps/api/agent','apps/web/lib','apps/web/components','apps/web/app'],{encoding:'utf8'}).trim().split('\n').filter(path=>/\.(tsx?|mjs)$/.test(path));
+const paths=['apps/api/src','apps/api/agent','apps/web/lib','apps/web/components','apps/web/app'].flatMap(sourceFiles).filter(path=>/\.(tsx?|mjs)$/.test(path)).sort();
 const basePaths=git('ls-tree','-r','--name-only',policy.base,'apps/api/src','apps/api/agent','apps/web/lib','apps/web/components','apps/web/app').trim().split('\n').filter(path=>/\.(tsx?|mjs)$/.test(path));
 const current=await measure(paths.map(path=>({path,text:readFileSync(path,'utf8')})));
 const baseline=await measure(basePaths.map(path=>({path,text:git('show',`${policy.base}:${path}`)})));
