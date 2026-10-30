@@ -11,9 +11,9 @@ import '@/components/atlas-identity.css';
 import './landing.css';
 
 export const metadata: Metadata = {
-  title: 'Atlas — IA Agents For Education',
+  title: 'Atlas — explore, pense, aprenda, evolua.',
   description:
-    'Conheça o Atlas, por NovaMente: tutores de IA, materiais de aprendizagem e referências ligadas às suas fontes.',
+    'Suas fontes, novas perspectivas. Um estúdio de aprendizagem com agentes educacionais e um Atlas com a sua identidade.',
 };
 
 export default function RootLayout({children}: Readonly<{children: React.ReactNode}>) {
