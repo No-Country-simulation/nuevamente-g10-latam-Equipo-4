@@ -25,6 +25,50 @@ html,body{font-size:14px}
 .agent-row small{line-height:1.5}
 .sidebar-bottom{padding-top:12px;padding-bottom:15px}
 .progress-footnote{line-height:1.5}
+/* Sidebar: nada pode ficar inacessível em janelas baixas. O rail inteiro rola como
+   último recurso, e a densidade aperta antes disso para o bloco inferior continuar visível. */
+.sidebar{overflow-y:auto;overscroll-behavior:contain}
+.sidebar-agents{min-height:96px}
+.sidebar-bottom{padding-left:12px;padding-right:12px}
+.custom-atlas-button,.calm-button,.local-user{padding-left:9px;padding-right:9px}
+@media(min-width:1251px) and (max-width:1420px){.matrix{grid-template-columns:1fr 1fr}}
+@media(min-width:761px) and (max-height:1180px){
+  .brand{height:56px}
+  .search-trigger{min-height:38px;margin-top:9px;margin-bottom:12px}
+  .sidebar nav{padding-bottom:10px}
+  .sidebar-label{padding-bottom:9px}
+  .nav-row{min-height:38px;margin-bottom:2px}
+  .sidebar-bottom{padding-top:8px;padding-bottom:10px}
+  .sidebar .custom-atlas-button{min-height:36px;margin:6px 0}
+  .calm-button{height:32px;min-height:32px;margin-bottom:8px;padding-bottom:6px}
+  .local-user{margin-bottom:10px}
+  .local-user span,.progress-footnote,.sidebar-bottom .MuiLinearProgress-root{display:none}
+  .progress-label{margin-bottom:0}
+  /* Os cinco tutores cabem inteiros em duas colunas, sem cortar a lista. */
+  .sidebar-agents{display:grid;grid-template-columns:1fr 1fr;gap:4px;flex:0 0 auto;min-height:0;overflow:visible;padding-top:10px;padding-bottom:4px}
+  .sidebar-agents>.sidebar-label{grid-column:1/-1}
+  .sidebar-agents>p{grid-column:1/-1}
+  .agent-row{min-height:38px;margin:0;padding:2px 6px;gap:6px}
+  .agent-row>span:not(.agent-status){min-width:0}
+  .agent-row .atlas-orb{width:24px;height:24px;flex:0 0 24px}
+  .agent-row strong{font-size:11px;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .agent-row small,.agent-status{display:none}
+}
+@media(min-width:761px) and (max-height:820px){
+  .brand{height:44px}
+  .nav-row{min-height:36px}
+  .sidebar-agents{padding-top:8px;padding-bottom:4px}
+}
+@media(min-width:761px) and (max-height:700px){
+  .brand{height:42px}
+  .search-trigger{margin-top:6px;margin-bottom:8px}
+  .sidebar nav>.sidebar-label{display:none}
+  .nav-row{min-height:34px}
+  .sidebar-agents{padding-top:6px}
+  .agent-row{min-height:32px}
+  .agent-row .atlas-orb{width:22px;height:22px;flex:0 0 22px}
+  .sidebar-bottom .progress-label,.sidebar-bottom .MuiLinearProgress-root{display:none}
+}
 .breadcrumb,.breadcrumb strong,.edition-label,.capability-bar{font-size:11px}
 .capability-bar{min-height:36px;height:36px}
 .capability-detail{font-size:11px}

@@ -16,7 +16,7 @@ Direção implementada a partir do book de design enviado em 21/10/2026. O pedid
 | Títulos e marca | Instrument Serif | Expressão editorial e identidade |
 | Interface | Plus Jakarta Sans | Navegação, controles e leitura curta |
 
-Fontes são servidas pelo próprio aplicativo. A arte `apps/web/public/images/atlas-world.webp` foi gerada para esta landing a partir de uma descrição da direção fornecida, e exportada em WebP (aproximadamente 186 kB). O book não foi usado como captura de interface nem como uma página inteira em imagem. Marca e avatares orbitais são SVGs decorativos, acompanhados de nomes legíveis.
+Fontes são servidas pelo próprio aplicativo. A arte do hero (`Atlas` segurando o globo) é a única imagem raster do site: `apps/web/public/images/atlas-world.webp` (1 536 × 1 240, ~170 KB, com alfa esfumado nas quatro bordas), servida por `next/image` com `fill`, `priority`, `sizes` responsivo e entrega AVIF/WebP otimizada pelo Next. O alfa é gerado em pós-produção para a arte se dissolver no fundo `#08090A` sem corte visível; o CSS ancora a peça à borda direita da janela (`right: calc(50% - 50vw - 40px)`) e a estica à altura do hero, então o lado direito nunca fica vazio nem encostado. Ela foi mantida em raster porque é uma ilustração fotorrealista: vetorizar perderia a fidelidade pedida pelo usuário. Todas as demais imagens estáticas — marca, orbes, avatares de agente, favicon e diagramas — são SVG (inline ou componentes), para manter o carregamento leve. O book não foi usado como captura de interface nem como uma página inteira em imagem.
 
 ## Organização e comportamento
 
@@ -25,6 +25,7 @@ Fontes são servidas pelo próprio aplicativo. A arte `apps/web/public/images/at
 - `#seu-atlas`: nome, quatro cores, tutor-base e prévia imediata. Salvar leva ao estúdio com a persona escolhida.
 - A navegação mobile é uma expansão simples; os links fecham o menu. Há foco visível, campos rotulados, feedback de erro e respeito a `prefers-reduced-motion`. Os modos de foco/baixo estímulo continuam no estúdio.
 - A prévia da landing é marcada como ilustrativa. O estúdio consulta as capacidades reais e identifica a demonstração extrativa.
+- O rail do estúdio mantém o logotipo, a busca, os sete espaços, os cinco tutores e as ações de rodapé sempre alcançáveis. Abaixo de 1180 px de altura a lista de tutores passa a duas colunas compactas (avatar e nome) e o bloco inferior encurta, para nada ficar cortado em portáteis de 768–900 px; em alturas extremas o rail inteiro rola. Abaixo de 761 px de largura o rail dá lugar ao menu-drawer, que mantém alvos de 44 px e rola dentro do diálogo. O painel de fontes fecha por padrão em ecrãs até 1250 px.
 
 ## Primeira etapa de “Crie seu Atlas”
 
@@ -46,7 +47,7 @@ Uma landing pronta não torna o estúdio apto a publicação pública: a exigên
 ## Integração da equipe — 24/10/2026
 
 O commit `ca87c9e` acrescentou landing editorial preta/bege, marca/avatares em
-`public/brand`, mockups e a entrada `/workspace`. Essas alterações foram
+SVG (`apps/web/components/atlas-orb.tsx`) e a entrada `/workspace`. Essas alterações foram
 preservadas no merge, junto do estúdio Atelier e leitor de fontes. `/studio`
 continua funcional; `/workspace/settings` e `/studio/settings` apresentam o mesmo
 painel de conexões. A seção **Seu Atlas** usa o criador existente e segue para

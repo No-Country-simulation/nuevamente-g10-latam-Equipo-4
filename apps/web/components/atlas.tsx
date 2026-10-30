@@ -5,7 +5,6 @@ import {AnimatePresence, motion, MotionConfig, useReducedMotion} from 'motion/re
 import {animate} from 'animejs';
 import * as Dialog from '@radix-ui/react-dialog';
 import {ThemeProvider, createTheme, CircularProgress, LinearProgress} from '@mui/material';
-import Image from 'next/image';
 import {ArrowDownToLine, ArrowRight, BookMarked, BookOpen, Briefcase, Building2, Check, CheckCheck, ChevronDown, ChevronLeft, ChevronRight, CircleHelp, Code2, Focus, GitBranch, GraduationCap, Layers3, ListChecks, Menu, MessageSquare, Network, PenLine, Plus, RotateCcw, ScrollText, Search, Send, ShieldCheck, Sparkles, Trash2, Upload, Users, Wand2, X, BrainCircuit, FileText, ExternalLink, Leaf, Settings2, type LucideIcon} from 'lucide-react';
 import type {Agent, AgentId, Bootstrap, Citation, Document, DreamStatus, EducationalPackage, Format, GenerationInput, Group, GroupMessage, LearningItem, Method, Profile, Progress, RagMode} from '@atlas/contracts';
 import {api, post} from '@/lib/api';
@@ -43,22 +42,8 @@ const cycleLabels: Record<string,string> = {canceled:'Ciclo cancelado', cancelle
 type Source = {id:string; title:string; pages:{number:number; text:string}[]};
 type Attempt = {correct:boolean; feedback:string; xp_awarded:number; progress:Progress};
 
-const agentMarks: Record<AgentId, string> = {
-  nilo: '/brand/agent-nilo.png',
-  lumi: '/brand/agent-lumi.png',
-  prisma: '/brand/agent-prisma.png',
-  fio: '/brand/agent-fio.png',
-  soma: '/brand/agent-soma.png',
-};
-
 function AgentMark({id, color, small=false, custom=false}:{id:AgentId; color?:string; small?:boolean; custom?:boolean}) {
-  if (custom && color) return <AtlasOrb color={color} />;
-  const size = small ? 32 : 42;
-  const src = agentMarks[id];
-  if (src) {
-    return <Image src={src} width={size} height={size} alt="" aria-hidden="true" className="agent-mark" />;
-  }
-  return <AtlasOrb color={color || '#ff7043'} />;
+  return <AtlasOrb color={color || '#ff7043'} className={small ? 'agent-mark' : ''} />;
 }
 function Modal({open,onOpenChange,title,description,children}:{open:boolean; onOpenChange:(v:boolean)=>void; title:string; description:string; children:ReactNode}) {
   return <Dialog.Root open={open} onOpenChange={onOpenChange}><Dialog.Portal><Dialog.Overlay className="dialog-overlay"/><Dialog.Content className="dialog-content"><div className="row between"><Dialog.Title>{title}</Dialog.Title><Dialog.Close className="icon-button" aria-label="Fechar"><X size={18}/></Dialog.Close></div><Dialog.Description>{description}</Dialog.Description>{children}</Dialog.Content></Dialog.Portal></Dialog.Root>;
@@ -85,7 +70,6 @@ export default function Atlas() {
   const [loading,setLoading]=useState(true);
   const [busy,setBusy]=useState('');
   const [agentId,setAgentId]=useState<AgentId>('nilo');
-  const [studioAgent,setStudioAgent]=useState<AgentId|'auto'>('auto');
   const [removing,setRemoving]=useState<Document|null>(null);
   const [selected,setSelected]=useState<string[]>([]);
   const [source,setSource]=useState<Source|null>(null);
@@ -157,7 +141,7 @@ export default function Atlas() {
   function navigate(value:Tab){setTab(value);setMenuOpen(false);setError('');}
   async function action(name:string,fn:()=>Promise<void>){setBusy(name);setError('');try{await fn();}catch(err){setError((err as Error).message);}finally{setBusy('');}}
   function acceptPackage(value:EducationalPackage){setPkg(value);setPackages(previous=>[value,...previous]);if(value.conteudo_adaptado.itens[0]?.citations[0]){const c=value.conteudo_adaptado.itens[0].citations[0];void openSource(c.document_id,c);}if(!reduce&&!calm&&!document.hidden&&completion.current)animate(completion.current,{opacity:[.5,1],duration:450,ease:'outQuad'});void loadDream();}
-  async function generate(event:FormEvent){event.preventDefault();await action('generate',async()=>{const value=await post<EducationalPackage>('generations',{document_ids:selected,goal,profile,format,sector,agent_id:studioAgent,method,rag_mode:rag} satisfies GenerationInput);acceptPackage(value);});}
+  async function generate(event:FormEvent){event.preventDefault();await action('generate',async()=>{const value=await post<EducationalPackage>('generations',{document_ids:selected,goal,profile,format,sector,agent_id:'auto',method,rag_mode:rag} satisfies GenerationInput);acceptPackage(value);});}
   async function upload(file?:File){if(!file)return;if(file.size>10*1024*1024){setError('O arquivo deve ter até 10 MiB.');return;}if(!/\.(pdf|md|markdown|txt)$/i.test(file.name)){setError('Escolha um PDF, Markdown ou TXT.');return;}await action('upload',async()=>{const body=new FormData();body.append('file',file);const doc=await api<Document>('documents',{method:'POST',body});setBoot(previous=>previous?{...previous,documents:[doc,...previous.documents.filter(d=>d.id!==doc.id)]}:previous);setSelected([doc.id]);await openSource(doc.id);setUploadOpen(false);});if(fileRef.current)fileRef.current.value='';}
   async function refreshAfterRemoval(regenerate=false){
     sourceRequest.current++;setBoot(previous=>previous?{...previous,documents:previous.documents.filter(doc=>doc.id!==removing?.id)}:previous);setSource(null);setCitation(null);setChats([]);setPackages([]);setPkg(null);
@@ -201,7 +185,7 @@ export default function Atlas() {
           <form onSubmit={generate} className="studio-form">
             <div className="section-heading"><h2><FileText size={16}/> Suas fontes</h2><button type="button" className="text-button" onClick={()=>setUploadOpen(true)}><Plus size={14}/>Adicionar fonte</button></div>
             <div className="document-strip">{boot.documents.map(doc=><div className={`document-chip ${selected.includes(doc.id)?'selected':''}`} key={doc.id}><label><input type="checkbox" checked={selected.includes(doc.id)} onChange={event=>{setSelected(previous=>event.target.checked?[...previous,doc.id]:previous.filter(id=>id!==doc.id));if(event.target.checked)void openSource(doc.id);}}/><FileText size={16}/><span><strong>{doc.title}</strong><small>{doc.pages} {doc.pages===1?'página':'páginas'} · v{doc.version}</small></span></label><button type="button" className="icon-button" title="Abrir fonte" aria-label={`Abrir fonte ${doc.title}`} onClick={()=>{void openSource(doc.id);setReaderOpen(true);}}><ExternalLink size={13}/></button><button type="button" className="icon-button" disabled={!!busy} aria-label={`Remover fonte ${doc.title}`} onClick={()=>{rebuildRequest.current=rebuildInput(pkg,doc.id);setRemoving(doc);}}><Trash2 size={14}/></button></div>)}{!boot.documents.length&&<button type="button" className="upload-inline" onClick={()=>setUploadOpen(true)}><Upload size={18}/>Adicione sua primeira fonte</button>}</div>
-            <StudioOptions agents={agents||[]} agent={studioAgent} onAgent={setStudioAgent} profile={profile} onProfile={setProfile} format={format} onFormat={setFormat} sector={sector} onSector={setSector} method={method} onMethod={setMethod} rag={rag} onRag={setRag}/>
+            <StudioOptions profile={profile} onProfile={setProfile} format={format} onFormat={setFormat} sector={sector} onSector={setSector} method={method} onMethod={setMethod} rag={rag} onRag={setRag}/>
             <div className="goal-composer"><label htmlFor="goal">O que você quer compreender?</label><textarea id="goal" value={goal} onChange={e=>setGoal(e.target.value)} minLength={3} maxLength={2000} required placeholder="Ex.: explique os conceitos principais e como eles se conectam…" rows={2}/><div className="row between"><span className="composer-hint"><ShieldCheck size={13}/>A partir das fontes selecionadas</span><button className="button primary" disabled={studyDisabled(busy,selected,goal,boot.pending_removals)}>{busy==='generate'?<CircularProgress size={15} color="inherit"/>:<Sparkles size={15}/>}Criar meu material<ArrowRight size={15}/></button></div></div>
           </form>
           <div ref={completion}>{pkg?<PackageView pkg={pkg} cite={cite} attempt={attempt} onExport={exportPackage}/>:<div className="artifact-placeholder"><div className="artifact-glyph"><Wand2 size={22} strokeWidth={1.5}/></div><div><h3>Seu próximo aprendizado começa aqui.</h3><p>Depois de criar, o material e as citações aparecem neste espaço.</p></div></div>}</div>
