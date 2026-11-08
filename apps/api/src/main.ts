@@ -18,14 +18,32 @@ import {MemoryController} from './modules/memory.controller.js';
 import {InternalController} from './modules/internal.controller.js';
 import {DocumentsController} from './modules/documents.controller.js';
 import {TrailsController} from './modules/trails.controller.js';
+import { AuthController } from './auth/auth.controller.js';
+import { sessionGate } from './auth/gate.js';
 
-@Module({controllers:[ConnectionsController,LibraryController,LearningController,CommunityController,MemoryController,InternalController,TrailsController,DocumentsController]})
+@Module({
+  controllers:[
+    ConnectionsController,
+    LibraryController,
+    LearningController,
+    CommunityController,
+    MemoryController,
+    InternalController,
+    TrailsController,
+    DocumentsController,
+    AuthController,
+  ]})
+
 class AtlasModule {}
+
 const app=await NestFactory.create<NestExpressApplication>(AtlasModule,{logger:['error','warn']});
 app.useBodyParser('json',{limit:'128kb'});
+
 const receipts=new CommandReceipts(join(process.env.ATLAS_DATA_DIR||'../../data','commands.sqlite3'),boundedInteger('ATLAS_COMMAND_MAX_ROWS',20000,100,1000000),boundedInteger('ATLAS_COMMAND_TTL_SECONDS',604800,60,2592000),boundedInteger('ATLAS_COMMAND_MAX_BYTES',67108864,1048576,1073741824));
+
 const rateLimit=boundedInteger('ATLAS_RATE_LIMIT_PER_MINUTE',120,30,10000);
 setInterval(()=>{try{receipts.expire();}catch{console.warn('Manutenção do registro de comandos indisponível.');}},60000).unref();
+
 const windows=new Map<string,{start:number;count:number}>();
 app.use((req:Request,res:Response,next:()=>void)=>{
   res.setHeader('X-Content-Type-Options','nosniff');res.setHeader('Cache-Control','no-store');
@@ -35,6 +53,8 @@ app.use((req:Request,res:Response,next:()=>void)=>{
   if(!current||time-current.start>60000){windows.set(key,{start:time,count:1});}else if(++current.count>rateLimit){res.status(429).json({message:'Muitas solicitações. Aguarde um minuto.'});return;}
   next();
 });
+
+app.use(sessionGate);
 app.use(commandMiddleware(receipts,tenant));
 app.useGlobalFilters({catch(error:unknown,host){const res=host.switchToHttp().getResponse<Response>();const err=error as {status?:number;getStatus?:()=>number;message?:string;code?:string};const status=error instanceof ZodError||err.code==='INPUT_INVALID'?400:err.code==='FORBIDDEN'?403:err.code==='UNAUTHENTICATED'?401:err.getStatus?.()||err.status||503;res.status(status).json({message:error instanceof ZodError?'Confira os campos enviados.':status<500?err.message:'O serviço não pôde concluir a operação. Fontes e dados anteriores foram preservados.'});}});
 await app.listen(Number(process.env.API_PORT||4000),process.env.ATLAS_BIND_ADDRESS||'127.0.0.1');
