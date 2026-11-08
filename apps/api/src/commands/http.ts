@@ -40,9 +40,9 @@ function execute(req:Request,res:Response,next:NextFunction,receipts:CommandRece
   attachResponse(res,receipts,tenant,operation,key);next();
 }
 /** Legacy clients without IDs remain compatible; public auth/reconciliation is P01/P02. */
-export function commandMiddleware(receipts:CommandReceipts,tenant:string){
+export function commandMiddleware(receipts:CommandReceipts,tenant:()=>string){
   return (req:Request,res:Response,next:NextFunction)=>{
-    try{execute(req,res,next,receipts,tenant);}
+    try{execute(req,res,next,receipts,tenant());}
     catch(error){
       const failure=error as {status?:number;message?:string};
       res.status(failure.status||503).json({message:failure.status?failure.message:'Registro de comandos indisponível.'});
