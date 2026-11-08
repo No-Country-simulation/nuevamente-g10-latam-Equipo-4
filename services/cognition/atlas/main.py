@@ -3,6 +3,7 @@ import hashlib
 import hmac
 import json
 import os
+import re
 from contextlib import asynccontextmanager
 from fastapi import BackgroundTasks, Depends, FastAPI, File, Header, HTTPException, UploadFile
 from fastapi.responses import JSONResponse
@@ -21,11 +22,13 @@ jobs = Jobs(store)
 work = asyncio.Semaphore(1)
 from .catalog import AGENTS
 
+TENANT = re.compile(r"[A-Za-z0-9_-]{1,100}")
+
 def identity(authorization: str = Header(default=""), x_atlas_tenant: str = Header(default="")):
     token = os.getenv("ATLAS_INTERNAL_TOKEN", "")
     if not token or not hmac.compare_digest(authorization, "Bearer " + token):
         raise HTTPException(401, "Acesso interno não autorizado.")
-    if not x_atlas_tenant or len(x_atlas_tenant) > 100:
+    if not x_atlas_tenant or not TENANT.fullmatch(x_atlas_tenant):
         raise HTTPException(400, "Workspace ausente ou inválido.")
     return x_atlas_tenant
 
@@ -112,6 +115,12 @@ Fonte demonstrativa escrita pela equipe Atlas, não um PDF oficial da Oracle. Co
     await asyncio.gather(deletion, scheduler, worker, return_exceptions=True)
 
 app = FastAPI(title="Atlas Cognition & Dreamer", version="0.1.0", lifespan=lifespan)
+
+@app.middleware("http")
+async def remember_tenant(request, call_next):
+    value = request.headers.get("x-atlas-tenant", "")
+    providers.set_tenant(value if TENANT.fullmatch(value) else None)
+    return await call_next(request)
 
 @app.exception_handler(ValueError)
 async def validation_error(request, exc):
@@ -237,3 +246,4 @@ def cycle(idempotency_key: str = Header(default=""), tenant=Depends(identity)):
 def run_job(job_id: str, tenant=Depends(job_identity)):
     # Caller is a server-side runner; the model has no capability for this route.
     return jobs.execute(dreamer, jobs.claim(job_id, tenant)) or {"status":"not_claimed"}
+    
