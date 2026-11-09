@@ -1,6 +1,6 @@
 # Relatório de Execução de QA e Testes Unitários
 
-**Data de Execução:** 05/11/2026  
+**Data de Execução:** 09/11/2026  
 **Responsável QA:** Samuel Souza Ferreira  
 **Ambiente:** Local (WSL2 Ubuntu / `extractive_demo`)
 
