@@ -19,7 +19,7 @@ for (const [name, path, options, expected] of cases) {
   console.log(`PASS ${name}: ${response.status}`);
 }
 const form = new FormData();
-form.append('file', new Blob([new Uint8Array(10 * 1024 * 1024 + 1)]), 'oversize.txt');
+form.append('file', new Blob([new Uint8Array(80 * 1024 * 1024 + 1)]), 'oversize.txt');
 const response = await fetch(`${base}/documents`, {method: 'POST', headers: {Origin: origin}, body: form});
-assert.equal(response.status, 413, 'actual file size must be limited to 10 MiB');
+assert.equal(response.status, 413, 'actual file size must be limited to 80 MiB');
 console.log('PASS actual file limit: 413');

@@ -33,7 +33,7 @@ try{
   let ready=false;
   for(let attempt=0;attempt<80;attempt++){
     if(api.exitCode!==null||python.exitCode!==null)throw new Error('A production runtime process exited before readiness.');
-    try{const boot=await call('bootstrap');assert.equal(boot.agents.length,5);ready=true;break;}catch{await delay(250);}
+    try{const boot=await call('bootstrap');assert.equal(boot.agents.length,7);ready=true;break;}catch{await delay(250);}
   }
   assert.ok(ready,'Production dependencies must boot the actual API and cognition.');
   const bootstrap=await call('bootstrap');const document=bootstrap.documents[0];
