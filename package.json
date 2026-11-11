@@ -17,6 +17,7 @@
     "check:eve": "node scripts/check-eve.mjs",
     "init:vault": "node scripts/init-vault.mjs",
     "test:e2e": "playwright test",
+    "test:auth": "node scripts/test-auth.mjs",
     "check:env": "node scripts/check-env.mjs",
     "quality:setup": "bash scripts/quality/setup.sh",
     "quality": "node --test scripts/quality/*.test.mjs && node scripts/quality/check.mjs",

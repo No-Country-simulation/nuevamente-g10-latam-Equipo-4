@@ -11,7 +11,7 @@ concurrency:
   cancel-in-progress: true
 jobs:
   checks:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     env:
       ATLAS_INTERNAL_TOKEN: ci-test-token-with-at-least-24-characters
@@ -36,6 +36,8 @@ jobs:
       - run: npm run typecheck
       - run: npm test
       - run: npm run build
+      - name: Verify private sources and sessions across real services
+        run: npm run test:auth
       - name: Verify the production API dependency tree and real compiled runtime
         run: npm run test:runtime
       - name: Install pinned structural analyzers (development only)
