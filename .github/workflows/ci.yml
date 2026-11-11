@@ -33,6 +33,10 @@ jobs:
           cache-dependency-path: services/cognition/requirements.lock
       - run: npm ci
       - run: python -m venv .venv && .venv/bin/pip install -r services/cognition/requirements.lock
+      - name: Use the official Ubuntu archive instead of the failing regional mirror
+        run: |
+          test -f /etc/apt/apt-mirrors.txt
+          printf '%s\n' 'https://archive.ubuntu.com/ubuntu/' | sudo tee /etc/apt/apt-mirrors.txt
       - run: npm run check:env
       - run: npm run typecheck
       - run: npm test
@@ -90,6 +94,10 @@ jobs:
           python-version: "3.12"
       - run: npm ci
       - run: python -m venv .venv && .venv/bin/pip install -r services/cognition/requirements.lock
+      - name: Use the official Ubuntu archive instead of the failing regional mirror
+        run: |
+          test -f /etc/apt/apt-mirrors.txt
+          printf '%s\n' 'https://archive.ubuntu.com/ubuntu/' | sudo tee /etc/apt/apt-mirrors.txt
       - name: Install native display and browser dependencies
         run: |
           native_deps_log="/tmp/atlas-native-deps.log"
