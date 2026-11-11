@@ -17,9 +17,12 @@ import {
   Sparkles,
 } from 'lucide-react';
 import Link from 'next/link';
+import {useState} from 'react';
+import catalog from '@atlas/contracts/agents.json';
 import Image from 'next/image';
 
 export default function Landing() {
+  const [menuOpen,setMenuOpen]=useState(false);
   return (
     <div className="atlas-landing">
       <a href="#conteudo" className="skip-link">
@@ -33,7 +36,8 @@ export default function Landing() {
         <button
           type="button"
           className="landing-menu-toggle"
-          aria-expanded={false}
+          aria-expanded={menuOpen}
+          onClick={()=>setMenuOpen(value=>!value)}
           aria-controls="landing-nav"
           aria-label="Abrir menu"
         >
@@ -41,7 +45,8 @@ export default function Landing() {
         </button>
         <nav
           id="landing-nav"
-          className="landing-navigation"
+          className={`landing-navigation ${menuOpen?'is-open':''}`}
+          onClick={()=>setMenuOpen(false)}
           aria-label="Navegação principal"
         >
           <a href="#produto">Produto</a>
@@ -108,7 +113,7 @@ export default function Landing() {
                 <Play size={13} />
                 Conheça a experiência
               </a>
-              <Link href="/workspace" className="landing-button landing-button-secondary">
+              <Link href="/login" className="landing-button landing-button-secondary">
                 <Play size={13} />
                 Entrar no sistema
               </Link>
@@ -204,12 +209,12 @@ export default function Landing() {
               <div className="preview-agents">
                 <div>
                   <AtlasOrb color="#ff704f" />
-                  <strong>Nilo</strong>
+                  <strong>Guia</strong>
                   <span>Uma ideia de cada vez</span>
                 </div>
                 <div>
                   <AtlasOrb color="#a89bff" />
-                  <strong>Lumi</strong>
+                  <strong>Faísca</strong>
                   <span>Curiosidade que conecta</span>
                 </div>
                 <div>
@@ -219,7 +224,7 @@ export default function Landing() {
                 </div>
                 <div>
                   <AtlasOrb color="#55dce8" />
-                  <strong>Fio</strong>
+                  <strong>Trama</strong>
                   <span>Aprender fazendo</span>
                 </div>
               </div>
@@ -304,40 +309,11 @@ export default function Landing() {
           <div className="landing-container">
             <div className="center-intro">
               <span className="landing-eyebrow">Companhia para a sua curiosidade</span>
-              <h2 id="agents-title">Cinco perspectivas.<br />Um universo para explorar.</h2>
+              <h2 id="agents-title">Sete perspectivas.<br />Um universo para explorar.</h2>
               <p>Cada agente tem um jeito de acompanhar você. Troque de perspectiva quando quiser, sem abandonar suas fontes.</p>
             </div>
             <div className="perspective-list">
-              <article>
-                <AtlasOrb color="#ff704f" />
-                <h3>Nilo</h3>
-                <span>Uma ideia de cada vez</span>
-                <p>Paciência para explicar. Espaço para perguntar de novo.</p>
-              </article>
-              <article>
-                <AtlasOrb color="#a89bff" />
-                <h3>Lumi</h3>
-                <span>Curiosidade que conecta</span>
-                <p>Novas conexões para enxergar além do primeiro exemplo.</p>
-              </article>
-              <article>
-                <AtlasOrb color="#e5c597" />
-                <h3>Prisma</h3>
-                <span>Um olhar mais atento</span>
-                <p>Perguntas sobre as evidências e os limites de cada resposta.</p>
-              </article>
-              <article>
-                <AtlasOrb color="#55dce8" />
-                <h3>Fio</h3>
-                <span>Aprender fazendo</span>
-                <p>Ideias ganham forma em materiais para estudar e praticar.</p>
-              </article>
-              <article>
-                <AtlasOrb color="#8fddb5" />
-                <h3>Soma</h3>
-                <span>Continuidade, sem pressão</span>
-                <p>Um passo possível hoje. Um novo começo quando precisar.</p>
-              </article>
+              {catalog.agents.map(agent=><article key={agent.id}><AtlasOrb color={agent.color}/><h3>{agent.name}</h3><span>{agent.role}</span><p>{agent.description}</p></article>)}
             </div>
           </div>
         </section>
