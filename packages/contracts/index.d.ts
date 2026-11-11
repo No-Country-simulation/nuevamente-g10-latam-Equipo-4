@@ -2,7 +2,7 @@ export type Profile = 'beginner' | 'developer' | 'architect' | 'executive';
 export type Format = 'tutorial' | 'flashcards' | 'quiz' | 'summary';
 export type Method = 'auto' | 'socratic' | 'feynman' | 'first_principles' | 'warburg';
 export type RagMode = 'auto' | 'vector' | 'hybrid' | 'lm';
-export type AgentId = 'nilo' | 'lumi' | 'prisma' | 'fio' | 'soma';
+export type AgentId = 'nilo' | 'lumi' | 'prisma' | 'fio' | 'soma' | 'agora' | 'clara';
 export interface Agent {id: AgentId; name: string; role: string; description: string; color: string}
 export interface StorageReceipt {provider: 'local' | 'oci'; object_key: string; status: 'stored' | 'verified'; namespace?:string; bucket?:string}
 export interface Document {id: string; title: string; filename: string; media_type: string; pages: number; characters: number; status: 'ready'; version: number; hash: string; created_at: string; storage: StorageReceipt}

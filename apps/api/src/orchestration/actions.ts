@@ -13,7 +13,7 @@ const empty=z.object({}).strict();
 const material=z.object({id:z.string(),status:z.enum(['ready','abstained']),conteudo_adaptado:z.object({itens:z.array(z.object({}).passthrough())}).passthrough()}).passthrough();
 const state=z.object({consent:z.boolean(),active_version:z.number().int().min(0),active_policy:z.object({}).passthrough().nullable()}).passthrough();
 export const brainCapabilities=['atlas.sources','atlas.generate','atlas.chat','atlas.web-search','atlas.judge','atlas.memory.status'] as const;
-const agents=new Set(['nilo','lumi','prisma','fio','soma']);
+const agents=new Set(['nilo','lumi','prisma','fio','soma','agora','clara']);
 
 /** Principal is constructed by the server, never deserialized from a model/request. */
 export function brainPrincipal(tenant:string,agent:string):Principal {

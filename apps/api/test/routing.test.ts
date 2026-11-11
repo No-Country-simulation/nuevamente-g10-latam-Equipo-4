@@ -59,3 +59,10 @@ test('the resolved agent is the actual principal sent to Invokta and is persiste
   const brains=createBrains('alice',actions,async(request,size)=>fallbackDecision(request,size),async()=>({agent_id:'prisma',agent_source:'typesafe',agent_reason:'Bounded classifier choice'}));
   await brains.respond('generate',input);assert.equal(sent.agent_id,'prisma');assert.equal(sent.decision.agent_id,'prisma');assert.equal(sent.decision.agent_source,'typesafe');
 });
+
+
+test('new study personas are reachable automatically while explicit agent and method remain independent',async()=>isolated(async()=>{
+  assert.equal((await routeAgent({...input,goal:'Quero investigar por que este conceito funciona'})).agent_id,'agora');
+  assert.equal((await routeAgent({...input,goal:'Quero explicar com minhas palavras'})).agent_id,'clara');
+  assert.equal((await routeAgent({...input,goal:'Feynman com palavras simples',agent_id:'prisma',method:'warburg'})).agent_id,'prisma');
+}));

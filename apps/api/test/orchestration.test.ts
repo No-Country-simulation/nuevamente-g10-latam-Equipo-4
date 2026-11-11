@@ -35,7 +35,7 @@ test('Invokta rejects injected fields and invalid provider outputs before return
   assert.equal(calls.length,0);
 });
 
-test('all five brains use authorized source sizes and Dreamer policy for chat and generation',async()=>{
+test('all seven brains use authorized source sizes and Dreamer policy for chat and generation',async()=>{
   const {actions,calls}=fixture();let decisions=0;
   const brains=createBrains('alice',actions,async(input,characters,memory)=>{decisions++;assert.equal(characters,1234);assert.deepEqual(memory,state.active_policy);return fallbackDecision(input,characters);});
   for(const brain of brains.catalog())for(const kind of ['chat','generate'] as const){
@@ -43,7 +43,8 @@ test('all five brains use authorized source sizes and Dreamer policy for chat an
     assert.equal((await brains.respond(kind,input)).id,'pkg_test');
     const sent=calls.at(-1)!.body as any;assert.equal(sent.agent_id,brain.id);assert.equal(sent.decision.method,'warburg');
   }
-  assert.equal(decisions,10);
+  assert.deepEqual(brains.catalog().map(b=>b.id).sort(),['agora','clara','fio','lumi','nilo','prisma','soma']);
+  assert.equal(decisions,14);
 });
 
 test('brains reject unauthorized documents before reading memory or executing a model',async()=>{

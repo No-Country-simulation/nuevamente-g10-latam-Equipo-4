@@ -10,7 +10,7 @@ class Decision(StrictModel):
     reason: str = Field(min_length=1, max_length=1000)
     source: Literal["policy", "typesafe"] = "policy"
 
-    agent_id: Literal["nilo", "lumi", "prisma", "fio", "soma"] | None = None
+    agent_id: Literal["nilo", "lumi", "prisma", "fio", "soma", "agora", "clara"] | None = None
     agent_source: Literal["manual", "policy", "typesafe"] | None = None
     agent_reason: str | None = Field(default=None, max_length=500)
 
@@ -20,7 +20,7 @@ class Generation(StrictModel):
     profile: Literal["beginner", "developer", "architect", "executive"] = "beginner"
     format: Literal["tutorial", "flashcards", "quiz", "summary"] = "tutorial"
     sector: Literal["general", "fintech", "health", "ecommerce"] = "general"
-    agent_id: Literal["nilo", "lumi", "prisma", "fio", "soma"] = "nilo"
+    agent_id: Literal["nilo", "lumi", "prisma", "fio", "soma", "agora", "clara"] = "nilo"
     method: Literal["auto", "socratic", "feynman", "first_principles", "warburg"] = "auto"
     rag_mode: Literal["auto", "vector", "hybrid", "lm"] = "auto"
     decision: Decision | None = None
@@ -115,7 +115,7 @@ class StudyRequest(StrictModel):
     profile: Literal['beginner', 'developer', 'architect', 'executive']
     format: Literal['tutorial', 'flashcards', 'quiz', 'summary']
     sector: Literal['general', 'fintech', 'health', 'ecommerce']
-    agent_id: Literal['auto', 'nilo', 'lumi', 'prisma', 'fio', 'soma']
+    agent_id: Literal['auto', 'nilo', 'lumi', 'prisma', 'fio', 'soma', 'agora', 'clara']
     method: Literal['auto', 'socratic', 'feynman', 'first_principles', 'warburg']
     rag_mode: Literal['auto', 'vector', 'hybrid', 'lm']
 

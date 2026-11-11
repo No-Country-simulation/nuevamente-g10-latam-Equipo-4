@@ -16,7 +16,7 @@ export type AtlasIdentity = {
   color: (typeof atlasColors)[number];
   agentId: AgentId;
 };
-const agents: AgentId[] = ["nilo", "lumi", "prisma", "fio", "soma"];
+const agents: AgentId[] = ["nilo", "lumi", "prisma", "fio", "soma", "agora", "clara"];
 
 export function parseIdentity(raw: string | null): AtlasIdentity | null {
   if (!raw) return null;

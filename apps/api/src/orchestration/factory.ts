@@ -3,7 +3,7 @@ import {z} from 'zod';
 import {persona,personas,catalogVersion} from './catalog.js';
 import {issueTicket,verifyTicket,type AgentGrant} from './tickets.js';
 import {brainPrincipal,type ActionEngines} from './actions.js';
-export const factoryInput=z.object({system:z.string().max(4000),prompt:z.string().max(60000),agent_id:z.enum(['nilo','lumi','prisma','fio','soma']),purpose:z.enum(['learning','dreamer_replay','dreamer_policy'])}).strict();
+export const factoryInput=z.object({system:z.string().max(4000),prompt:z.string().max(60000),agent_id:z.enum(['nilo','lumi','prisma','fio','soma','agora','clara']),purpose:z.enum(['learning','dreamer_replay','dreamer_policy'])}).strict();
 export const policyOutput=z.object({preferred_method:z.enum(['socratic','feynman','first_principles','warburg']),step_size:z.enum(['short','medium']),question_first:z.boolean(),exploration:z.object({branching:z.enum(['breadth_first','depth_first','best_leaf']),max_rounds:z.number().int().min(1).max(2),stop_score:z.number().min(0.5).max(1)}).strict().optional()}).strict();
 export const learningOutput=z.object({title:z.string().min(1).max(200),introduction:z.string().max(2000),items:z.array(z.object({title:z.string().min(1).max(200),body:z.string().min(1).max(6000),evidence_ids:z.array(z.string().min(1)).min(1).max(8),front:z.string().max(3000).nullable().optional(),back:z.string().max(3000).nullable().optional(),options:z.array(z.string()).min(2).max(4).nullable().optional(),correct_index:z.number().int().min(0).max(3).nullable().optional()}).strict()).min(1).max(6)}).strict();
 export type FactoryTask=z.infer<typeof factoryInput>;

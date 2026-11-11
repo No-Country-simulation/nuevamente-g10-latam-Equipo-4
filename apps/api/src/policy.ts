@@ -8,7 +8,7 @@ export const generationSchema = z.object({
   profile: z.enum(['beginner', 'developer', 'architect', 'executive']).default('beginner'),
   format: z.enum(['tutorial', 'flashcards', 'quiz', 'summary']).default('tutorial'),
   sector: z.enum(['general', 'fintech', 'health', 'ecommerce']).default('general'),
-  agent_id: z.enum(['nilo', 'lumi', 'prisma', 'fio', 'soma']).default('nilo'),
+  agent_id: z.enum(['nilo', 'lumi', 'prisma', 'fio', 'soma', 'agora', 'clara']).default('nilo'),
   method: z.enum(['auto', 'socratic', 'feynman', 'first_principles', 'warburg']).default('auto'),
   rag_mode: z.enum(['auto', 'vector', 'hybrid', 'lm']).default('auto'),
 }).strict();
