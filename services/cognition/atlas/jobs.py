@@ -2,6 +2,7 @@
 import json
 import time
 from .store import uid, now
+from . import providers
 
 class Jobs:
     def __init__(self, store):
@@ -43,6 +44,7 @@ class Jobs:
         if not job:
             return None
         tenant = job['tenant']
+        token = providers.set_tenant(tenant)
         try:
             if self.store.memory_state(tenant)['revision'] != job['revision']:
                 return self.finish(job, 'cancelled', {"status":"cancelled"})
@@ -51,6 +53,8 @@ class Jobs:
         except Exception:
             # A daily provider budget is also enforced by Dreamer. Retry is bounded.
             return self.finish(job,'queued' if job['attempts']<3 else 'failed',{"status":"retry_pending" if job['attempts']<3 else "failed"})
+        finally:
+            providers.reset_tenant(token)
 
     def finish(self, job, status, result):
         with self.store.db() as db:

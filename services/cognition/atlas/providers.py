@@ -23,6 +23,20 @@ class PlanUnavailable(ProviderError):
     public_code = 'chatgpt_unavailable'
 
 _execution = ContextVar("atlas_generation_execution", default=None)
+_tenant = ContextVar("atlas_tenant", default=None)
+
+def set_tenant(value):
+    return _tenant.set(value)
+
+def reset_tenant(token):
+    _tenant.reset(token)
+
+def internal_headers():
+    """Cabeçalhos das chamadas ao Node: token interno + de quem é o pedido."""
+    return {
+        "Authorization": "Bearer " + os.environ["ATLAS_INTERNAL_TOKEN"],
+        "x-atlas-tenant": _tenant.get() or os.getenv("ATLAS_TENANT_ID", "local-workspace")
+    }
 
 def runtime_mode():
     mode = os.getenv("ATLAS_AGENT_RUNTIME", "eve")
@@ -49,7 +63,7 @@ def complete(system, prompt, *, agent_id="nilo", purpose="learning"):
         raise ProviderError("Configure o provedor de geração no servidor para usar LLM.")
     if runtime_mode() == "eve":
         try:
-            response = httpx.post(os.getenv("ATLAS_API_URL", "http://127.0.0.1:4000") + "/v1/internal/generate", json={"system": system, "prompt": prompt, "agent_id": agent_id, "purpose": purpose}, headers={"Authorization": "Bearer " + os.environ["ATLAS_INTERNAL_TOKEN"]}, timeout=100)
+            response = httpx.post(os.getenv("ATLAS_API_URL", "http://127.0.0.1:4000") + "/v1/internal/generate", json={"system": system, "prompt": prompt, "agent_id": agent_id, "purpose": purpose}, headers=internal_headers(), timeout=100)
             response.raise_for_status()
             result = response.json()
             _execution.set(result["execution"])
@@ -109,7 +123,7 @@ def judge(question, evidence, answer):
     if len(evidence) > 28000 or len(answer) > 18000:
         raise ProviderError("A resposta excedeu o orçamento de avaliação integral. Nenhum trecho foi cortado ou publicado como verificado.")
     try:
-        response = httpx.post(os.getenv("ATLAS_API_URL", "http://127.0.0.1:4000") + "/v1/internal/judge", json={"question": question, "evidence": evidence, "answer": answer}, headers={"Authorization": "Bearer " + os.environ["ATLAS_INTERNAL_TOKEN"]}, timeout=35)
+        response = httpx.post(os.getenv("ATLAS_API_URL", "http://127.0.0.1:4000") + "/v1/internal/judge", json={"question": question, "evidence": evidence, "answer": answer}, headers=internal_headers(), timeout=35)
         response.raise_for_status()
         result = response.json()
         if result.get("verdict") not in ("supported", "contradicted", "insufficient_evidence", "not_evaluated"):
@@ -124,7 +138,7 @@ def rank_evidence(question, passages):
     if not passages or not credentials.configured("decision"):
         return passages
     try:
-        response = httpx.post(os.getenv("ATLAS_API_URL", "http://127.0.0.1:4000") + "/v1/internal/evidence", json={"question":question,"passages":[{"id":p["id"],"text":p["text"]} for p in passages]}, headers={"Authorization":"Bearer " + os.environ["ATLAS_INTERNAL_TOKEN"]}, timeout=35, follow_redirects=False)
+        response = httpx.post(os.getenv("ATLAS_API_URL", "http://127.0.0.1:4000") + "/v1/internal/evidence", json={"question":question,"passages":[{"id":p["id"],"text":p["text"]} for p in passages]}, headers=internal_headers(), timeout=35, follow_redirects=False)
         response.raise_for_status()
         result=response.json()
         if result["source"] != "typesafe":

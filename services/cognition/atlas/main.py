@@ -3,6 +3,7 @@ import hashlib
 import hmac
 import json
 import os
+import re
 from contextlib import asynccontextmanager
 from fastapi import BackgroundTasks, Depends, FastAPI, File, Header, HTTPException, UploadFile
 from fastapi.responses import JSONResponse
@@ -21,21 +22,21 @@ jobs = Jobs(store)
 work = asyncio.Semaphore(1)
 from .catalog import AGENTS
 
+TENANT = re.compile(r"[A-Za-z0-9_-]{1,100}")
+
 def identity(authorization: str = Header(default=""), x_atlas_tenant: str = Header(default="")):
     token = os.getenv("ATLAS_INTERNAL_TOKEN", "")
     if not token or not hmac.compare_digest(authorization, "Bearer " + token):
         raise HTTPException(401, "Acesso interno não autorizado.")
-    if not x_atlas_tenant or len(x_atlas_tenant) > 100:
+    if not x_atlas_tenant or not TENANT.fullmatch(x_atlas_tenant):
         raise HTTPException(400, "Workspace ausente ou inválido.")
     return x_atlas_tenant
 
-def job_identity(authorization: str = Header(default=""), x_atlas_tenant: str = Header(default="")):
+def job_identity(authorization: str = Header(default="")):
     secret = os.getenv("ATLAS_JOB_RUNNER_TOKEN", "")
     if len(secret)<24 or not hmac.compare_digest(authorization, "Bearer " + secret):
         raise HTTPException(401, "Runner não autorizado.")
-    if x_atlas_tenant != os.getenv("ATLAS_TENANT_ID", "local-workspace"):
-        raise HTTPException(403, "Workspace do runner inválido.")
-    return x_atlas_tenant
+
 
 async def limited(function, *args):
     if work.locked():
@@ -65,16 +66,18 @@ async def dream_worker():
 async def dream_schedule():
     while True:
         await asyncio.sleep(max(60, int(os.getenv("DREAMER_INTERVAL_SECONDS", "3600"))))
-        tenant = os.getenv("ATLAS_TENANT_ID", "local-workspace")
-        try:
-            state = dreamer.status(tenant)
-            if state["consent"] and state["events"] >= 3 and providers.llm_ready() and credentials.configured("decision"):
-                job = await run_in_threadpool(jobs.enqueue, tenant, "scheduled:" + now()[:10])
-                if os.getenv("ATLAS_JOB_RUNNER", "local") == "trigger":
-                    await run_in_threadpool(providers.dispatch_job, job)
-        except Exception:
-            # No provider response/secret in logs; durable queue remains retryable.
-            continue
+        with store.db() as db:
+            tenants = [row[0] for row in db.execute("SELECT tenant FROM consent WHERE enabled=1")]
+        for tenant in tenants:
+            try:
+                state = dreamer.status(tenant)
+                if state["consent"] and state["events"] >= 3 and providers.llm_ready() and credentials.configured("decision"):
+                    job = await run_in_threadpool(jobs.enqueue, tenant, "scheduled:" + now()[:10])
+                    if os.getenv("ATLAS_JOB_RUNNER", "local") == "trigger":
+                        await run_in_threadpool(providers.dispatch_job, job)
+            except Exception:
+                # Durable queue remains retryable for each workspace.
+                continue
 
 @asynccontextmanager
 async def lifespan(app):
@@ -129,6 +132,15 @@ async def upload_admission(request, call_next):
         return await call_next(request)
     finally:
         uploading = False
+
+@app.middleware("http")
+async def remember_tenant(request, call_next):
+    value = request.headers.get("x-atlas-tenant", "")
+    token = providers.set_tenant(value if TENANT.fullmatch(value) else None)
+    try:
+        return await call_next(request)
+    finally:
+        providers.reset_tenant(token)
 
 @app.exception_handler(ValueError)
 async def validation_error(request, exc):
@@ -254,6 +266,6 @@ def cycle(idempotency_key: str = Header(default=""), tenant=Depends(identity)):
     return {"id":job["id"], "status":job["status"], "reason":"Ciclo persistido na fila; acompanhe pelo painel."}
 
 @app.post("/v1/internal/jobs/{job_id}/run")
-def run_job(job_id: str, tenant=Depends(job_identity)):
+def run_job(job_id: str, _runner=Depends(job_identity)):
     # Caller is a server-side runner; the model has no capability for this route.
-    return jobs.execute(dreamer, jobs.claim(job_id, tenant)) or {"status":"not_claimed"}
+    return jobs.execute(dreamer, jobs.claim(job_id)) or {"status":"not_claimed"}

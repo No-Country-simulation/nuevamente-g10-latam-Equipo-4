@@ -5,7 +5,7 @@ import {CognitionError,unwrapCognitionError,publicErrorCode,replayErrorHeader} f
 import type {Response} from 'express';
 test('trusted upstream errors survive real Invokta wrapping without accepting forged cause objects',async()=>{
   const original=new CognitionError('safe message',429,'chatgpt_limit');
-  const actions=createActionEngines('test',{cognition:async()=>{throw original;},search:async()=>({}),judge:async()=>({})});
+  const actions=createActionEngines(()=>'test',{cognition:async()=>{throw original;},search:async()=>({}),judge:async()=>({})});
   await assert.rejects(actions.invoke('atlas.sources',{},brainPrincipal('test','nilo')),error=>{
     assert.equal(unwrapCognitionError(error),original);assert.equal(publicErrorCode(error),'chatgpt_limit');return true;
   });

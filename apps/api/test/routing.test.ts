@@ -8,8 +8,12 @@ import {publicGenerationSchema,routeAgent} from '../src/orchestration/routing.js
 import {createBrains} from '../src/orchestration/brains.js';
 import {createActionEngines} from '../src/orchestration/actions.js';
 import {fallbackDecision} from '../src/policy.js';
+
 const id='doc_'+'a'.repeat(20);
 const input=publicGenerationSchema.parse({document_ids:[id],goal:'Explique como os conceitos se conectam'});
+
+// Definindo o tenant como função conforme a nova arquitetura
+const tenant = () => 'alice';
 
 function isolated(run:()=>Promise<void>,key=''){
   const before={...process.env};const dir=mkdtempSync(join(tmpdir(),'atlas-routing-'));
@@ -44,19 +48,19 @@ test('provider failure and an invalid suggested ID cannot grant a capability or 
 
 test('automatic routing validates sources before consulting memory or the decision model',async()=>{
   const calls:string[]=[];
-  const actions=createActionEngines('alice',{async cognition(path){calls.push(path);return [];},async search(){throw Error('unused');},async judge(){throw Error('unused');}});
-  const brains=createBrains('alice',actions,async()=>{throw Error('must not run');},async()=>{throw Error('must not route');});
+  const actions=createActionEngines(tenant,{async cognition(path){calls.push(path);return [];},async search(){throw Error('unused');},async judge(){throw Error('unused');}});
+  const brains=createBrains(tenant,actions,async()=>{throw Error('must not run');},async()=>{throw Error('must not route');});
   await assert.rejects(brains.respond('generate',input));assert.deepEqual(calls,['documents']);
 });
 
 test('the resolved agent is the actual principal sent to Invokta and is persisted in the decision',async()=>{
   let sent:any;
-  const actions=createActionEngines('alice',{async cognition(path,_method,body){
+  const actions=createActionEngines(tenant,{async cognition(path,_method,body){
     if(path==='documents')return [{id,characters:100}];
     if(path==='dreamer/status')return {consent:false,active_version:0,active_policy:null};
     sent=body;return {id:'pkg_routing',status:'ready',conteudo_adaptado:{itens:[]}};
   },async search(){throw Error('unused');},async judge(){throw Error('unused');}});
-  const brains=createBrains('alice',actions,async(request,size)=>fallbackDecision(request,size),async()=>({agent_id:'prisma',agent_source:'typesafe',agent_reason:'Bounded classifier choice'}));
+  const brains=createBrains(tenant,actions,async(request,size)=>fallbackDecision(request,size),async()=>({agent_id:'prisma',agent_source:'typesafe',agent_reason:'Bounded classifier choice'}));
   await brains.respond('generate',input);assert.equal(sent.agent_id,'prisma');assert.equal(sent.decision.agent_id,'prisma');assert.equal(sent.decision.agent_source,'typesafe');
 });
 
