@@ -15,11 +15,17 @@ if (!token || token.length < 24) throw new Error('Configure ATLAS_INTERNAL_TOKEN
 if ((process.env.ATLAS_APP_MODE || 'local') !== 'local') throw new Error('Autenticação pública pendente. Esta versão só permite workspace local.');
 export const tenant = currentTenant;
 
+function cognitionTarget(memory:boolean) {
+  const remote=memory&&!!process.env.MEMORY_SERVICE_URL;
+  const base=remote?process.env.MEMORY_SERVICE_URL!:process.env.COGNITION_URL||'http://127.0.0.1:8000';
+  const secret=remote?process.env.MEMORY_SERVICE_TOKEN:token;
+  if(remote&&!base.startsWith('https://'))throw new Error('Memória externa requer HTTPS e token próprio.');
+  return {base,secret};
+}
+
 export async function cognition(path:string, method='GET', body?:unknown, memory=false, signal?:AbortSignal) {
-  const base = memory && process.env.MEMORY_SERVICE_URL ? process.env.MEMORY_SERVICE_URL : process.env.COGNITION_URL || 'http://127.0.0.1:8000';
-  const secret = memory && process.env.MEMORY_SERVICE_URL ? process.env.MEMORY_SERVICE_TOKEN : token;
-  if (memory && process.env.MEMORY_SERVICE_URL && !base.startsWith('https://')) throw new Error('Memória externa requer HTTPS e token próprio.');
-  const headers:Record<string,string> = {Authorization:`Bearer ${secret}`,'x-atlas-tenant':tenant()};  
+  const {base,secret}=cognitionTarget(memory);
+  const headers:Record<string,string> = {Authorization:`Bearer ${secret}`,'x-atlas-tenant':tenant()};
   if (body && !(body instanceof FormData)) headers['content-type']='application/json';
   const response = await fetch(`${base}/v1/${path}`, {method,headers,body:body instanceof FormData ? body : body ? JSON.stringify(body) : undefined,signal:AbortSignal.any([AbortSignal.timeout(120000),...(signal?[signal]:[])]),redirect:'error'});
   const data = await response.json();

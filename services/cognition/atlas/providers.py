@@ -16,7 +16,10 @@ _execution = ContextVar("atlas_generation_execution", default=None)
 _tenant = ContextVar("atlas_tenant", default=None)
 
 def set_tenant(value):
-    _tenant.set(value)
+    return _tenant.set(value)
+
+def reset_tenant(token):
+    _tenant.reset(token)
 
 def internal_headers():
     """Cabeçalhos das chamadas ao Node: token interno + de quem é o pedido."""
