@@ -1,0 +1,3 @@
+[submodule "integrations/chatgpt-desktop/devkit"]
+	path = integrations/chatgpt-desktop/devkit
+	url = https://github.com/openai/sign-in-with-chatgpt-devkit.git
