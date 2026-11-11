@@ -12,15 +12,21 @@
     "dev:api": "npm run dev -w @atlas/api",
     "build": "npm run build -w @atlas/api && npm run build -w @atlas/web",
     "typecheck": "npm run typecheck --workspaces --if-present",
-    "test": "npm run test -w @atlas/api && .venv/bin/python -m unittest discover -s services/cognition/tests -v && node --test scripts/env-loader.test.mjs scripts/check-env.test.mjs",
+    "test": "npm run test -w @atlas/api && .venv/bin/python -m unittest discover -s services/cognition/tests -v && node --test scripts/env-loader.test.mjs scripts/check-env.test.mjs && npm run test -w @atlas/web",
     "smoke": "node scripts/smoke.mjs",
     "check:eve": "node scripts/check-eve.mjs",
     "init:vault": "node scripts/init-vault.mjs",
     "test:e2e": "playwright test",
+    "test:auth": "node scripts/test-auth.mjs",
     "check:env": "node scripts/check-env.mjs",
     "quality:setup": "bash scripts/quality/setup.sh",
     "quality": "node --test scripts/quality/*.test.mjs && node scripts/quality/check.mjs",
-    "test:runtime": "node scripts/check-runtime.mjs"
+    "test:runtime": "node scripts/check-runtime.mjs",
+    "test:upload": "node scripts/check-upload-runtime.mjs",
+    "chatgpt:setup": "git submodule update --init integrations/chatgpt-desktop/devkit && node integrations/chatgpt-desktop/scripts/prepare-devkit.mjs && npm ci --prefix integrations/chatgpt-desktop && npm run install:runtime --prefix integrations/chatgpt-desktop && npm run build --prefix integrations/chatgpt-desktop",
+    "chatgpt:start": "npm start --prefix integrations/chatgpt-desktop",
+    "chatgpt:test": "npm test --prefix integrations/chatgpt-desktop",
+    "test:eve-auth": "node scripts/test-eve-auth.mjs"
   },
   "engines": {
     "node": ">=24 <25"
@@ -37,6 +43,7 @@
     "multer": "2.5.0"
   },
   "devDependencies": {
-    "@playwright/test": "1.58.2"
+    "@playwright/test": "1.58.2",
+    "tsx": "4.23.15"
   }
 }

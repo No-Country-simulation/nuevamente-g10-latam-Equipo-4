@@ -1,6 +1,6 @@
 import {createHmac,randomUUID,timingSafeEqual} from 'node:crypto';
 import {z} from 'zod';
-const claimsSchema=z.object({id:z.string().uuid(),tenant:z.string().min(1).max(100),agent:z.enum(['nilo','lumi','prisma','fio','soma']),purpose:z.enum(['learning','dreamer_replay','dreamer_policy']),expires:z.number().int(),capabilities:z.array(z.literal('atlas.web-search')).max(1)}).strict();
+const claimsSchema=z.object({id:z.string().uuid(),tenant:z.string().min(1).max(100),agent:z.enum(['nilo','lumi','prisma','fio','soma','agora','clara']),purpose:z.enum(['learning','dreamer_replay','dreamer_policy']),expires:z.number().int(),capabilities:z.array(z.literal('atlas.web-search')).max(1)}).strict();
 export type AgentGrant=z.infer<typeof claimsSchema>;
 function signature(data:string,secret:string){return createHmac('sha256',secret).update(data).digest('base64url');}
 export function issueTicket(claims:Omit<AgentGrant,'id'|'expires'>,secret:string,time=Date.now()) {

@@ -107,7 +107,7 @@ def generate(store, tenant, request: Generation, memory_snapshot=None):
     # Persist a self-contained artifact that includes its actual storage receipt.
     store.blob(tenant, f"packages/{package_id}.json", json.dumps(package, ensure_ascii=False).encode())
     with store.db() as db:
-        db.execute("INSERT INTO packages VALUES(?,?,?,?,?)", (tenant, package_id, json.dumps(package, ensure_ascii=False), json.dumps(answers, ensure_ascii=False), request.model_dump_json()))
+        db.execute("INSERT INTO packages VALUES(?,?,?,?,?)", (tenant, package_id, json.dumps(package, ensure_ascii=False), json.dumps(answers, ensure_ascii=False), request.model_dump_json(exclude={"conversation_context"})))
     if memory_snapshot["enabled"]:
         store.event(tenant, "generation", {"package_id": package_id, "method": decision.method, "profile": request.profile, "format": request.format, "execution": execution, "dream_world": dream_world, "replay": {"input": request.model_dump(), "package": package}}, memory_snapshot["revision"])
     return package

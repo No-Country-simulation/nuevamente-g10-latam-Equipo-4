@@ -1,6 +1,6 @@
 import {readFileSync} from 'node:fs';
 import {sourceFiles} from './source-files.mjs';
-const roots=['apps/api/src','apps/api/agent','apps/web/lib','apps/web/app','services/cognition/atlas','integrations/trigger/tasks','integrations/trigger/trigger.config.ts','scripts'];
+const roots=['apps/api/src','apps/api/agent','apps/web/lib','apps/web/app','services/cognition/atlas','integrations/chatgpt-desktop/src','integrations/trigger/tasks','integrations/trigger/trigger.config.ts','scripts'];
 const files=roots.flatMap(sourceFiles).sort();
 const names=new Set();
 const patterns=[/process\.env\.([A-Z][A-Z_0-9]+)/g,/process\.env\[['"]([A-Z][A-Z_0-9]+)['"]/g,/os\.(?:getenv|environ\.get)\(['"]([A-Z][A-Z_0-9]+)['"]/g,/os\.environ\[['"]([A-Z][A-Z_0-9]+)['"]/g];

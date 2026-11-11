@@ -48,6 +48,23 @@ class ReplayAndJobsTests(unittest.TestCase):
         with self.store.db() as db:self.assertEqual(db.execute('SELECT COUNT(*) FROM jobs').fetchone()[0],0)
         self.assertEqual(self.dream.status('alice')['cycles'],[])
         second=self.jobs.enqueue('alice','x');self.assertNotEqual(first['id'],second['id'])
+    def test_worker_binds_each_claimed_tenant_and_restores_context(self):
+        observed=[]
+        class Runner:
+            def cycle(self, tenant, job_id):
+                observed.append((tenant, providers.internal_headers()['x-atlas-tenant']))
+                return {"status":"completed"}
+        with patch.dict(os.environ,{"ATLAS_INTERNAL_TOKEN":"test"}):
+            previous=providers.set_tenant('outer')
+            try:
+                for tenant in ('alice','bob'):
+                    self.jobs.enqueue(tenant,tenant)
+                    self.jobs.execute(Runner(),self.jobs.claim())
+                self.assertEqual(observed,[('alice','alice'),('bob','bob')])
+                self.assertEqual(providers.internal_headers()['x-atlas-tenant'],'outer')
+            finally:
+                providers.reset_tenant(previous)
+
     def test_wrong_tenant_cannot_claim_a_job(self):
         job=self.jobs.enqueue('alice','x')
         self.assertIsNone(self.jobs.claim(job['id'],'bob'))

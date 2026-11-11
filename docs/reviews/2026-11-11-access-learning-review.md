@@ -1,0 +1,22 @@
+# Revisão independente — acesso e aprendizagem, 2026-11-11
+
+**Conclusão:** sem novo bloqueador reproduzível identificado nesta revisão para preparação de commits e PRs. Esta revisão não é aprovação humana, certificação de release nem autorização para produção. O checkout está em merge, com HEAD `c9e6eb824baf2c812c2e35007e56ec769c664dde`, alterações indexadas e alterações adicionais no working tree; a conclusão se limita ao conteúdo identificado abaixo.
+
+Revisão de código e evidências dos caminhos de upload com limite e admissão, limpeza temporária, proveniência de conversas e migrações, isolamento do desktop, ciclo de vida dos processos e preparação do SDK. A checagem anterior de regressão do contexto A/B, cancelamento de startup e SIGTERM foi considerada em conjunto com os testes e a implementação atuais. O relatório não cobre a revisão da PR 6 de Taylam.
+
+- Recalculei independentemente o SHA-256 das fontes e da revisão do DevKit usando a lista e o algoritmo do gate: `628eae0e4d855813f1ca1780fec416a05b20ddc6f62ee8ef5d518995ff090b37`, exatamente igual a `artifacts/quality/report.json`; a lista de arquivos também coincide. O gate registra PASS, zero erros de parsing e 23 achados de dívida legada. O escopo informado é working tree, não release. O digest precisa ser conferido novamente caso as fontes mudem.
+- Executei `node integrations/chatgpt-desktop/scripts/prepare-devkit.mjs --check`: PASS para o pin `0a36fefeb913055c8c7a1a29b63d82b96b2e841a` e o diff exato do patch. A comparação dos arquivos de qualidade com o snapshot de recuperação não mostrou mudança; política e baseline preexistentes são mantidos no snapshot.
+- Evidências registradas em `artifacts/verification-2026-11-11`: 26 testes E2E e 16 testes desktop passaram; smoke nativo, onboarding e cancelamento passaram. O teste de upload registrou 80 MiB com 201, excesso 413, concorrência 429 e zero temporários remanescentes, com RSS amostrado limitado. As evidências são de execuções anteriores, não foram reexecutadas nesta revisão.
+- As migrações até v4 colocam inconsistências legadas e contexto sem proveniência em quarentena; reconciliação administrativa manual continua pendente. A revisão observou a limitação do contexto a fontes correntes e a exclusão de contexto transitório do input persistido.
+
+Pendências para release/produção: autorização OAuth real e uso de plano, cofre real do sistema (indisponível no teste de onboarding), readback OCI, SAST/SBOM, prova de carga em ambiente de 4 GiB, CI remota e avaliação humana. O teste de upload usa PDF sintético e amostragem de RSS; não comprova limite de cgroup nem carga integral de 4 GiB. Auditoria reportada: desktop zero vulnerabilidades; runtime raiz uma low, sem high/critical. Estes resultados e a suíte raiz informada pela equipe não foram reexecutados nesta revisão; os logs temporários de suíte raiz não estavam disponíveis.
+
+## Adendo — CI `ca4cf68`
+
+Revisei o delta do commit `ca4cf68`: fixa os dois jobs em Ubuntu 24.04, instala dependências do Chromium no job desktop e configura o helper SUID do Electron. Os testes nativos continuam previstos com sandbox e sem `--no-sandbox`; não identifiquei bloqueador reproduzível no delta. O ajuste depende de confirmação pela execução remota do GitHub Actions; não foi executado neste runner nesta revisão. O commit altera apenas CI, e o digest anterior identifica o estado de fontes anterior a ele, não o commit novo.
+
+## Adendo — runtime Electron `38dfead`
+
+Revisei o delta `38dfead28b29df0afad9f7c887d19e740e2158dc`: o setup e o CI executam explicitamente o instalador oficial do Electron após `npm ci`, antes da configuração do helper do sandbox; o README documenta a etapa. Não identifiquei novo bloqueador reproduzível nesse delta. Os binários Electron e `chrome-sandbox` estão presentes na instalação limpa de verificação. O workflow remoto Atlas checks para esse SHA concluiu com sucesso nos jobs `checks` e `chatgpt-desktop`; o workflow de imagens ainda estava em andamento na consulta, portanto a conclusão geral de CI permanece pendente.
+
+Recalculei o digest das fontes e da revisão do DevKit: `6a8179e8b722cd2ff0945e8a2f6ebaa493f9ee82f8df7cf06812f5314500e74f`, igual ao quality PASS e à lista registrada, sem erros de parsing. `prepare-devkit.mjs --check` confirmou o pin e o patch exato. O submódulo aparece modificado pelo patch esperado; essa verificação não representa aprovação humana nem de produção.

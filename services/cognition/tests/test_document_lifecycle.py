@@ -347,4 +347,19 @@ print('restart-erasure-ok')
         index.delete_document.assert_called_with('alice', self.a['id'], 'atlas_old')
 
 
+    def test_unscoped_legacy_context_is_quarantined_before_any_source_purge(self):
+        material=self.material([self.b['id']])
+        with self.store.db() as db:
+            db.execute("UPDATE packages SET input=json_set(input,'$.conversation_context',?) WHERE tenant=? AND id=?",('LEGACY_PRIVATE_A_409','alice',material['id']))
+        from atlas.providers import ProviderError
+        with self.assertRaises(ProviderError):service.remove(self.store,self.dreamer,'alice',self.a['id'])
+        self.assertEqual(self.store.source('alice',self.a['id'])['id'],self.a['id'])
+        with self.assertRaises(LookupError):self.store.package('alice',material['id'])
+        with self.store.db() as db:
+            remaining=db.execute('SELECT input,payload FROM packages WHERE tenant=? AND id=?',('alice',material['id'])).fetchone()
+        self.assertIn('LEGACY_PRIVATE_A_409',remaining['input'])
+        self.assertEqual(json.loads(remaining['payload']),material)
+        self.assertTrue((self.store.root/'objects'/material['storage']['object_key']).exists())
+
+
 if __name__ == '__main__': unittest.main()

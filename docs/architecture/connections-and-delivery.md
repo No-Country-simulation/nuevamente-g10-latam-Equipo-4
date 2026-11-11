@@ -31,7 +31,12 @@ flowchart TD
 2. **Manuais:** o painel envia a chave uma vez ao BFF; Nest valida finalidade/provedor e grava um envelope AES-256-GCM com nonce aleatório, AAD de versão/tenant e escrita atômica. A chave mestra vem de env/arquivo separado do volume. Nenhuma API retorna a chave; o navegador não a persiste. São quatro finalidades: geração, decisão/judge, busca e embeddings opcionais.
 3. **Login local:** `chatgpt()` nativo do Eve usa o fluxo `/login` do desenvolvimento local, habilitado explicitamente pelo operador. Não é login de usuários no Atlas e não é API OpenAI para uma assinatura ChatGPT. A configuração é recusada em produção; não copiamos cookies nem usamos a autenticação do agente que desenvolve o projeto.
 
-Manual sobrescreve a fonte gerenciada para a mesma finalidade. Remover a configuração manual restaura a fonte do servidor. O painel declara `configured_not_verified`: uma chave preenchida não comprova acesso. O teste opcional consulta somente catálogo OpenAI/OpenRouter/Anthropic; não envia fontes nem gera conteúdo, e não comprova compatibilidade de ferramentas/JSON.
+Atualização0.6: [OAuth ChatGPT local](chatgpt-local.md) usa o DevKit oficial e
+cofre do SO em cliente opcional; geração fica travada na ponte local, sem fallback
+pago. O helper Eve acima continua legado de desenvolvimento. O fluxo pessoal
+local não autentica a aplicação Oracle multiusuário.
+
+Fora desse perfil desktop, manual sobrescreve a fonte gerenciada para a mesma finalidade. Remover a configuração manual restaura a fonte do servidor. O painel declara `configured_not_verified`: uma chave preenchida não comprova acesso. O teste opcional consulta somente catálogo OpenAI/OpenRouter/Anthropic; não envia fontes nem gera conteúdo, e não comprova compatibilidade de ferramentas/JSON.
 
 ## Distribuição e consistência
 

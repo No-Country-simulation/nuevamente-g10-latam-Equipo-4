@@ -12,6 +12,28 @@ Arquitetura atual: [Agent Factory 0.3](docs/SPEC_AGENT_FACTORY_V03.md) + [Conex�
 
 **Revisão de requisitos:** [Matriz MVP e pós-MVP](docs/AUDITORIA_MVP_POS_MVP.md), conferida com o PDF do hackathon. **Configuração:** [chaves, login local, SDKs e deploy por GitHub Actions/GHCR](docs/CONFIGURACAO_E_DEPLOY.md). O edital exige Object Storage e prova vetorial; OCI Compute é opcional.
 
+## Acesso e biblioteca 0.6 — branch em revisão
+
+Novo cliente opcional: [Atlas local com OAuth ChatGPT](integrations/chatgpt-desktop/README.md).
+Usa o DevKit oficial e cofre do SO, sem domínio/Client ID manual nesse modo.
+Conta elegível autoriza o uso explicitamente; limites e modelos são da conta.
+Não transfere tokens para Oracle nem troca geração para API paga automaticamente.
+O login por e-mail pode ser habilitado com `ATLAS_REQUIRE_LOGIN=1`; a liberação pública de produção continua pendente. Consulte [autenticação e builds](docs/architecture/auth-and-builds.md).
+
+```bash
+# Após preparar o ambiente e npm run build na raiz:
+npm run chatgpt:setup
+npm run chatgpt:start
+```
+
+[Arquitetura local/Oracle](docs/architecture/chatgpt-local.md) e
+[spec de acesso, fontes80MiB e personas](docs/specs/access-learning-80mb.md).
+Sete personas: Guia, Faísca, Prisma, Trama, Elo, Ágora e Clara. Método e tutor são
+independentes. Biblioteca aceita PDF textual/MD/TXT até80MiB, com parser/contexto
+limitados; Gerenciar fontes permite pesquisa e remoção múltipla confirmada.
+O perfil ChatGPT local usa geração direta validada; Eve/debates seguem no perfil
+por API. Login/uso real de uma assinatura precisa de teste interativo do usuário.
+
 ## Entrega 0.5 em branch — 28/10/2026
 
 A evolução está em `feat/andre-pos-mvp-quality-20261028`, sem atualizar `main`.
@@ -50,7 +72,7 @@ Para publicar esta entrega, use `bash scripts/push-branch-both.sh`; o script ant
 - Adicionar PDF textual, Markdown ou TXT e consultar o texto extraído por página.
 - Selecionar fontes, objetivo, perfil, formato e persona; gerar tutorial, flashcards, quiz ou resumo.
 - Abrir a evidência citada por um material e conferir o trecho original.
-- Conversar nos canais de Nilo, Lumi, Prisma, Fio e Soma.
+- Conversar nos canais de Guia, Faísca, Prisma, Trama, Elo, Ágora e Clara.
 - Responder quiz com gabarito no servidor e XP que não se duplica pelo mesmo acerto.
 - Criar grupo e mensagens em um workspace local de participante único.
 - Usar o painel de memória/Dreamer: consentimento, ciclos, versões, rollback e exclusão.
@@ -158,7 +180,7 @@ No seu computador local, abra o navegador em `http://127.0.0.1:3000` para conhec
 
 Abra `/workspace/settings` (também disponível em `/studio/settings`) ou **Conexões e modelos** na barra lateral. O painel separa geração, Jev, Firecrawl e embeddings opcionais. Aceita chaves gerenciadas por ambiente/arquivos ou chaves manuais criptografadas no servidor. `npm run init:vault` prepara a chave mestra em um checkout existente; reinicie os serviços depois. Não há chaves salvas no navegador.
 
-Eve pode chamar SDKs independentes OpenAI-compatible/OpenRouter e Anthropic, além do AI Gateway. O login por assinatura ChatGPT é opção de **desenvolvimento local**, mediante habilitação do operador e `/login` no terminal Eve; não é login de usuários do Atlas nem API de produção. Não há reutilização das credenciais do Codex desenvolvedor.
+Eve pode chamar SDKs independentes OpenAI-compatible/OpenRouter e Anthropic, além do AI Gateway. O cliente opcional [ChatGPT local](integrations/chatgpt-desktop/README.md) usa OAuth oficial e cofre do SO; esse perfil usa geração direta validada. O helper `/login` do terminal Eve continua legado de desenvolvimento habilitado pelo operador. Nenhum desses fluxos autentica a VPS multiusuário, e nenhuma credencial do Codex é reutilizada.
 
 O uso cotidiano continua sem modelo dedicado de embeddings: lexical, contexto de documentos e reranking Jev opcional. O caminho semântico fica disponível para o critério obrigatório do edital. Ao trocar embeddings, reindexe; o classificador Jev não gera vetores.
 
@@ -211,7 +233,7 @@ Depois de atualizar dependências do repositório, pare os serviços e execute o
 
 Sem chaves, o material estará em `extractive_demo`: passagens literais organizadas, com exercícios de demonstração. Uma resposta `abstained` significa que o sistema preferiu não publicar conteúdo sem respaldo. Não desative esse comportamento para “sempre aparecer uma resposta”.
 
-**Limites de upload:** 10 MiB por arquivo, até 100 páginas no PDF, até 300 mil caracteres extraídos e até 512 segmentos. Há timeout e limite de memória no parser PDF. PDFs escaneados sem texto e arquivos com senha não têm suporte neste incremento. Se um limite for excedido, divida o material em volumes menores.
+**Limites de upload:** 80 MiB por arquivo, até 1000 páginas no PDF, até dois milhões de caracteres extraídos e até 4096 segmentos. Há timeout e limite de memória no parser PDF. PDFs escaneados sem texto e arquivos com senha não têm suporte neste incremento. Se um limite for excedido, divida o material em volumes menores.
 
 ## Times de agentes: colaboração nos bastidores
 
@@ -637,3 +659,44 @@ assets e entrada `/workspace`. `/studio` continua como alias funcional. O criado
 **Seu Atlas** permanece na landing e os dois caminhos do estúdio levam ao painel
 de conexões correspondente. Os mockups/textos promocionais da landing não são
 prova de métricas de usuários nem substituem a auditoria do MVP.
+
+## Incremento de acesso e biblioteca (novembro)
+
+A landing da equipe foi sincronizada com o estúdio, mantendo a escolha manual de
+um tutor. O catálogo agora também inclui Ágora (investigação) e Clara (explicação
+com teach-back). Personas definem estilo; o método escolhido continua prioritário.
+
+Uploads aceitam até **80 MiB** por arquivo. Para manter a execução leve, o BFF
+encaminha o corpo em streaming e a API usa arquivo temporário, removido ao final.
+Há uma admissão por processo antes de processar outro upload. PDF textual:
+até 1000 páginas e dois milhões de caracteres; parser isolado em 512 MiB e 60s.
+O tamanho do arquivo não equivale à janela de contexto: LM RAG respeita o orçamento
+configurado e muda explicitamente para recuperação híbrida quando necessário.
+Embeddings semânticos continuam opcionais e dependem de um provedor configurado;
+o modo local é lexical, sem fingir inferência externa.
+
+A página `/login` oferece cadastro e entrada por e-mail quando
+`ATLAS_REQUIRE_LOGIN=1`; com a flag desabilitada, identifica o workspace local
+compartilhado. A sessão usa cookie HttpOnly e o backend deriva o tenant da conta.
+Os dois perfis Compose entregam a mesma flag ao Next e ao Nest.
+
+Separadamente, `/login/local` prepara o aplicativo pessoal com OAuth oficial:
+registro dinâmico e callback em 127.0.0.1, sem domínio ou Client ID manual.
+Usuários elegíveis podem autorizar o plano ChatGPT, sujeito aos limites da conta.
+O uso real ainda depende de teste interativo; esses tokens não vão para Oracle
+e esse fluxo não substitui a sessão por e-mail do Atlas.
+
+A migração relacional registra versões, vínculos de fontes e integridade referencial.
+Pacotes legados com referências ausentes ou de outro tenant são inventariados em
+`package_integrity_issues` e ficam indisponíveis até reconciliação; nenhum conteúdo
+é apagado silenciosamente. Schema4 também protege derivados de contexto legado
+sem proveniência. [Migração e reparo manual](docs/architecture/migration-06.md).
+Consulte a especificação desta branch antes de operar reparo administrativo ou abrir o serviço ao público.
+
+Em **Gerenciar fontes**, busque pelo nome, selecione até20 documentos e confirme a
+remoção de uma vez. O resultado aparece por fonte; falhas não desfazem remoções
+anteriores, e limpezas externas pendentes continuam sendo acompanhadas. A lixeira
+individual permanece disponível para conferir o impacto detalhado de uma fonte.
+### Administração de conexões
+
+O cadastro não concede privilégios pelo endereço de e-mail. No servidor confiável, após criar a conta, conceda o papel pelo ID exato do usuário: `cd apps/api && node dist/auth/grant-admin.js usr_<id>`. Use o mesmo `ATLAS_DATA_DIR` da API. O comando requer acesso local ao banco de usuários.

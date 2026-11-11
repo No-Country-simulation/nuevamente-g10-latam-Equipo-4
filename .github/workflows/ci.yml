@@ -11,7 +11,7 @@ concurrency:
   cancel-in-progress: true
 jobs:
   checks:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     env:
       ATLAS_INTERNAL_TOKEN: ci-test-token-with-at-least-24-characters
@@ -20,6 +20,7 @@ jobs:
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
+          submodules: true # Pinned official local ChatGPT DevKit.
           fetch-depth: 0 # Ratchet needs the baseline commit for show/archive.
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
@@ -36,6 +37,17 @@ jobs:
       - run: npm run typecheck
       - run: npm test
       - run: npm run build
+      - name: Install pinned Chromium and verify the runner libraries
+        shell: bash
+        run: |
+          set -euo pipefail
+          npx playwright install chromium
+          browser_path="$(node -e 'process.stdout.write(require("@playwright/test").chromium.executablePath())')"
+          ldd "$browser_path" | tee /tmp/atlas-chromium-deps.log
+          if grep -F 'not found' /tmp/atlas-chromium-deps.log; then exit 1; fi
+          node --input-type=module -e 'import { chromium } from "@playwright/test"; const browser = await chromium.launch(); await browser.close();'
+      - name: Verify private sources and sessions across real services
+        run: npm run test:auth
       - name: Verify the production API dependency tree and real compiled runtime
         run: npm run test:runtime
       - name: Install pinned structural analyzers (development only)
@@ -45,8 +57,8 @@ jobs:
         run: npm audit --omit=dev --audit-level=high
       - name: Compile native Eve workflows without provider credentials
         run: npm run agent:build -w @atlas/api
-      - name: Install Chromium for interaction tests
-        run: npx playwright install --with-deps chromium
+      - name: Verify signed tickets against the compiled Eve server
+        run: npm run test:eve-auth
       - name: Browser and HTTP journeys in isolated extractive workspace
         run: npm run test:e2e
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
@@ -73,3 +85,50 @@ jobs:
           done
           npm run smoke
           npm run test:proxy -w @atlas/web
+
+  chatgpt-desktop:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          submodules: true
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: "24"
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: "3.12"
+      - run: npm ci
+      - run: python -m venv .venv && .venv/bin/pip install -r services/cognition/requirements.lock
+      - run: npm ci --prefix integrations/chatgpt-desktop
+      - run: npm run install:runtime --prefix integrations/chatgpt-desktop
+      - name: Verify native display and Electron runtime libraries
+        shell: bash
+        run: |
+          set -euo pipefail
+          command -v xvfb-run
+          command -v xauth
+          ldd integrations/chatgpt-desktop/node_modules/electron/dist/electron | tee /tmp/atlas-electron-deps.log
+          if grep -F 'not found' /tmp/atlas-electron-deps.log; then exit 1; fi
+      - name: Configure the Chromium sandbox helper
+        run: |
+          sudo chown root:root integrations/chatgpt-desktop/node_modules/electron/dist/chrome-sandbox
+          sudo chmod 4755 integrations/chatgpt-desktop/node_modules/electron/dist/chrome-sandbox
+      - run: npm run build
+      - run: npm run build --prefix integrations/chatgpt-desktop
+      - run: npm run chatgpt:test
+      - run: npm audit --audit-level=high --prefix integrations/chatgpt-desktop
+      - name: Native launcher and real backend with synthetic provider; no account credentials
+        run: |
+          for native_test in native-smoke native-onboarding native-cancel; do
+            native_log="/tmp/${native_test}.log"
+            if xvfb-run -a node "integrations/chatgpt-desktop/test/${native_test}.mjs" > "$native_log" 2>&1; then
+              cat "$native_log"
+            else
+              native_status=$?
+              cat "$native_log"
+              node -e 'const fs=require("node:fs");const text=fs.readFileSync(process.argv[1],"utf8").slice(-12000);console.log("::error title=Native desktop test::"+text.replaceAll("%","%25").replaceAll("\r","%0D").replaceAll("\n","%0A"));' "$native_log"
+              exit "$native_status"
+            fi
+          done

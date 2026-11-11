@@ -22,3 +22,6 @@ artifacts/
 .venv-quality/
 .quality-tools/
 /*.png
+diff2.txt
+meu.md
+teste-isolamento.sh

@@ -13,19 +13,19 @@ const empty=z.object({}).strict();
 const material=z.object({id:z.string(),status:z.enum(['ready','abstained']),conteudo_adaptado:z.object({itens:z.array(z.object({}).passthrough())}).passthrough()}).passthrough();
 const state=z.object({consent:z.boolean(),active_version:z.number().int().min(0),active_policy:z.object({}).passthrough().nullable()}).passthrough();
 export const brainCapabilities=['atlas.sources','atlas.generate','atlas.chat','atlas.web-search','atlas.judge','atlas.memory.status'] as const;
-const agents=new Set(['nilo','lumi','prisma','fio','soma']);
+const agents=new Set(['nilo','lumi','prisma','fio','soma','agora','clara']);
 
 /** Principal is constructed by the server, never deserialized from a model/request. */
 export function brainPrincipal(tenant:string,agent:string):Principal {
   if(!agents.has(agent))throw new Error('Brain desconhecido.');
   return {id:`atlas-brain:${agent}`,attributes:{tenant,role:'brain',agent}};
 }
-export function controlPrincipal(tenant:string):Principal {
-  return {id:'atlas-workspace-control',attributes:{tenant,role:'workspace-control'}};
+export function controlPrincipal(tenant:()=>string):Principal {
+  return {id:'atlas-workspace-control',attributes:{get tenant(){return tenant();},role:'workspace-control'}};
 }
-export function createActionEngines(tenant:string,ports:ActionPorts) {
+export function createActionEngines(tenant:()=>string,ports:ActionPorts) {
   const access=({principal,capabilityId}:{principal:Principal|null;capabilityId:string})=>{
-    if(principal?.attributes?.tenant!==tenant)return false;
+    if(principal?.attributes?.tenant!==tenant())return false;
     if(principal.attributes.role==='workspace-control')return principal.id==='atlas-workspace-control';
     const agent=principal.attributes.agent;
     return principal.attributes.role==='brain' && typeof agent==='string' && agents.has(agent) && principal.id===`atlas-brain:${agent}` && (brainCapabilities as readonly string[]).includes(capabilityId);

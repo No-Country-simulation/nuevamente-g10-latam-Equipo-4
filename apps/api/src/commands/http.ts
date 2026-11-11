@@ -1,5 +1,6 @@
 import type {Request,Response,NextFunction} from 'express';
 import type {CommandReceipts} from './receipts.js';
+import {replayErrorHeader} from '../http-errors.js';
 
 const tracked=/^\/v1\/(generations|chat|groups(?:\/[\w-]+\/messages)?|quiz\/[\w-]+\/attempt|trails(?:\/[\w-]+\/steps\/[\w-]+\/(generate|complete))?|dreamer\/(cycles|consent|rollback))$/;
 function decodePart(part:string):string {
@@ -34,15 +35,16 @@ function execute(req:Request,res:Response,next:NextFunction,receipts:CommandRece
   const operation=`${req.method}:${path}`;
   const reservation=receipts.reserve(tenant,operation,key,req.body);
   if(reservation.kind==='replay'){
+    replayErrorHeader(res,reservation.body);
     res.setHeader('Idempotency-Replayed','true');res.status(reservation.status).json(reservation.body);return;
   }
   if(erase)receipts.forget(tenant,{operation,key});
   attachResponse(res,receipts,tenant,operation,key);next();
 }
 /** Legacy clients without IDs remain compatible; public auth/reconciliation is P01/P02. */
-export function commandMiddleware(receipts:CommandReceipts,tenant:string){
+export function commandMiddleware(receipts:CommandReceipts,tenant:()=>string){
   return (req:Request,res:Response,next:NextFunction)=>{
-    try{execute(req,res,next,receipts,tenant);}
+    try{execute(req,res,next,receipts,tenant());}
     catch(error){
       const failure=error as {status?:number;message?:string};
       res.status(failure.status||503).json({message:failure.status?failure.message:'Registro de comandos indisponível.'});

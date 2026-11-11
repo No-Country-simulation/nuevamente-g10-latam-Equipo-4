@@ -908,7 +908,6 @@ apagar memórias não remove a identidade visual.
 | `apps/web/components/atlas-customizer.tsx` | Formulário e prévia |
 | `apps/web/lib/atlas-identity.ts` | Validação e preferência local |
 | `apps/web/components/atlas-identity.css` | Identidade compartilhada entre landing e estúdio |
-| `apps/web/public/images/atlas-world.webp` | Arte local otimizada |
 
 O estágio web do Docker copia a pasta `public`, além do build Next. Não há novo
 banco, worker ou serviço pago para a landing. O acesso público ao estúdio continua

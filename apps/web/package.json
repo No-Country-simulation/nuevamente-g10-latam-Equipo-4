@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start --hostname 127.0.0.1 --port 3000",
     "typecheck": "tsc --noEmit",
-    "test:proxy": "node test/proxy.integration.mjs"
+    "test:proxy": "node test/proxy.integration.mjs",
+    "test": "tsx --test test/*.test.ts"
   },
   "dependencies": {
     "@atlas/contracts": "*",

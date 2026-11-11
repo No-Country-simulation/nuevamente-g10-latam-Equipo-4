@@ -7,7 +7,6 @@ const service:AuthFn<Request>=request=>{
   if(!bearer.startsWith('Bearer '))return null;
   try {
     const ticket=bearer.slice(7);const grant=verifyTicket(ticket,secret);
-    if(grant.tenant!==(process.env.ATLAS_TENANT_ID||'local-workspace'))return null;
     return {authenticator:'atlas-factory',principalId:`atlas-brain:${grant.agent}`,principalType:'service',attributes:{tenant:grant.tenant,agent:grant.agent,purpose:grant.purpose,ticket}};
   }catch{return null;}
 };

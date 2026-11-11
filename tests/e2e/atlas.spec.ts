@@ -144,7 +144,7 @@ test('companion identity and encrypted manual settings preserve original persona
   await page.getByRole('button',{name:/Gerenciado pelo servidor/}).click();
   await page.getByRole('button',{name:/Usar configuração do servidor/}).click();
   await expect(page.getByText('Chave manual criptografada')).toBeHidden();
-  await page.getByRole('button',{name:/Login com ChatGPT/}).click();
+  await page.getByRole('button',{name:/Eve · desenvolvimento/}).click();
   await expect(page.getByRole('button',{name:'Salvar preferência de login local'})).toBeDisabled();
 });
 
@@ -318,4 +318,58 @@ test('pending cleanup can be closed and another source opened without enabling g
   await page.reload();
   await expect(page.getByRole('button',{name:'Criar meu material',exact:true})).toBeDisabled();
   await expect(page.getByText('Há uma limpeza de fontes em andamento.',{exact:false})).toBeVisible();
+});
+
+test('access screen explains native OAuth, setup and shared web workspace',async({page})=>{
+  await page.goto('/login');
+  await expect(page.getByRole('heading',{name:'Volte à sua próxima descoberta.'})).toBeVisible();
+  await page.getByRole('link',{name:'Preparar o aplicativo local',exact:false}).click();
+  await expect(page.getByRole('heading',{name:'Conecte. Escolha. Aprenda.'})).toBeVisible();
+  await expect(page.getByText('npm run chatgpt:setup',{exact:true})).toBeVisible();
+  await page.getByRole('link',{name:'Voltar às opções de acesso',exact:false}).click();
+  await expect(page.getByText('Continuar não cria uma conta nem autentica você.',{exact:false})).toBeVisible();
+  await page.getByRole('link',{name:'Continuar no workspace local',exact:false}).click();
+  await expect(page.getByRole('button',{name:'Adicionar fonte',exact:true})).toBeVisible();
+});
+
+test('landing exposes seven catalog personas and mobile navigation actually opens',async({page},info)=>{
+  await page.goto('/');
+  if(info.project.name==='mobile'){
+    await page.getByRole('button',{name:'Abrir menu'}).click();
+    await expect(page.getByRole('button',{name:'Abrir menu'})).toHaveAttribute('aria-expanded','true');
+    await page.getByRole('navigation',{name:'Navegação principal'}).getByRole('link',{name:'Agentes',exact:true}).click();
+    await expect(page.getByRole('button',{name:'Abrir menu'})).toHaveAttribute('aria-expanded','false');
+  }
+  const list=page.locator('.perspective-list');
+  for(const name of ['Guia','Faísca','Prisma','Trama','Elo','Ágora','Clara'])await expect(list.getByRole('heading',{name,exact:true})).toBeVisible();
+  await page.screenshot({path:`artifacts/access-landing-${info.project.name}.png`,fullPage:true});
+});
+
+test('document manager searches, confirms once and removes selected sources without touching others',async({page,request},info)=>{
+  const docs=[];
+  for(const label of ['A','B']){
+    const upload=await request.post(`${root}/documents`,{multipart:{file:{name:`Lote ${info.project.name} ${label}.md`,mimeType:'text/markdown',buffer:Buffer.from(`# Lote ${info.project.name} ${label}\n\nUma rede privada permite estudar conceitos com fontes verificaveis.`)}}});
+    expect(upload.status()).toBe(201);docs.push(await upload.json());
+  }
+  const boot=await (await request.get(`${root}/bootstrap`)).json();
+  const other=boot.documents.find((d:{id:string})=>!docs.some(doc=>doc.id===d.id));expect(other).toBeTruthy();
+  const material=await (await command(request,'generations',{document_ids:docs.map(doc=>doc.id),goal:'Explicar os conceitos destas fontes',agent_id:'clara',method:'warburg'})).json();
+  expect(material.decision.method).toBe('warburg');
+  await page.goto('/workspace');await page.getByRole('button',{name:'Gerenciar fontes',exact:true}).click();
+  const dialog=page.getByRole('dialog',{name:'Gerenciar fontes',exact:true});
+  await dialog.getByRole('textbox',{name:'Buscar fontes'}).fill(`Lote ${info.project.name}`);
+  await expect(dialog.getByRole('checkbox')).toHaveCount(2);
+  await dialog.getByRole('button',{name:'Selecionar resultados'}).click();
+  await dialog.getByRole('button',{name:'Remover selecionadas'}).click();
+  await expect(dialog.getByRole('heading',{name:'Remover 2 fontes?'})).toBeVisible();
+  for(const doc of docs)expect((await request.get(`${root}/documents/${doc.id}/source`)).status()).toBe(200);
+  await dialog.getByRole('button',{name:'Remover selecionadas'}).click();
+  await expect(dialog.getByText('Removida',{exact:true})).toHaveCount(2);
+  await expect(dialog.getByRole('checkbox')).toHaveCount(0);
+  for(const doc of docs)expect((await request.get(`${root}/documents/${doc.id}/source`)).status()).toBe(404);
+  expect((await request.get(`${root}/packages/${material.id}`)).status()).toBe(404);
+  expect((await request.get(`${root}/documents/${other.id}/source`)).status()).toBe(200);
+  await dialog.getByRole('button',{name:'Fechar',exact:true}).click();
+  await page.reload();
+  for(const doc of docs)await expect(page.getByRole('button',{name:`Remover fonte ${doc.title}`,exact:true})).toHaveCount(0);
 });
