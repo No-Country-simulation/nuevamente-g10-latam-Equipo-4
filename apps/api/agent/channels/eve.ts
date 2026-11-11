@@ -2,7 +2,7 @@ import {eveChannel} from 'eve/channels/eve';
 import type {AuthFn} from 'eve/channels/auth';
 import {verifyTicket} from '../../src/orchestration/tickets.js';
 const service:AuthFn<Request>=request=>{
-  const secret=(import.meta as any).env?.EVE_SERVICE_TOKEN||(import.meta as any).env?.ATLAS_INTERNAL_TOKEN||'';
+  const secret=process.env.EVE_SERVICE_TOKEN||process.env.ATLAS_INTERNAL_TOKEN||'';
   const bearer=request.headers.get('authorization')||'';
   if(!bearer.startsWith('Bearer '))return null;
   try {

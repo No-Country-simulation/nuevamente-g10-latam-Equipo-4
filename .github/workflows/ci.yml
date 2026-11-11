@@ -47,8 +47,17 @@ jobs:
         run: npm audit --omit=dev --audit-level=high
       - name: Compile native Eve workflows without provider credentials
         run: npm run agent:build -w @atlas/api
-      - name: Install Chromium for interaction tests
-        run: npx playwright install --with-deps chromium
+      - name: Verify signed tickets against the compiled Eve server
+        run: npm run test:eve-auth
+      - name: Install pinned Chromium and verify the runner libraries
+        shell: bash
+        run: |
+          set -euo pipefail
+          npx playwright install chromium
+          browser_path="$(node -e 'process.stdout.write(require("@playwright/test").chromium.executablePath())')"
+          ldd "$browser_path" | tee /tmp/atlas-chromium-deps.log
+          if grep -F 'not found' /tmp/atlas-chromium-deps.log; then exit 1; fi
+          node --input-type=module -e 'import { chromium } from "@playwright/test"; const browser = await chromium.launch(); await browser.close();'
       - name: Browser and HTTP journeys in isolated extractive workspace
         run: npm run test:e2e
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
