@@ -11,7 +11,7 @@ concurrency:
   cancel-in-progress: true
 jobs:
   checks:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     env:
       ATLAS_INTERNAL_TOKEN: ci-test-token-with-at-least-24-characters
@@ -76,7 +76,7 @@ jobs:
           npm run test:proxy -w @atlas/web
 
   chatgpt-desktop:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
@@ -90,7 +90,13 @@ jobs:
           python-version: "3.12"
       - run: npm ci
       - run: python -m venv .venv && .venv/bin/pip install -r services/cognition/requirements.lock
+      - name: Install native display and browser dependencies
+        run: npx playwright install-deps chromium
       - run: npm ci --prefix integrations/chatgpt-desktop
+      - name: Configure the Chromium sandbox helper
+        run: |
+          sudo chown root:root integrations/chatgpt-desktop/node_modules/electron/dist/chrome-sandbox
+          sudo chmod 4755 integrations/chatgpt-desktop/node_modules/electron/dist/chrome-sandbox
       - run: npm run build
       - run: npm run build --prefix integrations/chatgpt-desktop
       - run: npm run chatgpt:test
