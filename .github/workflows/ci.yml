@@ -91,7 +91,16 @@ jobs:
       - run: npm ci
       - run: python -m venv .venv && .venv/bin/pip install -r services/cognition/requirements.lock
       - name: Install native display and browser dependencies
-        run: npx playwright install-deps chromium
+        run: |
+          native_deps_log="/tmp/atlas-native-deps.log"
+          if npx playwright install-deps chromium > "$native_deps_log" 2>&1; then
+            cat "$native_deps_log"
+          else
+            native_status=$?
+            cat "$native_deps_log"
+            node -e 'const fs=require("node:fs");const text=fs.readFileSync(process.argv[1],"utf8").slice(-12000);console.log("::error title=Native dependencies::"+text.replaceAll("%","%25").replaceAll("\r","%0D").replaceAll("\n","%0A"));' "$native_deps_log"
+            exit "$native_status"
+          fi
       - run: npm ci --prefix integrations/chatgpt-desktop
       - run: npm run install:runtime --prefix integrations/chatgpt-desktop
       - name: Configure the Chromium sandbox helper
