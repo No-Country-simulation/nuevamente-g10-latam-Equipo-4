@@ -10,3 +10,7 @@ Revisão de código e evidências dos caminhos de upload com limite e admissão,
 - As migrações até v4 colocam inconsistências legadas e contexto sem proveniência em quarentena; reconciliação administrativa manual continua pendente. A revisão observou a limitação do contexto a fontes correntes e a exclusão de contexto transitório do input persistido.
 
 Pendências para release/produção: autorização OAuth real e uso de plano, cofre real do sistema (indisponível no teste de onboarding), readback OCI, SAST/SBOM, prova de carga em ambiente de 4 GiB, CI remota e avaliação humana. O teste de upload usa PDF sintético e amostragem de RSS; não comprova limite de cgroup nem carga integral de 4 GiB. Auditoria reportada: desktop zero vulnerabilidades; runtime raiz uma low, sem high/critical. Estes resultados e a suíte raiz informada pela equipe não foram reexecutados nesta revisão; os logs temporários de suíte raiz não estavam disponíveis.
+
+## Adendo — CI `ca4cf68`
+
+Revisei o delta do commit `ca4cf68`: fixa os dois jobs em Ubuntu 24.04, instala dependências do Chromium no job desktop e configura o helper SUID do Electron. Os testes nativos continuam previstos com sandbox e sem `--no-sandbox`; não identifiquei bloqueador reproduzível no delta. O ajuste depende de confirmação pela execução remota do GitHub Actions; não foi executado neste runner nesta revisão. O commit altera apenas CI, e o digest anterior identifica o estado de fontes anterior a ele, não o commit novo.
