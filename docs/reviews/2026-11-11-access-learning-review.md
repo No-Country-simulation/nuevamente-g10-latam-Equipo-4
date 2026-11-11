@@ -14,3 +14,9 @@ Pendências para release/produção: autorização OAuth real e uso de plano, co
 ## Adendo — CI `ca4cf68`
 
 Revisei o delta do commit `ca4cf68`: fixa os dois jobs em Ubuntu 24.04, instala dependências do Chromium no job desktop e configura o helper SUID do Electron. Os testes nativos continuam previstos com sandbox e sem `--no-sandbox`; não identifiquei bloqueador reproduzível no delta. O ajuste depende de confirmação pela execução remota do GitHub Actions; não foi executado neste runner nesta revisão. O commit altera apenas CI, e o digest anterior identifica o estado de fontes anterior a ele, não o commit novo.
+
+## Adendo — runtime Electron `38dfead`
+
+Revisei o delta `38dfead28b29df0afad9f7c887d19e740e2158dc`: o setup e o CI executam explicitamente o instalador oficial do Electron após `npm ci`, antes da configuração do helper do sandbox; o README documenta a etapa. Não identifiquei novo bloqueador reproduzível nesse delta. Os binários Electron e `chrome-sandbox` estão presentes na instalação limpa de verificação. O workflow remoto Atlas checks para esse SHA concluiu com sucesso nos jobs `checks` e `chatgpt-desktop`; o workflow de imagens ainda estava em andamento na consulta, portanto a conclusão geral de CI permanece pendente.
+
+Recalculei o digest das fontes e da revisão do DevKit: `6a8179e8b722cd2ff0945e8a2f6ebaa493f9ee82f8df7cf06812f5314500e74f`, igual ao quality PASS e à lista registrada, sem erros de parsing. `prepare-devkit.mjs --check` confirmou o pin e o patch exato. O submódulo aparece modificado pelo patch esperado; essa verificação não representa aprovação humana nem de produção.
