@@ -14,3 +14,10 @@ test('boundary gate permits public contracts, UI modules and trusted server adap
   assert.deepEqual(boundaryViolations(ts,file,"import type {Trail} from '@atlas/contracts'; import {post} from '@/lib/api'"),[]);
   assert.deepEqual(boundaryViolations(ts,'apps/web/lib/server/proxy.ts',"import {readFile} from 'node:fs'"),[]);
 });
+
+test('desktop renderer can import SDK types but cannot run trusted SDK, Electron or private modules',()=>{
+  const renderer='integrations/chatgpt-desktop/renderer/main.tsx';
+  assert.deepEqual(boundaryViolations(ts,renderer,"import type {SessionState} from '@siwc/local'; import {ChatGPTConnectionCard} from '@siwc/react'"),[]);
+  for(const source of ["import {createChatGPT} from '@siwc/local'", "import type {SessionState} from '@siwc/local'; const x=require('@siwc/local')", "import {ipcRenderer} from 'electron'", "import x from '../src/main.mjs'", "const x=import('node:fs')"])
+    assert.equal(boundaryViolations(ts,renderer,source).length,1,source);
+});

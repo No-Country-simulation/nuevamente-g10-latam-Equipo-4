@@ -13,3 +13,8 @@ data
 
 .venv-docs
 **/node_modules
+
+# Optional native client is built on the student computer, never on the VPS.
+integrations/chatgpt-desktop
+.quality-tools
+.venv-quality
