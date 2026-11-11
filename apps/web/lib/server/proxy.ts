@@ -93,11 +93,16 @@ export async function publicResponse(response:Response):Promise<NextResponse> {
 
 const authMessages:Record<number,string>={400:'Confira nome, e-mail e senha (mínimo 10 caracteres).',401:'E-mail ou senha incorretos.',409:'Não foi possível criar a conta com estes dados.',429:'Muitas tentativas. Aguarde alguns minutos.'};
 
+async function authData(response:Response,logout:boolean) {
+  if(!response.ok||!response.body||logout)return {};
+  return JSON.parse(new TextDecoder().decode(await boundedBytes(response.body,64*1024)));
+}
+
 export async function authResponse(response:Response,request:NextRequest,path:string):Promise<NextResponse> {
   const logout=path==='auth/logout';
   if(!response.ok&&!logout)throw new ProxyError(response.status>=500?502:response.status,authMessages[response.status]||'Não foi possível concluir. Tente novamente.');
-  const data=response.ok&&response.body&&!logout?JSON.parse(new TextDecoder().decode(await boundedBytes(response.body,64*1024))):{};
-  const result=NextResponse.json(logout?{status:'ok'}:{user:data.user},{headers:{'Cache-Control':'no-store'}});
+  const data=await authData(response,logout);
+  const result=NextResponse.json(logout?{status:'ok'}:{user:data.user},{status:response.status,headers:{'Cache-Control':'no-store'}});
   const secure=(request.headers.get('x-forwarded-proto')||request.nextUrl.protocol.replace(':',''))==='https';
   const base={httpOnly:true,secure,sameSite:'lax' as const,path:'/'};
   if(data.session_token)result.cookies.set('atlas_session',data.session_token,{...base,expires:new Date(data.expires_at)});
