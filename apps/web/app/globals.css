@@ -497,3 +497,9 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,
 .removal-impact li+li{margin-top:8px}
 .removal-regenerate{display:flex;gap:10px;align-items:flex-start;margin:18px 0;font-size:14px;line-height:1.5}
 .removal-regenerate input{width:auto;flex:none;margin-top:4px}
+
+.documents-manager{max-width:640px}.manager-search{display:flex;align-items:center;gap:10px;margin:20px 0}.manager-search input{width:100%;min-width:0}.manager-list{max-height:300px;overflow:auto;list-style:none;padding:0;margin:15px 0}.manager-list li{border-bottom:1px solid var(--line);padding:12px 0}.manager-list label{display:flex;gap:12px;align-items:center;cursor:pointer}.manager-list input{width:auto;flex-shrink:0}.manager-list small{display:block;opacity:.65;margin-top:5px}.manager-results{list-style:none;padding:0;max-height:200px;overflow:auto}.manager-results li{display:grid;gap:4px;padding:10px 0;border-bottom:1px solid var(--line)}.manager-results span,.manager-confirm p{font-size:13px;line-height:1.6}.manager-confirm ul{max-height:160px;overflow:auto}
+
+.manager-list label>span{min-width:0;overflow-wrap:anywhere}.manager-results strong,.manager-confirm li{overflow-wrap:anywhere}
+
+.connection-fields{border:0;margin:0;padding:0;min-width:0}.connection-fields:disabled{opacity:.65}

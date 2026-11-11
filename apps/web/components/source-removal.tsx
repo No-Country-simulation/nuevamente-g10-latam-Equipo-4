@@ -48,7 +48,7 @@ export default function SourceRemoval({document,onClose,onBusy,onRemoved,canRege
   return <Dialog.Root open={!!document} onOpenChange={open=>{if(!open&&!locked)close();}}><Dialog.Portal><Dialog.Overlay className="dialog-overlay"/><Dialog.Content className="dialog-content">
     <div className="row between"><Dialog.Title>Remover fonte?</Dialog.Title><button className="icon-button" disabled={locked} aria-label="Fechar" onClick={close}><X size={18}/></button></div>
     <Dialog.Description>A fonte e os resultados que dependem dela serão removidos do workspace.</Dialog.Description>
-    {preview&&<><strong>{preview.title}</strong><ul className="removal-impact"><li>{preview.impact.packages} materiais e {preview.impact.trails} trilhas vinculadas</li><li>{preview.impact.xp} XP vinculado a esses exercícios</li><li>Todo o histórico de conversas e a memória pedagógica serão limpos para não reutilizar trechos da fonte. Sua preferência de memória e os outros documentos permanecem.</li></ul></>}
+    {preview&&<><strong>{preview.title}</strong><ul className="removal-impact"><li>{preview.impact.packages} materiais e {preview.impact.trails} trilhas vinculadas</li><li>{preview.impact.xp} XP vinculado a esses exercícios</li><li>Todo o histórico de conversas com os tutores e a memória pedagógica serão limpos para não reutilizar trechos da fonte. Sua preferência de memória e os outros documentos permanecem.</li></ul></>}
     {canRegenerate&&<label className="removal-regenerate"><input type="checkbox" checked={regenerate} disabled={working} onChange={e=>setRegenerate(e.target.checked)}/>Refazer o material aberto com as fontes restantes</label>}
     <RemovalProgress job={job}/>
     {error&&<p className="error-text" role="alert">{error}</p>}
