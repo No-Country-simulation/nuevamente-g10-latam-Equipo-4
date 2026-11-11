@@ -103,6 +103,14 @@ jobs:
       - run: npm audit --audit-level=high --prefix integrations/chatgpt-desktop
       - name: Native launcher and real backend with synthetic provider; no account credentials
         run: |
-          xvfb-run -a node integrations/chatgpt-desktop/test/native-smoke.mjs
-          xvfb-run -a node integrations/chatgpt-desktop/test/native-onboarding.mjs
-          xvfb-run -a node integrations/chatgpt-desktop/test/native-cancel.mjs
+          for native_test in native-smoke native-onboarding native-cancel; do
+            native_log="/tmp/${native_test}.log"
+            if xvfb-run -a node "integrations/chatgpt-desktop/test/${native_test}.mjs" > "$native_log" 2>&1; then
+              cat "$native_log"
+            else
+              native_status=$?
+              cat "$native_log"
+              node -e 'const fs=require("node:fs");const text=fs.readFileSync(process.argv[1],"utf8").slice(-12000);console.log("::error title=Native desktop test::"+text.replaceAll("%","%25").replaceAll("\r","%0D").replaceAll("\n","%0A"));' "$native_log"
+              exit "$native_status"
+            fi
+          done
