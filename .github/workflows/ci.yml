@@ -33,10 +33,6 @@ jobs:
           cache-dependency-path: services/cognition/requirements.lock
       - run: npm ci
       - run: python -m venv .venv && .venv/bin/pip install -r services/cognition/requirements.lock
-      - name: Use the official Ubuntu archive instead of the failing regional mirror
-        run: |
-          test -f /etc/apt/apt-mirrors.txt
-          printf '%s\n' 'https://archive.ubuntu.com/ubuntu/' | sudo tee /etc/apt/apt-mirrors.txt
       - run: npm run check:env
       - run: npm run typecheck
       - run: npm test
@@ -50,8 +46,15 @@ jobs:
         run: npm audit --omit=dev --audit-level=high
       - name: Compile native Eve workflows without provider credentials
         run: npm run agent:build -w @atlas/api
-      - name: Install Chromium for interaction tests
-        run: npx playwright install --with-deps chromium
+      - name: Install pinned Chromium and verify the runner libraries
+        shell: bash
+        run: |
+          set -euo pipefail
+          npx playwright install chromium
+          browser_path="$(node -e 'process.stdout.write(require("@playwright/test").chromium.executablePath())')"
+          ldd "$browser_path" | tee /tmp/atlas-chromium-deps.log
+          if grep -F 'not found' /tmp/atlas-chromium-deps.log; then exit 1; fi
+          node --input-type=module -e 'import { chromium } from "@playwright/test"; const browser = await chromium.launch(); await browser.close();'
       - name: Browser and HTTP journeys in isolated extractive workspace
         run: npm run test:e2e
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
@@ -94,23 +97,16 @@ jobs:
           python-version: "3.12"
       - run: npm ci
       - run: python -m venv .venv && .venv/bin/pip install -r services/cognition/requirements.lock
-      - name: Use the official Ubuntu archive instead of the failing regional mirror
-        run: |
-          test -f /etc/apt/apt-mirrors.txt
-          printf '%s\n' 'https://archive.ubuntu.com/ubuntu/' | sudo tee /etc/apt/apt-mirrors.txt
-      - name: Install native display and browser dependencies
-        run: |
-          native_deps_log="/tmp/atlas-native-deps.log"
-          if npx playwright install-deps chromium > "$native_deps_log" 2>&1; then
-            cat "$native_deps_log"
-          else
-            native_status=$?
-            cat "$native_deps_log"
-            node -e 'const fs=require("node:fs");const text=fs.readFileSync(process.argv[1],"utf8").slice(-12000);console.log("::error title=Native dependencies::"+text.replaceAll("%","%25").replaceAll("\r","%0D").replaceAll("\n","%0A"));' "$native_deps_log"
-            exit "$native_status"
-          fi
       - run: npm ci --prefix integrations/chatgpt-desktop
       - run: npm run install:runtime --prefix integrations/chatgpt-desktop
+      - name: Verify native display and Electron runtime libraries
+        shell: bash
+        run: |
+          set -euo pipefail
+          command -v xvfb-run
+          command -v xauth
+          ldd integrations/chatgpt-desktop/node_modules/electron/dist/electron | tee /tmp/atlas-electron-deps.log
+          if grep -F 'not found' /tmp/atlas-electron-deps.log; then exit 1; fi
       - name: Configure the Chromium sandbox helper
         run: |
           sudo chown root:root integrations/chatgpt-desktop/node_modules/electron/dist/chrome-sandbox
