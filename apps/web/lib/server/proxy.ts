@@ -4,8 +4,8 @@ import {timingSafeEqual} from 'node:crypto';
 const MAX_FILE=80*1024*1024;
 const MAX_BODY=MAX_FILE+64*1024;
 export const routes:Record<string,RegExp[]>={
-  GET:[/^connections$/,/^bootstrap$/,/^documents$/,/^documents\/[\w-]+\/(source|deletion|removal)$/,/^packages\/[\w-]+$/,/^trails(?:\/[\w-]+)?$/,/^progress$/,/^groups$/,/^groups\/[\w-]+\/messages$/,/^dreamer\/status$/],
-  POST:[/^connections\/(generation|embeddings)\/test$/,/^connections\/(generation|embeddings|decision|search)$/,/^documents$/,/^generations$/,/^chat$/,/^quiz\/[\w-]+\/attempt$/,/^trails(?:\/[\w-]+\/steps\/[\w-]+\/(generate|complete))?$/,/^groups$/,/^groups\/[\w-]+\/messages$/,/^dreamer\/(consent|cycles|rollback)$/],
+  GET:[/^connections$/,/^bootstrap$/,/^auth\/me$/,/^health$/,/^documents$/,/^documents\/[\w-]+\/(source|deletion|removal)$/,/^packages\/[\w-]+$/,/^trails(?:\/[\w-]+)?$/,/^progress$/,/^groups$/,/^groups\/[\w-]+\/messages$/,/^dreamer\/status$/],
+  POST:[/^auth\/(register|login|logout)$/,/^connections\/(generation|embeddings)\/test$/,/^connections\/(generation|embeddings|decision|search)$/,/^documents$/,/^generations$/,/^chat$/,/^quiz\/[\w-]+\/attempt$/,/^trails(?:\/[\w-]+\/steps\/[\w-]+\/(generate|complete))?$/,/^groups$/,/^groups\/[\w-]+\/messages$/,/^dreamer\/(consent|cycles|rollback)$/],
   DELETE:[/^connections\/(generation|embeddings|decision|search)$/,/^documents\/[\w-]+$/,/^dreamer\/memory$/],
 };
 export class ProxyError extends Error {
@@ -37,6 +37,8 @@ export function requestHeaders(request:NextRequest):Headers {
   const token=process.env.ATLAS_INTERNAL_TOKEN;
   if(!token)throw new ProxyError(503,'O serviço precisa de configuração no servidor.');
   const headers=new Headers({Authorization:`Bearer ${token}`,Accept:'application/json'});
+  const session=request.cookies.get('atlas_session')?.value||request.headers.get('x-atlas-session');
+  if(session)headers.set('x-atlas-session',session);
   const key=request.headers.get('Idempotency-Key');
   if(key){
     if(!/^[a-zA-Z0-9_-]{16,100}$/.test(key))throw new ProxyError(400,'Identificador de operação inválido.');
@@ -122,7 +124,7 @@ export function proxyFailure(error:unknown):ProxyError{
 
 function publicFailure(response:Response,path:string):never {
     providerFailure(response);
-    const messages:Record<number,string>={400:'Confira o arquivo e os pré-requisitos. PDFs devem conter texto selecionável, até 1000 páginas e 2 milhões de caracteres; arquivos protegidos precisam ser desbloqueados.',401:'O acesso ao serviço não foi validado. Solicite ao responsável a revisão da configuração deste ambiente.',403:'Você não tem acesso a este recurso.',404:'O conteúdo não foi encontrado ou foi removido.',409:'Confira o estado da operação ou conclua a etapa anterior antes de continuar.',413:'O arquivo deve ter até 80 MiB.',415:'Use um arquivo PDF, Markdown ou TXT.',422:'Confira se a fonte contém texto.',429:'O serviço está ocupado. Aguarde um instante e tente novamente.'};
+    const messages:Record<number,string>={400:'Confira o arquivo e os pré-requisitos. PDFs devem conter texto selecionável, até 1000 páginas e 2 milhões de caracteres; arquivos protegidos precisam ser desbloqueados.',401:'Entre na sua conta para continuar. Se o problema persistir, solicite a revisão da configuração do ambiente.',403:'Você não tem acesso a este recurso.',404:'O conteúdo não foi encontrado ou foi removido.',409:'Confira o estado da operação ou conclua a etapa anterior antes de continuar.',413:'O arquivo deve ter até 80 MiB.',415:'Use um arquivo PDF, Markdown ou TXT.',422:'Confira se a fonte contém texto.',429:'O serviço está ocupado. Aguarde um instante e tente novamente.'};
     if(response.status===400&&path!=='documents')throw new ProxyError(400,'Confira os campos, as fontes selecionadas e os pré-requisitos desta etapa.');
     throw new ProxyError(response.status>=500?502:response.status,messages[response.status]||'O serviço não conseguiu concluir a solicitação. Tente novamente.');
 }
@@ -135,4 +137,23 @@ const providerNotices:Record<string,{status:number;message:string}>={
 function providerFailure(response:Response){
   const notice=providerNotices[response.headers.get('X-Atlas-Error-Code')||''];
   if(notice&&notice.status===response.status)throw new ProxyError(notice.status,notice.message);
+}
+
+const authMessages:Record<number,string>={400:'Confira nome, e-mail e senha (mínimo 10 caracteres).',401:'E-mail ou senha incorretos.',409:'Não foi possível criar a conta com estes dados.',429:'Muitas tentativas. Aguarde alguns minutos.'};
+
+async function authData(response:Response,logout:boolean) {
+  if(!response.ok||!response.body||logout)return {};
+  return JSON.parse(new TextDecoder().decode(await boundedBytes(response.body,64*1024)));
+}
+
+export async function authResponse(response:Response,request:NextRequest,path:string):Promise<NextResponse> {
+  const logout=path==='auth/logout';
+  if(!response.ok&&!logout)throw new ProxyError(response.status>=500?502:response.status,authMessages[response.status]||'Não foi possível concluir. Tente novamente.');
+  const data=await authData(response,logout);
+  const result=NextResponse.json(logout?{status:'ok'}:{user:data.user},{status:response.status,headers:{'Cache-Control':'no-store'}});
+  const secure=(request.headers.get('x-forwarded-proto')||request.nextUrl.protocol.replace(':',''))==='https';
+  const base={httpOnly:true,secure,sameSite:'lax' as const,path:'/'};
+  if(data.session_token)result.cookies.set('atlas_session',data.session_token,{...base,expires:new Date(data.expires_at)});
+  if(logout)result.cookies.set('atlas_session','',{...base,maxAge:0});
+  return result;
 }

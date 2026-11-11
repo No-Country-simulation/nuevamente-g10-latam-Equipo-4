@@ -1,5 +1,5 @@
 import {NextRequest,NextResponse} from 'next/server';
-import {routes,ProxyError,authorizeDesktop,authorizeOrigin,targetURL,requestHeaders,requestBody,timeout,publicResponse,uploadSlot,proxyFailure} from '@/lib/server/proxy';
+import {routes,ProxyError,authorizeDesktop,authorizeOrigin,targetURL,requestHeaders,requestBody,timeout,publicResponse,uploadSlot,proxyFailure,authResponse} from '@/lib/server/proxy';
 export const runtime='nodejs';
 export const dynamic='force-dynamic';
 async function proxy(request:NextRequest,context:{params:Promise<{path:string[]}>}){
@@ -14,7 +14,7 @@ async function proxy(request:NextRequest,context:{params:Promise<{path:string[]}
       const headers=requestHeaders(request);
       const body=await requestBody(request,pathname,headers);
       const response=await fetch(targetURL(pathname),{method:request.method,headers,body:body as BodyInit|undefined,...(body instanceof ReadableStream?{duplex:'half' as const}:{}),signal:AbortSignal.timeout(timeout(pathname)),redirect:'error',cache:'no-store'});
-      return await publicResponse(response,pathname);
+      return await (['auth/register','auth/login','auth/logout'].includes(pathname)?authResponse(response,request,pathname):publicResponse(response,pathname));
     });
   }catch(error){
     const failure=proxyFailure(error);
