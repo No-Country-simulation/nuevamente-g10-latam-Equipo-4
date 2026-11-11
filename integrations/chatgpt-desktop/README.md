@@ -18,7 +18,8 @@ npm run chatgpt:start
 ```
 
 O setup opcional inicializa o submodule fixado, verifica/aplica o patch restrito,
-instala dependências com lock e compila o SDK/renderer. Repetir não apaga edições;
+instala dependências com lock, executa o instalador oficial do binário Electron
+e compila o SDK/renderer. O Electron42 não baixa esse binário apenas com npmci. Repetir não apaga edições;
 modificações desconhecidas interrompem o build. Em ambiente cloud com proxy,
 preserve proxy/CA; Node24 pode precisar de `NODE_USE_ENV_PROXY=1` no download do
 Electron. Não desative TLS, sandbox ou cofre para conseguir iniciar.

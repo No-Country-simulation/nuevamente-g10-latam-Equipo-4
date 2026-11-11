@@ -10,7 +10,8 @@
     "start": "electron .",
     "test": "node --test test/*.test.mjs",
     "typecheck": "tsc --noEmit",
-    "test:native": "node test/native-smoke.mjs"
+    "test:native": "node test/native-smoke.mjs",
+    "install:runtime": "node node_modules/electron/install.js"
   },
   "dependencies": {
     "@siwc/local": "file:devkit/packages/local",

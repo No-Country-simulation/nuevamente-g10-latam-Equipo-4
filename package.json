@@ -22,7 +22,7 @@
     "quality": "node --test scripts/quality/*.test.mjs && node scripts/quality/check.mjs",
     "test:runtime": "node scripts/check-runtime.mjs",
     "test:upload": "node scripts/check-upload-runtime.mjs",
-    "chatgpt:setup": "git submodule update --init integrations/chatgpt-desktop/devkit && node integrations/chatgpt-desktop/scripts/prepare-devkit.mjs && npm ci --prefix integrations/chatgpt-desktop && npm run build --prefix integrations/chatgpt-desktop",
+    "chatgpt:setup": "git submodule update --init integrations/chatgpt-desktop/devkit && node integrations/chatgpt-desktop/scripts/prepare-devkit.mjs && npm ci --prefix integrations/chatgpt-desktop && npm run install:runtime --prefix integrations/chatgpt-desktop && npm run build --prefix integrations/chatgpt-desktop",
     "chatgpt:start": "npm start --prefix integrations/chatgpt-desktop",
     "chatgpt:test": "npm test --prefix integrations/chatgpt-desktop"
   },

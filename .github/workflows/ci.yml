@@ -93,6 +93,7 @@ jobs:
       - name: Install native display and browser dependencies
         run: npx playwright install-deps chromium
       - run: npm ci --prefix integrations/chatgpt-desktop
+      - run: npm run install:runtime --prefix integrations/chatgpt-desktop
       - name: Configure the Chromium sandbox helper
         run: |
           sudo chown root:root integrations/chatgpt-desktop/node_modules/electron/dist/chrome-sandbox
