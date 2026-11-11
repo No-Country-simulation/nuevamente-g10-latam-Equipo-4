@@ -12,6 +12,16 @@ class ProviderError(RuntimeError):
 class ProviderBusy(ProviderError):
     status_code = 429
 
+class ProviderIntegrity(ProviderError):
+    status_code = 409
+    public_code = 'source_reconciliation_required'
+
+class PlanLimit(ProviderBusy):
+    public_code = 'chatgpt_limit'
+
+class PlanUnavailable(ProviderError):
+    public_code = 'chatgpt_unavailable'
+
 _execution = ContextVar("atlas_generation_execution", default=None)
 
 def runtime_mode():
@@ -53,7 +63,7 @@ def complete(system, prompt, *, agent_id="nilo", purpose="learning"):
     profile = credentials.connection("generation")
     if profile.get("provider") == "anthropic":
         raise ProviderError("Anthropic direto requer o SDK do runtime Eve. Use ATLAS_AGENT_RUNTIME=eve.")
-    base = safe_base(profile["base_url"])
+    base = credentials.local_broker()['base_url'] if os.getenv('ATLAS_LOCAL_CHATGPT_PLAN') == '1' else safe_base(profile["base_url"])
     headers = {"Authorization": "Bearer " + profile["key"]}
     payload = {"model": profile["model"], "messages": [{"role": "system", "content": system}, {"role": "user", "content": prompt}], "temperature": 0.2, "max_tokens": 2500, "response_format": {"type": "json_object"}}
     try:
@@ -63,7 +73,15 @@ def complete(system, prompt, *, agent_id="nilo", purpose="learning"):
         _execution.set({"runtime": "direct", "agent_id": agent_id, "purpose": purpose})
         return result
     except (httpx.HTTPError, KeyError, ValueError, TypeError) as exc:
-        raise ProviderError("A geração remota falhou ou retornou um formato inválido. Seus documentos foram preservados.") from exc
+        raise generation_failure(exc) from None
+
+def generation_failure(exc):
+    if os.getenv('ATLAS_LOCAL_CHATGPT_PLAN') != '1':
+        return ProviderError('A geração remota falhou ou retornou formato inválido. Seus documentos foram preservados.')
+    if isinstance(exc, httpx.HTTPStatusError) and exc.response.status_code == 429:
+        return PlanLimit('O ChatGPT está ocupado ou atingiu um limite. Consulte o uso da conta; não houve troca para API paga.')
+    return PlanUnavailable('O ChatGPT não concluiu a resposta. Confira a conexão e a conta no aplicativo desktop; seus documentos foram preservados.')
+
 
 def embed(texts):
     profile = credentials.connection("embeddings")

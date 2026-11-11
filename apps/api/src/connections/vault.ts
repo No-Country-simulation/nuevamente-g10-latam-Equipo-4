@@ -9,6 +9,7 @@ import {
 } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { z } from "zod";
+import {localPlan, requireLocalBroker, requireEditable} from './local-plan.js';
 
 export const slots = [
   "generation",
@@ -220,6 +221,10 @@ function envConnection(slot: Slot): Connection {
   };
 }
 export function connection(slot: Slot): Connection {
+  if (localPlan() && slot === 'generation') {
+    requireLocalBroker();
+    return envConnection(slot);
+  }
   return readVault().profiles[slot] || envConnection(slot);
 }
 export function ready(slot: Slot) {
@@ -230,6 +235,7 @@ export function ready(slot: Slot) {
         (!(slot === "generation" || slot === "embeddings") || !!p.model);
 }
 export function saveConnection(slot: Slot, raw: unknown) {
+  requireEditable(slot);
   const input = connectionSchema.parse(raw);
   const allowed = {
     generation: ["openrouter", "openai", "anthropic", "chatgpt_local"],
@@ -281,6 +287,7 @@ export function saveConnection(slot: Slot, raw: unknown) {
   return publicConnections();
 }
 export function removeConnection(slot: Slot) {
+  requireEditable(slot);
   const value = readVault();
   delete value.profiles[slot];
   writeVault(value);
@@ -295,6 +302,7 @@ export function publicConnections() {
   return {
     scope: "local_workspace",
     manual_available: writable,
+    local_chatgpt_plan: localPlan(),
     chatgpt_local_allowed:
       process.env.ATLAS_ALLOW_LOCAL_CHATGPT === "1" &&
       process.env.NODE_ENV !== "production",

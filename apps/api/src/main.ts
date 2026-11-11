@@ -18,6 +18,7 @@ import {MemoryController} from './modules/memory.controller.js';
 import {InternalController} from './modules/internal.controller.js';
 import {DocumentsController} from './modules/documents.controller.js';
 import {TrailsController} from './modules/trails.controller.js';
+import {publicErrorHeader,publicErrorCode,unwrapCognitionError} from './http-errors.js';
 
 @Module({controllers:[ConnectionsController,LibraryController,LearningController,CommunityController,MemoryController,InternalController,TrailsController,DocumentsController]})
 class AtlasModule {}
@@ -36,6 +37,6 @@ app.use((req:Request,res:Response,next:()=>void)=>{
   next();
 });
 app.use(commandMiddleware(receipts,tenant));
-app.useGlobalFilters({catch(error:unknown,host){const res=host.switchToHttp().getResponse<Response>();const err=error as {status?:number;getStatus?:()=>number;message?:string;code?:string};const status=error instanceof ZodError||err.code==='INPUT_INVALID'?400:err.code==='FORBIDDEN'?403:err.code==='UNAUTHENTICATED'?401:err.getStatus?.()||err.status||503;res.status(status).json({message:error instanceof ZodError?'Confira os campos enviados.':status<500?err.message:'O serviço não pôde concluir a operação. Fontes e dados anteriores foram preservados.'});}});
+app.useGlobalFilters({catch(error:unknown,host){const res=host.switchToHttp().getResponse<Response>();const err=unwrapCognitionError(error) as {status?:number;getStatus?:()=>number;message?:string;code?:string};const status=error instanceof ZodError||err.code==='INPUT_INVALID'?400:err.code==='FORBIDDEN'?403:err.code==='UNAUTHENTICATED'?401:err.getStatus?.()||err.status||503;publicErrorHeader(res,error);res.status(status).json({code:publicErrorCode(error),message:error instanceof ZodError?'Confira os campos enviados.':status<500?err.message:'O serviço não pôde concluir a operação. Fontes e dados anteriores foram preservados.'});}});
 await app.listen(Number(process.env.API_PORT||4000),process.env.ATLAS_BIND_ADDRESS||'127.0.0.1');
 console.log('Atlas API pronta. Somente workspace local; segredos permanecem no servidor.');

@@ -1,5 +1,6 @@
 import type {Request,Response,NextFunction} from 'express';
 import type {CommandReceipts} from './receipts.js';
+import {replayErrorHeader} from '../http-errors.js';
 
 const tracked=/^\/v1\/(generations|chat|groups(?:\/[\w-]+\/messages)?|quiz\/[\w-]+\/attempt|trails(?:\/[\w-]+\/steps\/[\w-]+\/(generate|complete))?|dreamer\/(cycles|consent|rollback))$/;
 function decodePart(part:string):string {
@@ -34,6 +35,7 @@ function execute(req:Request,res:Response,next:NextFunction,receipts:CommandRece
   const operation=`${req.method}:${path}`;
   const reservation=receipts.reserve(tenant,operation,key,req.body);
   if(reservation.kind==='replay'){
+    replayErrorHeader(res,reservation.body);
     res.setHeader('Idempotency-Replayed','true');res.status(reservation.status).json(reservation.body);return;
   }
   if(erase)receipts.forget(tenant,{operation,key});
