@@ -28,7 +28,6 @@ services:
       ATLAS_DATA_DIR: /data
       NODE_OPTIONS: --max-old-space-size=256
       ATLAS_REQUIRE_LOGIN: ${ATLAS_REQUIRE_LOGIN:-0}
-      ATLAS_ADMIN_EMAILS: ${ATLAS_ADMIN_EMAILS:-}
     volumes: [atlas-data:/data]
     depends_on:
       cognition: {condition: service_healthy}

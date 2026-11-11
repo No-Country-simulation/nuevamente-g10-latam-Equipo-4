@@ -32,7 +32,6 @@ const dummyHash=hashPassword('senha-falsa-para-igualar-o-tempo');
 
 export class Accounts {
   private readonly db:DatabaseSync;
-  private readonly fails=new Map<string,{count:number;until:number}>();
   constructor(path:string){
     mkdirSync(dirname(path),{recursive:true,mode:0o700});
     this.db=new DatabaseSync(path);
@@ -40,7 +39,9 @@ export class Accounts {
     this.db.exec(`PRAGMA journal_mode=WAL; PRAGMA busy_timeout=1500; PRAGMA foreign_keys=ON;
       CREATE TABLE IF NOT EXISTS users(id TEXT PRIMARY KEY,email TEXT NOT NULL UNIQUE,name TEXT NOT NULL,password_hash TEXT NOT NULL,created INTEGER NOT NULL);
       CREATE TABLE IF NOT EXISTS sessions(token_hash TEXT PRIMARY KEY,user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,expires INTEGER NOT NULL);
-      CREATE INDEX IF NOT EXISTS sessions_user ON sessions(user_id);`);
+      CREATE INDEX IF NOT EXISTS sessions_user ON sessions(user_id);
+      CREATE TABLE IF NOT EXISTS administrators(user_id TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE);
+      CREATE TABLE IF NOT EXISTS login_attempts(email TEXT PRIMARY KEY,count INTEGER NOT NULL,until INTEGER NOT NULL);`);
   }
   private openSession(userId:string):Session {
     const token=randomBytes(32).toString('base64url');
@@ -57,19 +58,33 @@ export class Accounts {
     catch{throw fail(409,'Não foi possível criar a conta com estes dados.');}
     return {user:{id,email:clean,name:name.trim()},session:this.openSession(id)};
   }
+  private reserveAttempt(clean:string):void {
+    // Reserve an attempt before the asynchronous password check, across API processes.
+    const now=Date.now();
+    this.db.exec('BEGIN IMMEDIATE');
+    try {
+      const lock=this.db.prepare('SELECT count,until FROM login_attempts WHERE email=?').get(clean) as {count:number;until:number}|undefined;
+      if(lock&&lock.count>=MAX_FAILS&&lock.until>now)throw fail(429,'Muitas tentativas. Aguarde alguns minutos.');
+      const count=lock&&lock.until>now?lock.count+1:1;
+      this.db.prepare('INSERT INTO login_attempts VALUES(?,?,?) ON CONFLICT(email) DO UPDATE SET count=excluded.count,until=excluded.until').run(clean,count,now+LOCK_MS);
+      this.db.exec('COMMIT');
+    } catch(error) {this.db.exec('ROLLBACK');throw error;}
+  }
   async login(email:string,password:string):Promise<{user:PublicUser;session:Session}> {
     const clean=email.trim().toLowerCase();
-    const lock=this.fails.get(clean);
-    if(lock&&lock.count>=MAX_FAILS&&lock.until>Date.now())throw fail(429,'Muitas tentativas. Aguarde alguns minutos.');
+    this.reserveAttempt(clean);
     const row=this.db.prepare('SELECT id,email,name,password_hash FROM users WHERE email=?').get(clean) as {id:string;email:string;name:string;password_hash:string}|undefined;
     const ok=await checkPassword(password,row?.password_hash??await dummyHash);
-    if(!row||!ok){
-      const count=(lock&&lock.until>Date.now()?lock.count:0)+1;
-      this.fails.set(clean,{count,until:Date.now()+LOCK_MS});
-      throw fail(401,'E-mail ou senha incorretos.');
-    }
-    this.fails.delete(clean);
+    if(!row||!ok)throw fail(401,'E-mail ou senha incorretos.');
+    this.db.prepare('DELETE FROM login_attempts WHERE email=?').run(clean);
     return {user:{id:row.id,email:row.email,name:row.name},session:this.openSession(row.id)};
+  }
+  isAdmin(userId:string):boolean {
+    return !!this.db.prepare('SELECT 1 FROM administrators WHERE user_id=?').get(userId);
+  }
+  grantAdmin(userId:string):void {
+    const result=this.db.prepare('INSERT OR IGNORE INTO administrators SELECT id FROM users WHERE id=?').run(userId);
+    if(!result.changes&&!this.isAdmin(userId))throw new Error('Usuário não encontrado.');
   }
   /** Devolve o usuário dono do token, ou null se inválido/expirado. */
   validate(token:string|undefined):PublicUser|null {
@@ -85,8 +100,7 @@ export class Accounts {
   /** Chamar de tempos em tempos (ex.: a cada minuto) para limpar o que expirou. */
   cleanup():void {
     this.db.prepare('DELETE FROM sessions WHERE expires<?').run(Date.now());
-    const now=Date.now();
-    for(const [key,value] of this.fails)if(value.until<=now)this.fails.delete(key);
+    this.db.prepare('DELETE FROM login_attempts WHERE until<=?').run(Date.now());
   }
   close():void {this.db.close();}
 }

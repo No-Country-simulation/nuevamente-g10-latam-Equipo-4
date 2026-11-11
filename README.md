@@ -637,3 +637,7 @@ assets e entrada `/workspace`. `/studio` continua como alias funcional. O criado
 **Seu Atlas** permanece na landing e os dois caminhos do estúdio levam ao painel
 de conexões correspondente. Os mockups/textos promocionais da landing não são
 prova de métricas de usuários nem substituem a auditoria do MVP.
+
+### Administração de conexões
+
+O cadastro não concede privilégios pelo endereço de e-mail. No servidor confiável, após criar a conta, conceda o papel pelo ID exato do usuário: `cd apps/api && node dist/auth/grant-admin.js usr_<id>`. Use o mesmo `ATLAS_DATA_DIR` da API. O comando requer acesso local ao banco de usuários.

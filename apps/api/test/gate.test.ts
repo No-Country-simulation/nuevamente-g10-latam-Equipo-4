@@ -125,3 +125,23 @@ test('sessionGate - Security & Internal Routes', async (t) => {
     assert.strictEqual(nextCalled, true);
   });
 });
+
+test('connections aliases require administrative role without changing resource IDs', async () => {
+  const {accounts}=await import('../src/auth/accounts.js');
+  const previousLogin=process.env.ATLAS_REQUIRE_LOGIN;
+  const validate=accounts.validate.bind(accounts), isAdmin=accounts.isAdmin.bind(accounts);
+  process.env.ATLAS_REQUIRE_LOGIN='1';
+  accounts.validate=()=>({id:'usr_1234567890abcdef1234',email:'admin@example.test',name:'User'});
+  accounts.isAdmin=()=>false;
+  try {
+    for(const path of ['/v1/connections/SecretID','/V1/Connections/SecretID']){
+      let status=0;let passed=false;
+      const res:any={status:(code:number)=>{status=code;return res;},json:()=>res};
+      sessionGate({path,get:()=> 'session',headers:{}} as any,res,()=>{passed=true;});
+      assert.equal(status,403);assert.equal(passed,false);
+    }
+  } finally {
+    accounts.validate=validate;accounts.isAdmin=isAdmin;
+    if(previousLogin===undefined)delete process.env.ATLAS_REQUIRE_LOGIN;else process.env.ATLAS_REQUIRE_LOGIN=previousLogin;
+  }
+});
