@@ -28,13 +28,16 @@ async function decode<T>(response:Response,receipt:Receipt|null):Promise<T>{
     const message=body.error??body.message;
     throw new Error(typeof message==='string'?message:`A solicitação falhou (${response.status}). Tente novamente.`);
   }
-  const value=await response.json();
+  let value:T;
+  try{value=await response.json();}catch{throw new Error('A resposta chegou incompleta. Confira o estado da operação antes de tentar novamente.');}
   if(receipt)pending.delete(receipt.fingerprint);
   return value;
 }
 export async function api<T>(path:string,options:RequestInit={}):Promise<T>{
   const {receipt,headers}=await prepare(path,options);
-  const response=await fetch(`/api/atlas/${path}`,{...options,headers,cache:'no-store'});
+  let response:Response;
+  try{response=await fetch(`/api/atlas/${path}`,{...options,headers,cache:'no-store'});}
+  catch{throw new Error('A conexão foi interrompida. Verifique sua internet. Se enviou uma operação, confira o estado antes de tentar novamente.');}
   return decode<T>(response,receipt);
 }
 export const post=<T>(path:string,value:unknown)=>api<T>(path,{method:'POST',body:JSON.stringify(value)});

@@ -1,0 +1,36 @@
+diff --git a/packages/local/src/responses.ts b/packages/local/src/responses.ts
+index dd9f6f6..7b214a2 100644
+--- a/packages/local/src/responses.ts
++++ b/packages/local/src/responses.ts
+@@ -1,3 +1,4 @@
++// Atlas modification (2026-11-08): forward explicit output cap and JSON mode to Responses.
+ import OpenAI from "openai";
+ import { apiError, ChatGPTError, isObject } from "./errors.js";
+ import type { StreamResponseOptions } from "./types.js";
+@@ -42,6 +43,8 @@ export async function streamResponse(
+       model: options.model,
+       input: input.map((message) => ({ role: message.role, content: message.content })),
+       ...(options.instructions !== undefined ? { instructions: options.instructions } : {}),
++      ...(options.maxOutputTokens !== undefined ? { max_output_tokens: options.maxOutputTokens } : {}),
++      ...(options.responseFormat !== undefined ? { text: { format: options.responseFormat } } : {}),
+       store: false,
+       stream: true,
+     }, { signal: requestSignal, headers: { accept: "text/event-stream" } }).withResponse();
+diff --git a/packages/local/src/types.ts b/packages/local/src/types.ts
+index e80f3d2..42b1800 100644
+--- a/packages/local/src/types.ts
++++ b/packages/local/src/types.ts
+@@ -1,3 +1,4 @@
++// Atlas modification (2026-11-08): bounded JSON study responses; auth flow unchanged.
+ export interface SessionIdentity {
+   name?: string;
+   email?: string;
+@@ -73,6 +74,8 @@ export interface ResponseInputMessage {
+ }
+ 
+ export interface StreamResponseOptions {
++  maxOutputTokens?: number;
++  responseFormat?: { type: "json_object" };
+   model: string;
+   input: string | ResponseInputMessage[];
+   instructions?: string;

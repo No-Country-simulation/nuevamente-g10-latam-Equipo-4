@@ -6,15 +6,15 @@ from pypdf import PdfReader
 
 if __name__ == "__main__":
     resource.setrlimit(resource.RLIMIT_AS, (512 * 1024**2, 512 * 1024**2))
-    resource.setrlimit(resource.RLIMIT_CPU, (15, 15))
+    resource.setrlimit(resource.RLIMIT_CPU, (45, 45))
     reader = PdfReader(sys.argv[1], strict=False)
-    if reader.is_encrypted or len(reader.pages) > 100:
-        raise ValueError("PDF protegido ou acima de 100 páginas.")
+    if reader.is_encrypted or len(reader.pages) > 1000:
+        raise ValueError("PDF protegido ou acima de 1000 páginas.")
     pages, total = [], 0
     for index, page in enumerate(reader.pages):
         text = (page.extract_text() or "").replace("\x00", "")
         total += len(text)
-        if total > 300_000:
-            raise ValueError("Texto acima de 300 mil caracteres.")
+        if total > 2_000_000:
+            raise ValueError("Texto acima de 2 milhões de caracteres.")
         pages.append({"number": index + 1, "text": text})
     print(json.dumps(pages, ensure_ascii=False))

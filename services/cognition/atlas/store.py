@@ -7,6 +7,7 @@ from contextlib import contextmanager
 from datetime import datetime, timezone
 from pathlib import Path
 from .progression import progress
+from .schema import migrate,unscoped_context
 
 def now():
     return datetime.now(timezone.utc).isoformat()
@@ -60,10 +61,14 @@ class Store:
             db.execute("CREATE INDEX IF NOT EXISTS documents_by_date ON documents(tenant,created_at)")
             db.execute("CREATE INDEX IF NOT EXISTS passages_by_document ON passages(tenant,doc_id)")
 
+        with self.db() as db:
+            migrate(db)
+
     @contextmanager
     def db(self):
         db = sqlite3.connect(self.root / "atlas.sqlite3", timeout=15)
         db.row_factory = sqlite3.Row
+        db.execute("PRAGMA foreign_keys=ON")
         db.execute("PRAGMA secure_delete=ON")
         try:
             yield db
@@ -94,6 +99,8 @@ class Store:
 
     def package(self, tenant, package_id):
         with self.db() as db:
+            if db.execute('SELECT 1 FROM package_integrity_issues WHERE tenant=? AND package_id=? LIMIT 1',(tenant,package_id)).fetchone() or unscoped_context(db,tenant,package_id):
+                raise LookupError('Material legado em quarentena por proveniência inconsistente. Solicite reconciliação ao administrador.')
             row = db.execute("SELECT * FROM packages WHERE tenant=? AND id=?", (tenant, package_id)).fetchone()
         if not row:
             raise LookupError("Material não encontrado.")

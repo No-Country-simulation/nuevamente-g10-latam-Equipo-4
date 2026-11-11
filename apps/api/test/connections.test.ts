@@ -46,6 +46,19 @@ test('provider vault: encrypted roundtrip, cross-runtime read, isolation, probes
   await t.test('mounted secret file has explicit priority and missing files fail closed',()=>{
    const file=join(dir,'secret');writeFileSync(file,'file-secret');process.env.TYPESAFE_API_KEY='env-secret';process.env.TYPESAFE_API_KEY_FILE=file;assert.equal(secret('TYPESAFE_API_KEY'),'file-secret');process.env.TYPESAFE_API_KEY_FILE=join(dir,'absent');assert.throws(()=>secret('TYPESAFE_API_KEY'));delete process.env.TYPESAFE_API_KEY_FILE;
   });
+  await t.test('local ChatGPT plan ignores stored API keys in both runtimes and rejects overrides',()=>{
+   const snapshot={...process.env};
+   Object.assign(process.env,{ATLAS_LOCAL_CHATGPT_PLAN:'1',ATLAS_AGENT_RUNTIME:'direct',LLM_BASE_URL:'http://127.0.0.1:32123/v1',LLM_API_KEY:'synthetic-broker-capability',LLM_MODEL:'local-model'});
+   try{
+    assert.equal(connection('generation').key,'synthetic-broker-capability');
+    assert.throws(()=>saveConnection('generation',{mode:'manual',provider:'openai',model:'x',key:'synthetic-paid-key'}));
+    assert.throws(()=>removeConnection('generation'));
+    assert.equal(readVault().profiles.generation?.key,'test-only-private-api-key');
+    const result=spawnSync(resolve('../../.venv/bin/python'),['-c','from atlas.credentials import connection; p=connection("generation"); assert p["base_url"]=="http://127.0.0.1:32123/v1"; assert p["key"]=="synthetic-broker-capability"'],{env:{...process.env,PYTHONPATH:resolve('../../services/cognition')}});
+    assert.equal(result.status,0,result.stderr.toString());
+    process.env.LLM_BASE_URL='https://api.openai.com/v1';assert.throws(()=>connection('generation'));
+   }finally{for(const key of Object.keys(process.env))if(!(key in snapshot))delete process.env[key];Object.assign(process.env,snapshot);}
+  });
   await t.test('deleting a manual key restores server configuration without returning it',()=>{
    process.env.ATLAS_AGENT_RUNTIME='direct';process.env.LLM_API_KEY='server-fallback-secret';process.env.LLM_MODEL='server-model';
    const state=removeConnection('generation');assert.equal(connection('generation').key,'server-fallback-secret');assert.ok(!JSON.stringify(state).includes('server-fallback-secret'));assert.equal(publicConnections().connections.find(p=>p.slot==='generation')?.source,'env');

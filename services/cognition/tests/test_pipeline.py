@@ -33,7 +33,7 @@ class PipelineTests(unittest.TestCase):
         self.assertEqual(again['id'],self.doc['id']);self.assertIn('VCN',source['pages'][0]['text'])
 
     def test_rejects_invalid_binary_empty_and_oversize_uploads(self):
-        for filename,data in [('x.pdf',b'not PDF'),('x.exe',b'script'),('x.txt',b'\x00binary'),('x.md',b' '),('x.txt',b'x'*(10*1024**2+1))]:
+        for filename,data in [('x.pdf',b'not PDF'),('x.exe',b'script'),('x.txt',b'\x00binary'),('x.md',b' '),('x.txt',b'x'*(80*1024**2+1))]:
             with self.subTest(filename=filename),self.assertRaises(ValueError):parse(filename,data)
 
     def test_unrelated_question_abstains_instead_of_inventing_evidence(self):

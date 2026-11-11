@@ -29,6 +29,7 @@ type Profile = {
 type State = {
   scope: string;
   manual_available: boolean;
+  local_chatgpt_plan?: boolean;
   chatgpt_local_allowed: boolean;
   runtime: string;
   eve_configured: boolean;
@@ -167,13 +168,14 @@ export default function Connections({studioHref="/studio"}:{studioHref?:"/studio
               },
               {
                 id: "local_login",
-                title: "Login com ChatGPT",
-                text: "Assinatura no Eve local. Disponibilidade diferente de uma API.",
+                title: "Eve · desenvolvimento",
+                text: "Helper legado para o operador. OAuth pessoal fica no aplicativo desktop.",
                 icon: LockKeyhole,
               },
             ] as const
           ).map(({ id, title, text, icon: Icon }) => (
             <button
+              disabled={generationLocked(state,slot)}
               key={id}
               aria-pressed={mode === id}
               onClick={() => {
@@ -231,29 +233,8 @@ export default function Connections({studioHref="/studio"}:{studioHref?:"/studio
                 <RefreshCw size={16} />
               </button>
             </div>
-            {active && (
-              <div className="connection-summary">
-                <span>
-                  Em uso: <strong>{active.provider}</strong>
-                  {active.model && <> · {active.model}</>}
-                </span>
-                <small>
-                  {active.source === "manual"
-                    ? "Chave manual criptografada"
-                    : active.source === "local_login"
-                      ? "Login local requer verificação"
-                      : active.source === "secret_file"
-                        ? "Arquivo gerenciado no servidor"
-                        : "Ambiente do servidor"}{" "}
-                  ·{" "}
-                  {active.status === "login_requires_local_verification"
-                    ? "login ainda não verificado"
-                    : active.configured
-                      ? "configuração presente, uso real ainda não verificado"
-                      : "não configurado"}
-                </small>
-              </div>
-            )}
+            <ConnectionSummary active={active} localPlan={state?.local_chatgpt_plan}/>
+            <fieldset className="connection-fields" disabled={generationLocked(state,slot)}>
             {slot === "embeddings" && (
               <p className="settings-note">
                 Não é necessário contratar um modelo de embeddings para começar.
@@ -496,10 +477,20 @@ export default function Connections({studioHref="/studio"}:{studioHref?:"/studio
               </p>
             )}
             {!state && !error && <p role="status">Carregando conexões…</p>}
+            </fieldset>
           </section>
         </div>
       </main>
       <footer>Atlas · Chaves no servidor. Clareza no caminho.</footer>
     </div>
   );
+}
+
+function generationLocked(state: State | null,slot: Slot){return Boolean(state?.local_chatgpt_plan)&&slot==='generation';}
+function ConnectionSummary({active,localPlan}: {active?: Profile;localPlan?: boolean}){
+  if(!active)return null;
+  if(localPlan&&active.slot==='generation')return <div className="connection-summary"><strong>ChatGPT · aplicativo local</strong><p>Modelo: {active.model}. Gerencie a conta, o modelo e o uso no menu Atlas → Conta e uso do ChatGPT. A geração não usa chaves manuais neste modo.</p><p>Um login não confirma quota disponível. Memória exige consentimento separado.</p></div>;
+  const sources: Record<string,string>={manual:'Chave manual criptografada',local_login:'Login local requer verificação',secret_file:'Arquivo gerenciado no servidor'};
+  const status=active.configured?'configuração presente, uso real ainda não verificado':'não configurado';
+  return <div className="connection-summary"><span>Em uso: <strong>{active.provider}</strong> {active.model}</span><small>{sources[active.source]||'Ambiente do servidor'} · {active.status==='login_requires_local_verification'?'login ainda não verificado':status}</small></div>;
 }

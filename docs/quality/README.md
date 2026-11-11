@@ -55,3 +55,15 @@ autoridade para aprovar política humana, dispensar SAST ou liberar produção.
 Os gates locais são conjunção; nenhum score médio compensa bloqueador. O release
 segue INCONCLUSIVO/BLOQUEADO até os gates externos e humanos. SAST/SBOM/mutation
 não executados precisam constar no relatório, sem marcação verde inventada.
+
+
+## Cliente ChatGPT local 0.6
+
+O escopo inclui src/renderer/preload CJS do cliente opcional: mesmos limites,
+sem baseline novo. Digest inclui fonte/config/testes/lock/patch e revisão do
+DevKit. O SDK third-party é pin externo com diff exato verificado, não código
+Atlas excluído artificialmente dos limites. Setup inicializa o submodule/aplica
+patch; quality verifica sem resetar. A arquitetura inclui imports desktop;
+fronteira bloqueia Electron/SDK confiável em runtime no renderer.
+Testes nativos usam provedor sintético. OAuth/conta/cobrança reais, assinatura de
+instalador e suporte a outros SOs seguem sem evidência e não são gates verdes.

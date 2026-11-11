@@ -4,6 +4,7 @@ import json
 import os
 from pathlib import Path
 from contextvars import ContextVar
+from urllib.parse import urlsplit
 
 _snapshot=ContextVar("atlas_provider_snapshot",default=None)
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
@@ -43,6 +44,8 @@ def profiles():
         raise CredentialError('Cofre indisponível. Verifique a chave mestra e o volume no servidor.') from None
 
 def connection(slot):
+    if slot == 'generation' and os.getenv('ATLAS_LOCAL_CHATGPT_PLAN') == '1':
+        return local_broker()
     profile=profiles().get(slot)
     if profile: return profile
     if slot in ('decision','search'):
@@ -53,6 +56,19 @@ def connection(slot):
         return {'provider':provider,'key':secret(variable),'model':os.getenv('EVE_MODEL',''),'base_url':''}
     prefix='EMBEDDING' if slot=='embeddings' else 'LLM'
     return {'provider':'compatible','key':secret(prefix+'_API_KEY'),'base_url':os.getenv(prefix+'_BASE_URL',''),'model':os.getenv(prefix+'_MODEL','')}
+
+def local_broker():
+    value = os.getenv('LLM_BASE_URL', '')
+    if os.getenv('ATLAS_AGENT_RUNTIME') != 'direct' or not local_url(value) or not secret('LLM_API_KEY') or not os.getenv('LLM_MODEL'):
+        raise CredentialError('O modo ChatGPT local requer a ponte privada do aplicativo desktop.')
+    return {'provider':'compatible','key':secret('LLM_API_KEY'),
+            'base_url':value,'model':os.getenv('LLM_MODEL','')}
+
+def local_url(value):
+    url = urlsplit(value)
+    return (url.scheme == 'http' and url.hostname == '127.0.0.1' and url.port
+             and url.path == '/v1' and not url.username and not url.password
+             and not url.query and not url.fragment)
 
 def configured(slot):
     value=connection(slot)

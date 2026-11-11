@@ -3,6 +3,7 @@ import hashlib
 import hmac
 import json
 import os
+import re
 from contextlib import asynccontextmanager
 from fastapi import BackgroundTasks, Depends, FastAPI, File, Header, HTTPException, UploadFile
 from fastapi.responses import JSONResponse
@@ -21,21 +22,21 @@ jobs = Jobs(store)
 work = asyncio.Semaphore(1)
 from .catalog import AGENTS
 
+TENANT = re.compile(r"[A-Za-z0-9_-]{1,100}")
+
 def identity(authorization: str = Header(default=""), x_atlas_tenant: str = Header(default="")):
     token = os.getenv("ATLAS_INTERNAL_TOKEN", "")
     if not token or not hmac.compare_digest(authorization, "Bearer " + token):
         raise HTTPException(401, "Acesso interno não autorizado.")
-    if not x_atlas_tenant or len(x_atlas_tenant) > 100:
+    if not x_atlas_tenant or not TENANT.fullmatch(x_atlas_tenant):
         raise HTTPException(400, "Workspace ausente ou inválido.")
     return x_atlas_tenant
 
-def job_identity(authorization: str = Header(default=""), x_atlas_tenant: str = Header(default="")):
+def job_identity(authorization: str = Header(default="")):
     secret = os.getenv("ATLAS_JOB_RUNNER_TOKEN", "")
     if len(secret)<24 or not hmac.compare_digest(authorization, "Bearer " + secret):
         raise HTTPException(401, "Runner não autorizado.")
-    if x_atlas_tenant != os.getenv("ATLAS_TENANT_ID", "local-workspace"):
-        raise HTTPException(403, "Workspace do runner inválido.")
-    return x_atlas_tenant
+
 
 async def limited(function, *args):
     if work.locked():
@@ -65,16 +66,18 @@ async def dream_worker():
 async def dream_schedule():
     while True:
         await asyncio.sleep(max(60, int(os.getenv("DREAMER_INTERVAL_SECONDS", "3600"))))
-        tenant = os.getenv("ATLAS_TENANT_ID", "local-workspace")
-        try:
-            state = dreamer.status(tenant)
-            if state["consent"] and state["events"] >= 3 and providers.llm_ready() and credentials.configured("decision"):
-                job = await run_in_threadpool(jobs.enqueue, tenant, "scheduled:" + now()[:10])
-                if os.getenv("ATLAS_JOB_RUNNER", "local") == "trigger":
-                    await run_in_threadpool(providers.dispatch_job, job)
-        except Exception:
-            # No provider response/secret in logs; durable queue remains retryable.
-            continue
+        with store.db() as db:
+            tenants = [row[0] for row in db.execute("SELECT tenant FROM consent WHERE enabled=1")]
+        for tenant in tenants:
+            try:
+                state = dreamer.status(tenant)
+                if state["consent"] and state["events"] >= 3 and providers.llm_ready() and credentials.configured("decision"):
+                    job = await run_in_threadpool(jobs.enqueue, tenant, "scheduled:" + now()[:10])
+                    if os.getenv("ATLAS_JOB_RUNNER", "local") == "trigger":
+                        await run_in_threadpool(providers.dispatch_job, job)
+            except Exception:
+                # Durable queue remains retryable for each workspace.
+                continue
 
 @asynccontextmanager
 async def lifespan(app):
@@ -113,6 +116,32 @@ Fonte demonstrativa escrita pela equipe Atlas, não um PDF oficial da Oracle. Co
 
 app = FastAPI(title="Atlas Cognition & Dreamer", version="0.1.0", lifespan=lifespan)
 
+uploading = False
+@app.middleware('http')
+async def upload_admission(request, call_next):
+    global uploading
+    if request.method != 'POST' or request.url.path != '/v1/documents':
+        return await call_next(request)
+    expected = 'Bearer ' + os.getenv('ATLAS_INTERNAL_TOKEN', '')
+    if not hmac.compare_digest(request.headers.get('authorization', ''), expected):
+        return JSONResponse({'detail': 'Acesso interno não autorizado.'}, status_code=401)
+    if uploading or work.locked():
+        return JSONResponse({'detail': 'Outro arquivo está sendo processado. Aguarde.'}, status_code=429)
+    uploading = True
+    try:
+        return await call_next(request)
+    finally:
+        uploading = False
+
+@app.middleware("http")
+async def remember_tenant(request, call_next):
+    value = request.headers.get("x-atlas-tenant", "")
+    token = providers.set_tenant(value if TENANT.fullmatch(value) else None)
+    try:
+        return await call_next(request)
+    finally:
+        providers.reset_tenant(token)
+
 @app.exception_handler(ValueError)
 async def validation_error(request, exc):
     return JSONResponse(status_code=getattr(exc, "status_code", 400), content={"detail": str(exc)[:500]})
@@ -123,7 +152,9 @@ async def missing(request, exc):
 
 @app.exception_handler(providers.ProviderError)
 async def provider_failed(request, exc):
-    return JSONResponse(status_code=exc.status_code, content={"detail": str(exc)})
+    code = getattr(exc, 'public_code', '')
+    headers = {'X-Atlas-Error-Code': code} if code in ('chatgpt_limit','chatgpt_unavailable','source_reconciliation_required') else {}
+    return JSONResponse(status_code=exc.status_code, content={"detail": str(exc)}, headers=headers)
 
 @app.exception_handler(Exception)
 async def internal_error(request, exc):
@@ -144,7 +175,7 @@ def documents(tenant=Depends(identity)):
 
 @app.post("/v1/documents", status_code=201)
 async def upload(file: UploadFile = File(), tenant=Depends(identity)):
-    data = await file.read(10 * 1024**2 + 1)
+    data = await file.read(80 * 1024**2 + 1)
     return await limited(ingest, store, tenant, file.filename or "documento.txt", data)
 
 @app.get("/v1/documents/{doc_id}/source")
@@ -160,15 +191,16 @@ async def chat(request: Generation, tenant=Depends(identity)):
     epoch = dreamer.epochs.get(tenant, 0)
     snapshot = store.memory_state(tenant)
     consent = snapshot["enabled"]
-    with store.db() as db:
-        rows = db.execute("SELECT agent_id,role,text FROM conversations WHERE tenant=? AND (? OR agent_id=?) ORDER BY created_at DESC LIMIT 8", (tenant, int(consent), request.agent_id)).fetchall()
-    request.conversation_context = "\n".join(f"{r['agent_id']} / {r['role']}: {r['text']}" for r in reversed(rows))[-8000:]
+    from .conversations import context, append
+    request.conversation_context = context(store,tenant,request.document_ids,request.agent_id,consent)
     result = await limited(generate, store, tenant, request, snapshot)
     with dreamer.state_lock, store.db() as db:
         if epoch != dreamer.epochs.get(tenant, 0) or store.memory_state(tenant)["revision"] != snapshot["revision"]:
             return result
         for role, text in (("user", request.goal), ("assistant", result["conteudo_adaptado"]["introducao_contextualizada"])):
-            db.execute("INSERT INTO conversations VALUES(?,?,?,?,?,?)", (tenant, uid("turn"), request.agent_id, role, text[:2000], now()))
+            turn_id=uid("turn")
+            db.execute("INSERT INTO conversations VALUES(?,?,?,?,?,?)", (tenant, turn_id, request.agent_id, role, text[:2000], now()))
+            append(db,tenant,turn_id,request.document_ids)
         db.execute("DELETE FROM conversations WHERE tenant=? AND id NOT IN (SELECT id FROM conversations WHERE tenant=? ORDER BY created_at DESC LIMIT 100)", (tenant, tenant))
     return result
 
@@ -234,6 +266,6 @@ def cycle(idempotency_key: str = Header(default=""), tenant=Depends(identity)):
     return {"id":job["id"], "status":job["status"], "reason":"Ciclo persistido na fila; acompanhe pelo painel."}
 
 @app.post("/v1/internal/jobs/{job_id}/run")
-def run_job(job_id: str, tenant=Depends(job_identity)):
+def run_job(job_id: str, _runner=Depends(job_identity)):
     # Caller is a server-side runner; the model has no capability for this route.
-    return jobs.execute(dreamer, jobs.claim(job_id, tenant)) or {"status":"not_claimed"}
+    return jobs.execute(dreamer, jobs.claim(job_id)) or {"status":"not_claimed"}

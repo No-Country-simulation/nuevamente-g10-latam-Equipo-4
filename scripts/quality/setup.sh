@@ -13,3 +13,7 @@ npm ci --prefix "$quality_dir" --ignore-scripts --no-audit --no-fund
 mkdir -p "$quality_dir/.lint-sandbox"
 python3 -m venv .venv-quality
 .venv-quality/bin/pip install -r scripts/quality/requirements.lock
+
+# Static inspection includes our local launcher; optional desktop dependencies stay outside root.
+git submodule update --init integrations/chatgpt-desktop/devkit
+node integrations/chatgpt-desktop/scripts/prepare-devkit.mjs

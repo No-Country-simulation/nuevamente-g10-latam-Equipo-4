@@ -7,7 +7,7 @@ import {spawnSync} from 'node:child_process';
 
 function fixture(check){
   const root=mkdtempSync(join(tmpdir(),'atlas-env-contract-'));
-  for(const path of ['apps/api/src/nested','apps/api/agent','apps/web/lib','apps/web/app','services/cognition/atlas','integrations/trigger/tasks','scripts'])mkdirSync(join(root,path),{recursive:true});
+  for(const path of ['apps/api/src/nested','apps/api/agent','apps/web/lib','apps/web/app','services/cognition/atlas','integrations/trigger/tasks','integrations/chatgpt-desktop/src','scripts'])mkdirSync(join(root,path),{recursive:true});
   copyFileSync('.env.example',join(root,'.env.example'));
   writeFileSync(join(root,'integrations/trigger/trigger.config.ts'),'export {};');
   // A private runtime file is irrelevant to the static example contract.
@@ -27,9 +27,11 @@ test('environment contract works with Node alone and preserves nested source cov
 test('missing variables in nested modules and direct config files still fail the gate without rg',()=>fixture(root=>{
   const nested='ATLAS_'+'UNDECLARED_NESTED';
   const config='ATLAS_'+'UNDECLARED_CONFIG';
+  const desktop='ATLAS_'+'UNDECLARED_DESKTOP';
   writeFileSync(join(root,'apps/api/src/nested/config.ts'),'export const value=process.env.'+nested+';');
   writeFileSync(join(root,'integrations/trigger/trigger.config.ts'),'export const value=process.env.'+config+';');
+  writeFileSync(join(root,'integrations/chatgpt-desktop/src/preload.cjs'),'const value=process.env.'+desktop+';');
   const result=run(root);assert.equal(result.status,1);
-  assert.ok(result.stderr.includes(nested));assert.ok(result.stderr.includes(config));
+  assert.ok(result.stderr.includes(nested));assert.ok(result.stderr.includes(config));assert.ok(result.stderr.includes(desktop));
   assert.ok(!result.stderr.includes('this-is-private-fixture'));
 }));

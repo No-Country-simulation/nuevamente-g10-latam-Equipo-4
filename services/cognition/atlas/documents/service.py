@@ -3,6 +3,7 @@ import json
 import os
 import time
 from ..store import now
+from ..schema import ensure_integrity
 from ..providers import ProviderError
 from . import policy, cleanup, memory
 from .locking import synchronized, library_lock
@@ -25,6 +26,7 @@ def pending(store, tenant):
 
 def ensure_ready(store, tenant):
     with store.db() as db:
+        ensure_integrity(db,tenant)
         exists = db.execute("SELECT 1 FROM document_removals WHERE tenant=? AND status<>'deleted' LIMIT 1", (tenant,)).fetchone()
     if exists:
         raise ProviderError('Aguarde a limpeza das fontes removidas antes de gerar novos materiais.')
@@ -32,6 +34,7 @@ def ensure_ready(store, tenant):
 
 def preview(store, tenant, doc_id):
     with store.db() as db:
+        ensure_integrity(db,tenant)
         doc = db.execute('SELECT id,title FROM documents WHERE tenant=? AND id=?', (tenant, doc_id)).fetchone()
         if not doc:
             raise LookupError('Fonte não encontrada neste workspace.')
@@ -55,6 +58,7 @@ def purge(db, tenant, doc_id):
 def begin(store, dreamer, tenant, doc_id):
     with dreamer.state_lock, store.db() as db:
         db.execute('BEGIN IMMEDIATE')
+        ensure_integrity(db,tenant)
         existing = db.execute('SELECT 1 FROM document_removals WHERE tenant=? AND id=?', (tenant, doc_id)).fetchone()
         if existing:
             return
@@ -74,6 +78,7 @@ def begin(store, dreamer, tenant, doc_id):
 @synchronized
 def retry(store, tenant, doc_id):
     with store.db() as db:
+        ensure_integrity(db,tenant)
         row = db.execute('SELECT status,payload,attempts FROM document_removals WHERE tenant=? AND id=?', (tenant, doc_id)).fetchone()
     if not row:
         raise LookupError('Remoção não encontrada neste workspace.')

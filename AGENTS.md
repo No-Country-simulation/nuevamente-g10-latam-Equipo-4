@@ -15,7 +15,7 @@ Leia docs/SPEC_AGENT_FACTORY_V03.md, docs/SPEC.md, docs/STATUS.md, docs/architec
 - Validar mudanças importantes com testes de comportamento, typecheck/build e smoke real. Skills instaladas são ferramentas selecionáveis; não aplicar todas simultaneamente nem sobrepor requisitos explícitos do usuário.
 
 - Credenciais manuais são criptografadas no servidor; nunca retornar chaves na API, localStorage ou estado durável Eve. Variáveis `_FILE` têm prioridade e falham fechadas. Next não monta o cofre.
-- ChatGPT por assinatura usa o helper nativo do Eve somente em dev local habilitado; não é API de produção e não reutiliza a identidade do Codex desenvolvedor.
+- ChatGPT pessoal: cliente local opcional em integrations/chatgpt-desktop com DevKit oficial, OAuth dinâmico e cofre do SO; ler docs/architecture/chatgpt-local.md. Geração direta explícita, sem fallback pago. Não levar tokens para Oracle nem reutilizar identidade Codex. Helper Eve legado é apenas desenvolvimento habilitado.
 - O fluxo cotidiano usa recuperação lexical/seções e Jev opcional, sem exigir serviço dedicado de embeddings. Preserve o caminho semântico opcional para provar o requisito explícito do edital.
 - Buildar imagens em GitHub Actions e usar GHCR é permitido pelo PDF; documentos e JSONs continuam obrigatoriamente no OCI Object Storage Always Free. Deploy na VPS usa pull por SHA, sem build e sem publicar o estúdio antes de autenticação.
 
@@ -26,7 +26,7 @@ Leia docs/SPEC_AGENT_FACTORY_V03.md, docs/SPEC.md, docs/STATUS.md, docs/architec
 - Proibido bypass para testes verdes: não remover/skippiar testes críticos, afrouxar asserts, mudar expectativas para combinar com bug ou reduzir gates/baseline. Corrigir código e repetir regressão. Achados externos sem evidência permanecem pendentes.
 - Novas regras de negócio devem ficar no backend; usar as gavetas commands/modules/trails/community/attempts/progression. UI usa projeções e pede comandos.
 - Recibos: normalizar segmentos estáticos/slash sem alterar case de IDs; expirar conteúdo fora de transação de reserva que pode falhar; consent/rollback/exclusão também são comandos idempotentes. Esquecer invalida recibos privados antes de exclusão externa.
-- Nomes públicos Guia/Faísca/Prisma/Trama/Elo; IDs nilo/lumi/prisma/fio/soma permanecem.
+- Nomes públicos Guia/Faísca/Prisma/Trama/Elo/Ágora/Clara; IDs nilo/lumi/prisma/fio/soma/agora/clara. Persona e método permanecem independentes.
 - Analisadores rodam apenas em desenvolvimento/CI. Ratchet também na UI; dívida legada explícita, nenhuma piora acima dos limites. Revisão por agente não é aprovação humana ou produção.
 
 - Após revisão independente, commits desta entrega com no máximo 400 linhas textuais alteradas por commit; PDFs binários separados. Todo commit deve explicar o porquê no corpo. Conferir taylam/backend e registrar conflitos/decisões antes da publicação.

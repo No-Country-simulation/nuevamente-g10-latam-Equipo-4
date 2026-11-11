@@ -18,8 +18,10 @@ const {measure}=await import(pathToFileURL(join(engine,'src/adapters/eslint-metr
 const {dependencyEdges}=await import(pathToFileURL(join(engine,'src/adapters/depgraph.ts')).href);
 const {evaluateCycles}=await import(pathToFileURL(join(engine,'src/domain/graph.ts')).href);
 const {default:ts}=await import(pathToFileURL(join(engine,'node_modules/typescript/lib/typescript.js')).href);
-const paths=['apps/api/src','apps/api/agent','apps/web/lib','apps/web/components','apps/web/app'].flatMap(sourceFiles).filter(path=>/\.(tsx?|mjs)$/.test(path)).sort();
-const basePaths=git('ls-tree','-r','--name-only',policy.base,'apps/api/src','apps/api/agent','apps/web/lib','apps/web/components','apps/web/app').trim().split('\n').filter(path=>/\.(tsx?|mjs)$/.test(path));
+const desktop='integrations/chatgpt-desktop';
+execFileSync('node',[`${desktop}/scripts/prepare-devkit.mjs`,'--check']);
+const paths=['apps/api/src','apps/api/agent','apps/web/lib','apps/web/components','apps/web/app',`${desktop}/src`,`${desktop}/renderer`,`${desktop}/scripts`].flatMap(sourceFiles).filter(path=>/\.(tsx?|mjs|cjs)$/.test(path)).sort();
+const basePaths=git('ls-tree','-r','--name-only',policy.base,'apps/api/src','apps/api/agent','apps/web/lib','apps/web/components','apps/web/app').trim().split('\n').filter(path=>/\.(tsx?|mjs|cjs)$/.test(path));
 const current=await measure(paths.map(path=>({path,text:readFileSync(path,'utf8')})));
 const baseline=await measure(basePaths.map(path=>({path,text:git('show',`${policy.base}:${path}`)})));
 const python=JSON.parse(execFileSync('.venv-quality/bin/python',['scripts/quality/python_metrics.py',policy.base],{encoding:'utf8',maxBuffer:16*1024*1024}));
@@ -44,8 +46,8 @@ try{
   execFileSync('tar',['-x','-C',temp],{input:archive});
   async function graph(folder){
     const result=[];let unresolved=0;
-    for(const [workspace,sources] of [['apps/api',['src','agent']],['apps/web',['app','lib','components']]]){
-      const measured=await dependencyEdges(join(folder,workspace),sources,['node_modules','\\.next','\\.eve','\\.output']);
+    for(const [workspace,sources] of [['apps/api',['src','agent']],['apps/web',['app','lib','components']],[desktop,['src','renderer']]]){
+      const measured=await dependencyEdges(join(folder,workspace),sources,['node_modules','\\.next','\\.eve','\\.output','devkit','dist']);
       unresolved+=measured.unresolved;
       result.push(...measured.edges.map(edge=>({...edge,from:`${workspace}/${edge.from}`,to:edge.to.startsWith('npm:')?edge.to:`${workspace}/${edge.to}`})));
     }
@@ -60,11 +62,13 @@ for(const item of paths){
   const source=readFileSync(item,'utf8');
   boundaryFailures.push(...boundaryViolations(ts,item,source));
 }
-const evidenceFiles=git('ls-files','--cached','--others','--exclude-standard').trim().split('\n').filter(path=>/^(apps\/|services\/|packages\/|infra\/|scripts\/|tests\/|\.github\/|\.env\.example$|package(?:-lock)?\.json$|playwright\.config\.ts$)/.test(path)).sort();
+const evidenceFiles=git('ls-files','--cached','--others','--exclude-standard').trim().split('\n').filter(path=>/^(apps\/|services\/|packages\/|infra\/|scripts\/|tests\/|\.github\/|\.gitmodules$|integrations\/chatgpt-desktop\/|\.env\.example$|package(?:-lock)?\.json$|playwright\.config\.ts$)/.test(path)).filter(path=>!path.startsWith(`${desktop}/devkit`)).sort();
 const sourceHash=createHash('sha256');
 for(const path of evidenceFiles)sourceHash.update(path+'\0').update(readFileSync(path)).update('\0');
+const devkitRevision=execFileSync('git',['-C',`${desktop}/devkit`,'rev-parse','HEAD'],{encoding:'utf8'}).trim();
+sourceHash.update('devkitRevision\0'+devkitRevision+'\0');
 const report={createdAt:new Date().toISOString(),base:policy.base,candidate:git('rev-parse','HEAD').trim(),scope:'working tree; not release or human approval',
-  sourceDigest:sourceHash.digest('hex'),evidenceFiles,
+  sourceDigest:sourceHash.digest('hex'),evidenceFiles,devkitRevision,
   policyDigest:createHash('sha256').update(JSON.stringify(policy)).digest('hex'),engineRevision:actual,
   algorithms:{typescript:current.snapshot.algorithmId,python:python.algorithm},parseErrors:current.parseErrors,
   findings,architecture,boundaryFailures,symbols,

@@ -12,7 +12,31 @@ class ProviderError(RuntimeError):
 class ProviderBusy(ProviderError):
     status_code = 429
 
+class ProviderIntegrity(ProviderError):
+    status_code = 409
+    public_code = 'source_reconciliation_required'
+
+class PlanLimit(ProviderBusy):
+    public_code = 'chatgpt_limit'
+
+class PlanUnavailable(ProviderError):
+    public_code = 'chatgpt_unavailable'
+
 _execution = ContextVar("atlas_generation_execution", default=None)
+_tenant = ContextVar("atlas_tenant", default=None)
+
+def set_tenant(value):
+    return _tenant.set(value)
+
+def reset_tenant(token):
+    _tenant.reset(token)
+
+def internal_headers():
+    """Cabeçalhos das chamadas ao Node: token interno + de quem é o pedido."""
+    return {
+        "Authorization": "Bearer " + os.environ["ATLAS_INTERNAL_TOKEN"],
+        "x-atlas-tenant": _tenant.get() or os.getenv("ATLAS_TENANT_ID", "local-workspace")
+    }
 
 def runtime_mode():
     mode = os.getenv("ATLAS_AGENT_RUNTIME", "eve")
@@ -39,7 +63,7 @@ def complete(system, prompt, *, agent_id="nilo", purpose="learning"):
         raise ProviderError("Configure o provedor de geração no servidor para usar LLM.")
     if runtime_mode() == "eve":
         try:
-            response = httpx.post(os.getenv("ATLAS_API_URL", "http://127.0.0.1:4000") + "/v1/internal/generate", json={"system": system, "prompt": prompt, "agent_id": agent_id, "purpose": purpose}, headers={"Authorization": "Bearer " + os.environ["ATLAS_INTERNAL_TOKEN"]}, timeout=100)
+            response = httpx.post(os.getenv("ATLAS_API_URL", "http://127.0.0.1:4000") + "/v1/internal/generate", json={"system": system, "prompt": prompt, "agent_id": agent_id, "purpose": purpose}, headers=internal_headers(), timeout=100)
             response.raise_for_status()
             result = response.json()
             _execution.set(result["execution"])
@@ -53,7 +77,7 @@ def complete(system, prompt, *, agent_id="nilo", purpose="learning"):
     profile = credentials.connection("generation")
     if profile.get("provider") == "anthropic":
         raise ProviderError("Anthropic direto requer o SDK do runtime Eve. Use ATLAS_AGENT_RUNTIME=eve.")
-    base = safe_base(profile["base_url"])
+    base = credentials.local_broker()['base_url'] if os.getenv('ATLAS_LOCAL_CHATGPT_PLAN') == '1' else safe_base(profile["base_url"])
     headers = {"Authorization": "Bearer " + profile["key"]}
     payload = {"model": profile["model"], "messages": [{"role": "system", "content": system}, {"role": "user", "content": prompt}], "temperature": 0.2, "max_tokens": 2500, "response_format": {"type": "json_object"}}
     try:
@@ -63,7 +87,15 @@ def complete(system, prompt, *, agent_id="nilo", purpose="learning"):
         _execution.set({"runtime": "direct", "agent_id": agent_id, "purpose": purpose})
         return result
     except (httpx.HTTPError, KeyError, ValueError, TypeError) as exc:
-        raise ProviderError("A geração remota falhou ou retornou um formato inválido. Seus documentos foram preservados.") from exc
+        raise generation_failure(exc) from None
+
+def generation_failure(exc):
+    if os.getenv('ATLAS_LOCAL_CHATGPT_PLAN') != '1':
+        return ProviderError('A geração remota falhou ou retornou formato inválido. Seus documentos foram preservados.')
+    if isinstance(exc, httpx.HTTPStatusError) and exc.response.status_code == 429:
+        return PlanLimit('O ChatGPT está ocupado ou atingiu um limite. Consulte o uso da conta; não houve troca para API paga.')
+    return PlanUnavailable('O ChatGPT não concluiu a resposta. Confira a conexão e a conta no aplicativo desktop; seus documentos foram preservados.')
+
 
 def embed(texts):
     profile = credentials.connection("embeddings")
@@ -91,7 +123,7 @@ def judge(question, evidence, answer):
     if len(evidence) > 28000 or len(answer) > 18000:
         raise ProviderError("A resposta excedeu o orçamento de avaliação integral. Nenhum trecho foi cortado ou publicado como verificado.")
     try:
-        response = httpx.post(os.getenv("ATLAS_API_URL", "http://127.0.0.1:4000") + "/v1/internal/judge", json={"question": question, "evidence": evidence, "answer": answer}, headers={"Authorization": "Bearer " + os.environ["ATLAS_INTERNAL_TOKEN"]}, timeout=35)
+        response = httpx.post(os.getenv("ATLAS_API_URL", "http://127.0.0.1:4000") + "/v1/internal/judge", json={"question": question, "evidence": evidence, "answer": answer}, headers=internal_headers(), timeout=35)
         response.raise_for_status()
         result = response.json()
         if result.get("verdict") not in ("supported", "contradicted", "insufficient_evidence", "not_evaluated"):
@@ -106,7 +138,7 @@ def rank_evidence(question, passages):
     if not passages or not credentials.configured("decision"):
         return passages
     try:
-        response = httpx.post(os.getenv("ATLAS_API_URL", "http://127.0.0.1:4000") + "/v1/internal/evidence", json={"question":question,"passages":[{"id":p["id"],"text":p["text"]} for p in passages]}, headers={"Authorization":"Bearer " + os.environ["ATLAS_INTERNAL_TOKEN"]}, timeout=35, follow_redirects=False)
+        response = httpx.post(os.getenv("ATLAS_API_URL", "http://127.0.0.1:4000") + "/v1/internal/evidence", json={"question":question,"passages":[{"id":p["id"],"text":p["text"]} for p in passages]}, headers=internal_headers(), timeout=35, follow_redirects=False)
         response.raise_for_status()
         result=response.json()
         if result["source"] != "typesafe":

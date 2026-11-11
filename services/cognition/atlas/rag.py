@@ -37,8 +37,8 @@ def cosine(a, b):
 
 def validate_upload(filename, data):
     suffix = Path(filename).suffix.lower()
-    if suffix not in (".pdf", ".md", ".markdown", ".txt") or not data or len(data) > 10 * 1024**2:
-        raise ValueError("Envie PDF, Markdown ou TXT de até 10 MiB.")
+    if suffix not in (".pdf", ".md", ".markdown", ".txt") or not data or len(data) > 80 * 1024**2:
+        raise ValueError("Envie PDF, Markdown ou TXT de até 80 MiB.")
     if suffix == ".pdf":
         if not data.startswith(b"%PDF-"):
             raise ValueError("O arquivo não contém um PDF válido.")
@@ -52,9 +52,9 @@ def parse(filename, data):
         with tempfile.NamedTemporaryFile(suffix=".pdf") as file:
             file.write(data); file.flush()
             try:
-                result = subprocess.run([sys.executable, "-m", "atlas.extract", file.name], capture_output=True, timeout=20)
+                result = subprocess.run([sys.executable, str(Path(__file__).with_name("extract.py")), file.name], capture_output=True, timeout=60)
                 if result.returncode:
-                    raise ValueError("Não foi possível ler o PDF. Limite: 100 páginas; sem senha.")
+                    raise ValueError("Não foi possível ler o PDF. Limite: 1000 páginas; sem senha.")
                 pages = json.loads(result.stdout)
             except subprocess.TimeoutExpired as exc:
                 raise ValueError("O PDF excedeu o tempo seguro de leitura.") from exc
@@ -68,8 +68,8 @@ def parse(filename, data):
     size = sum(len(page["text"]) for page in pages)
     if not size or not any(page["text"].strip() for page in pages):
         raise ValueError("Não encontrei texto selecionável. Use PDF textual ou envie uma transcrição; OCR ainda não está disponível.")
-    if size > 300_000:
-        raise ValueError("Texto acima de 300 mil caracteres.")
+    if size > 2_000_000:
+        raise ValueError("Texto acima de 2 milhões de caracteres.")
     return pages, mime
 
 @synchronized
@@ -90,8 +90,8 @@ def ingest(store, tenant, filename, data):
             # Sections remain variable length; this size cap is a safety fallback.
             for offset in range(0, len(paragraph), 1800):
                 passages.append({"id": uid("sec"), "page": page["number"], "text": paragraph[offset:offset+1800]})
-    if len(passages) > 512:
-        raise ValueError("Documento acima de 512 segmentos. Divida-o em volumes menores.")
+    if len(passages) > 4096:
+        raise ValueError("Documento acima de 4096 segmentos. Divida-o em volumes menores.")
     vectors = []
     for start in range(0, len(passages), 16):
         batch = [s["text"] for s in passages[start:start+16]]
@@ -132,7 +132,7 @@ def retrieve(store, tenant, document_ids, query, mode):
     placeholders = ",".join("?" for _ in document_ids)
     qdrant = vector_index.enabled()
     fields = "tenant,doc_id,id,page,text,json_object('model',json_extract(vector,'$.model'),'collection',json_extract(vector,'$.collection')) AS vector" if qdrant else "*"
-    limit = 4096 if qdrant else 1024
+    limit = 4096
     with store.db() as db:
         rows = [dict(row) for row in db.execute(f"SELECT {fields} FROM passages WHERE tenant=? AND doc_id IN ({placeholders}) LIMIT ?", [tenant, *document_ids,limit+1]).fetchall()]
     if len(rows)>limit:
