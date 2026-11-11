@@ -1,5 +1,6 @@
 """Invalidate learned context while preserving the user's consent preference."""
 from .. import providers
+from ..schema import ensure_integrity
 from .locking import synchronized
 import os
 import hashlib
@@ -13,6 +14,8 @@ TABLES = ('jobs', 'memory_events', 'policies', 'cycles', 'conversations', 'repla
 
 
 def clear(db, tenant):
+    ensure_integrity(db, tenant)
+    db.execute("UPDATE packages SET input=json_remove(input,'$.conversation_context') WHERE tenant=? AND json_type(input,'$.conversation_context') IS NOT NULL", (tenant,))
     db.execute("INSERT INTO memory_revisions VALUES(?,1) ON CONFLICT(tenant) DO UPDATE SET version=version+1", (tenant,))
     for table in TABLES:
         db.execute(f"DELETE FROM {table} WHERE tenant=?", (tenant,))

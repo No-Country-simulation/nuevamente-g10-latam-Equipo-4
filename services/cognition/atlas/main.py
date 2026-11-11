@@ -113,6 +113,23 @@ Fonte demonstrativa escrita pela equipe Atlas, não um PDF oficial da Oracle. Co
 
 app = FastAPI(title="Atlas Cognition & Dreamer", version="0.1.0", lifespan=lifespan)
 
+uploading = False
+@app.middleware('http')
+async def upload_admission(request, call_next):
+    global uploading
+    if request.method != 'POST' or request.url.path != '/v1/documents':
+        return await call_next(request)
+    expected = 'Bearer ' + os.getenv('ATLAS_INTERNAL_TOKEN', '')
+    if not hmac.compare_digest(request.headers.get('authorization', ''), expected):
+        return JSONResponse({'detail': 'Acesso interno não autorizado.'}, status_code=401)
+    if uploading or work.locked():
+        return JSONResponse({'detail': 'Outro arquivo está sendo processado. Aguarde.'}, status_code=429)
+    uploading = True
+    try:
+        return await call_next(request)
+    finally:
+        uploading = False
+
 @app.exception_handler(ValueError)
 async def validation_error(request, exc):
     return JSONResponse(status_code=getattr(exc, "status_code", 400), content={"detail": str(exc)[:500]})
@@ -123,7 +140,9 @@ async def missing(request, exc):
 
 @app.exception_handler(providers.ProviderError)
 async def provider_failed(request, exc):
-    return JSONResponse(status_code=exc.status_code, content={"detail": str(exc)})
+    code = getattr(exc, 'public_code', '')
+    headers = {'X-Atlas-Error-Code': code} if code in ('chatgpt_limit','chatgpt_unavailable','source_reconciliation_required') else {}
+    return JSONResponse(status_code=exc.status_code, content={"detail": str(exc)}, headers=headers)
 
 @app.exception_handler(Exception)
 async def internal_error(request, exc):
@@ -144,7 +163,7 @@ def documents(tenant=Depends(identity)):
 
 @app.post("/v1/documents", status_code=201)
 async def upload(file: UploadFile = File(), tenant=Depends(identity)):
-    data = await file.read(10 * 1024**2 + 1)
+    data = await file.read(80 * 1024**2 + 1)
     return await limited(ingest, store, tenant, file.filename or "documento.txt", data)
 
 @app.get("/v1/documents/{doc_id}/source")
@@ -160,15 +179,16 @@ async def chat(request: Generation, tenant=Depends(identity)):
     epoch = dreamer.epochs.get(tenant, 0)
     snapshot = store.memory_state(tenant)
     consent = snapshot["enabled"]
-    with store.db() as db:
-        rows = db.execute("SELECT agent_id,role,text FROM conversations WHERE tenant=? AND (? OR agent_id=?) ORDER BY created_at DESC LIMIT 8", (tenant, int(consent), request.agent_id)).fetchall()
-    request.conversation_context = "\n".join(f"{r['agent_id']} / {r['role']}: {r['text']}" for r in reversed(rows))[-8000:]
+    from .conversations import context, append
+    request.conversation_context = context(store,tenant,request.document_ids,request.agent_id,consent)
     result = await limited(generate, store, tenant, request, snapshot)
     with dreamer.state_lock, store.db() as db:
         if epoch != dreamer.epochs.get(tenant, 0) or store.memory_state(tenant)["revision"] != snapshot["revision"]:
             return result
         for role, text in (("user", request.goal), ("assistant", result["conteudo_adaptado"]["introducao_contextualizada"])):
-            db.execute("INSERT INTO conversations VALUES(?,?,?,?,?,?)", (tenant, uid("turn"), request.agent_id, role, text[:2000], now()))
+            turn_id=uid("turn")
+            db.execute("INSERT INTO conversations VALUES(?,?,?,?,?,?)", (tenant, turn_id, request.agent_id, role, text[:2000], now()))
+            append(db,tenant,turn_id,request.document_ids)
         db.execute("DELETE FROM conversations WHERE tenant=? AND id NOT IN (SELECT id FROM conversations WHERE tenant=? ORDER BY created_at DESC LIMIT 100)", (tenant, tenant))
     return result
 
