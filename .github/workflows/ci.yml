@@ -37,15 +37,6 @@ jobs:
       - run: npm run typecheck
       - run: npm test
       - run: npm run build
-      - name: Verify the production API dependency tree and real compiled runtime
-        run: npm run test:runtime
-      - name: Install pinned structural analyzers (development only)
-        run: npm run quality:setup
-      - run: npm run quality
-      - name: Audit runtime dependencies
-        run: npm audit --omit=dev --audit-level=high
-      - name: Compile native Eve workflows without provider credentials
-        run: npm run agent:build -w @atlas/api
       - name: Install pinned Chromium and verify the runner libraries
         shell: bash
         run: |
@@ -55,6 +46,19 @@ jobs:
           ldd "$browser_path" | tee /tmp/atlas-chromium-deps.log
           if grep -F 'not found' /tmp/atlas-chromium-deps.log; then exit 1; fi
           node --input-type=module -e 'import { chromium } from "@playwright/test"; const browser = await chromium.launch(); await browser.close();'
+      - name: Verify private sources and sessions across real services
+        run: npm run test:auth
+      - name: Verify the production API dependency tree and real compiled runtime
+        run: npm run test:runtime
+      - name: Install pinned structural analyzers (development only)
+        run: npm run quality:setup
+      - run: npm run quality
+      - name: Audit runtime dependencies
+        run: npm audit --omit=dev --audit-level=high
+      - name: Compile native Eve workflows without provider credentials
+        run: npm run agent:build -w @atlas/api
+      - name: Verify signed tickets against the compiled Eve server
+        run: npm run test:eve-auth
       - name: Browser and HTTP journeys in isolated extractive workspace
         run: npm run test:e2e
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4

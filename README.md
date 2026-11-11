@@ -18,7 +18,7 @@ Novo cliente opcional: [Atlas local com OAuth ChatGPT](integrations/chatgpt-desk
 Usa o DevKit oficial e cofre do SO, sem domínio/Client ID manual nesse modo.
 Conta elegível autoriza o uso explicitamente; limites e modelos são da conta.
 Não transfere tokens para Oracle nem troca geração para API paga automaticamente.
-O estúdio hospedado continua sem autenticação pública multiusuário.
+O login por e-mail pode ser habilitado com `ATLAS_REQUIRE_LOGIN=1`; a liberação pública de produção continua pendente. Consulte [autenticação e builds](docs/architecture/auth-and-builds.md).
 
 ```bash
 # Após preparar o ambiente e npm run build na raiz:
@@ -675,12 +675,16 @@ configurado e muda explicitamente para recuperação híbrida quando necessário
 Embeddings semânticos continuam opcionais e dependem de um provedor configurado;
 o modo local é lexical, sem fingir inferência externa.
 
-A página `/login` distingue o workspace web compartilhado do aplicativo local
-com OAuth oficial. O modo local usa registro dinâmico e callback127.0.0.1; não
-exige comprar domínio ou preencher Client ID manualmente. Usuários elegíveis
-podem autorizar uso do ChatGPT, com limites e modelos da própria conta. Ainda
-é necessário o teste interativo de uma conta real. Não transportar esses tokens
-para Oracle nem confundir o fluxo com autenticação pública do Atlas.
+A página `/login` oferece cadastro e entrada por e-mail quando
+`ATLAS_REQUIRE_LOGIN=1`; com a flag desabilitada, identifica o workspace local
+compartilhado. A sessão usa cookie HttpOnly e o backend deriva o tenant da conta.
+Os dois perfis Compose entregam a mesma flag ao Next e ao Nest.
+
+Separadamente, `/login/local` prepara o aplicativo pessoal com OAuth oficial:
+registro dinâmico e callback em 127.0.0.1, sem domínio ou Client ID manual.
+Usuários elegíveis podem autorizar o plano ChatGPT, sujeito aos limites da conta.
+O uso real ainda depende de teste interativo; esses tokens não vão para Oracle
+e esse fluxo não substitui a sessão por e-mail do Atlas.
 
 A migração relacional registra versões, vínculos de fontes e integridade referencial.
 Pacotes legados com referências ausentes ou de outro tenant são inventariados em
@@ -693,3 +697,6 @@ Em **Gerenciar fontes**, busque pelo nome, selecione até20 documentos e confirm
 remoção de uma vez. O resultado aparece por fonte; falhas não desfazem remoções
 anteriores, e limpezas externas pendentes continuam sendo acompanhadas. A lixeira
 individual permanece disponível para conferir o impacto detalhado de uma fonte.
+### Administração de conexões
+
+O cadastro não concede privilégios pelo endereço de e-mail. No servidor confiável, após criar a conta, conceda o papel pelo ID exato do usuário: `cd apps/api && node dist/auth/grant-admin.js usr_<id>`. Use o mesmo `ATLAS_DATA_DIR` da API. O comando requer acesso local ao banco de usuários.

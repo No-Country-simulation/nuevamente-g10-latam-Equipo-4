@@ -17,6 +17,7 @@
     "check:eve": "node scripts/check-eve.mjs",
     "init:vault": "node scripts/init-vault.mjs",
     "test:e2e": "playwright test",
+    "test:auth": "node scripts/test-auth.mjs",
     "check:env": "node scripts/check-env.mjs",
     "quality:setup": "bash scripts/quality/setup.sh",
     "quality": "node --test scripts/quality/*.test.mjs && node scripts/quality/check.mjs",
@@ -24,7 +25,8 @@
     "test:upload": "node scripts/check-upload-runtime.mjs",
     "chatgpt:setup": "git submodule update --init integrations/chatgpt-desktop/devkit && node integrations/chatgpt-desktop/scripts/prepare-devkit.mjs && npm ci --prefix integrations/chatgpt-desktop && npm run install:runtime --prefix integrations/chatgpt-desktop && npm run build --prefix integrations/chatgpt-desktop",
     "chatgpt:start": "npm start --prefix integrations/chatgpt-desktop",
-    "chatgpt:test": "npm test --prefix integrations/chatgpt-desktop"
+    "chatgpt:test": "npm test --prefix integrations/chatgpt-desktop",
+    "test:eve-auth": "node scripts/test-eve-auth.mjs"
   },
   "engines": {
     "node": ">=24 <25"
