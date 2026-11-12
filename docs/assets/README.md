@@ -7,4 +7,6 @@ A direção de cores, marca e tipografia está em [DESIGN_ATLAS.md](../DESIGN_AT
 
 Ao atualizar a captura, use uma fonte sintética e preserve as indicações reais de capacidades. O arquivo é uma imagem da interface, não um mockup ou comprovação de uma integração externa.
 
-Os badges em `badges/` são SVGs locais, com rótulos e descrições acessíveis. Suas versões resumem os manifests de frontend/backend, o lock Python e o runtime do CI; revise-os junto com atualizações dessas dependências. Não consultam serviços externos, não contam visitas e não representam status de CI, licença ou deploy. Cada badge no README leva ao arquivo ou guia correspondente.
+Os badges em `badges/` são SVGs locais, com rótulos e descrições acessíveis. Suas versões resumem os manifests de frontend/backend, o lock Python e o runtime do CI; revise-os junto com atualizações dessas dependências. Não consultam serviços externos, não contam visitas e não representam status de CI ou deploy. Cada badge no README leva ao arquivo ou guia correspondente.
+
+O badge MIT aponta à licença das contribuições originais do Atlas; não cobre conteúdo de terceiros. O banner inclui contornos de Instrument Serif: [copyright e OFL-1.1](licenses/instrument-serif-OFL.txt). Veja também as [exceções da licença do projeto](../../THIRD_PARTY_NOTICES.md).
