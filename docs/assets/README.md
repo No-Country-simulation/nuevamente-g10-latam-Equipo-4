@@ -13,7 +13,7 @@ O badge MIT aponta à licença das contribuições originais do Atlas; não cobr
 
 ## Operação e animação
 
-- `atlas-operation.svg`: ilustração conceitual autoral do fluxo de estudo. Usa animações CSS locais, sem scripts, fontes ou imagens externas; `prefers-reduced-motion: reduce` desativa todas as animações. A arte distingue geração remota configurada e modo extrativo, sem representar telemetria real.
+- `atlas-operation.svg`: ilustração conceitual autoral do fluxo de estudo. Usa animações CSS locais, sem scripts, fontes ou imagens externas; `prefers-reduced-motion: reduce` desativa todas as animações. A arte explica funções para quem estuda, mantém os termos Action Engine e Jev e distingue IA configurada de trechos originais, sem representar uma execução real.
 - `atlas-source-evidence.png`: captura sintética original `17-demo-citacao.png`, com a passagem de origem destacada.
 - `atlas-quiz-feedback.png`: captura sintética original `18-demo-xp.png`, com feedback do quiz e XP.
 
