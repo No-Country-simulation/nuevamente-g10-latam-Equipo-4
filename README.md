@@ -70,7 +70,7 @@ O Atlas parte do material de quem estuda. Você adiciona uma fonte, escolhe um o
   <img src="docs/assets/atlas-operation.svg" alt="Fluxo ilustrado do Atlas: biblioteca, recuperação de evidências, agentes e ações, resposta com citações; Dreamer com consentimento e avaliação." width="1200" />
 </p>
 
-O SVG anima o percurso conceitual e respeita a preferência do sistema por movimento reduzido. Ele ilustra a arquitetura; não mostra uma chamada LLM em tempo real. A recuperação precede a geração, e as citações retornam com o material. [Diagramas técnicos em Mermaid](#arquitetura-em-linguagem-simples).
+O SVG apresenta o que acontece com seu material: encontrar trechos úteis, organizar a ajuda dos tutores e estudar com referências. A animação respeita a preferência por movimento reduzido. É uma ilustração do funcionamento; os recursos de IA dependem de configuração. [Diagramas técnicos em Mermaid](#arquitetura-em-linguagem-simples).
 
 ## O Atlas em ação
 

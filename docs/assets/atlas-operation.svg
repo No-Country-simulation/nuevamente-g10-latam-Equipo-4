@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="660" viewBox="0 0 1200 660" role="img" aria-labelledby="title desc">
   <title id="title">Atlas em movimento: da fonte ao estudo com referências</title>
-  <desc id="desc">Ilustração conceitual animada em quatro etapas: adicionar uma fonte, recuperar evidências, coordenar agentes e ações e entregar material com citações. O Dreamer trabalha com experiências consentidas e avaliação. Geração por LLM e Jev dependem de configuração; sem LLM, o modo é extrativo. Não é telemetria ou captura de uma execução. A animação para quando o sistema solicita movimento reduzido.</desc>
+  <desc id="desc">Ilustração animada do funcionamento do Atlas: adicionar materiais, encontrar trechos úteis, organizar a ajuda dos tutores e estudar com referências. A Action Engine executa tarefas; Jev pode avaliar a relevância dos trechos. Com consentimento, o Dreamer avalia experiências para melhorar a ajuda futura. Recursos de IA dependem de configuração; sem IA, o Atlas apresenta trechos originais. A animação respeita a preferência por movimento reduzido.</desc>
   <defs>
     <linearGradient id="canvas" x2="1" y2="1"><stop stop-color="#111316"/><stop offset="1" stop-color="#08090A"/></linearGradient>
     <radialGradient id="ember"><stop stop-color="#FF4F38" stop-opacity=".18"/><stop offset="1" stop-color="#FF4F38" stop-opacity="0"/></radialGradient>
@@ -51,30 +51,30 @@
     <text class="micro" y="218">FONTES DO ESTUDANTE</text>
   </g>
   <g transform="translate(352 235)">
-    <text class="label" y="0">02 / RECUPERAR</text>
+    <text class="label" y="0">02 / ENCONTRAR</text>
     <g class="icon" transform="translate(0 24)"><circle cx="17" cy="17" r="15"/><path d="M28 28l12 12 M10 12h14 M10 18h14 M10 24h8"/></g>
     <text class="heading" y="104">Encontrar respaldo</text>
-    <text class="body" y="133"><tspan x="0">Trechos e contexto das fontes.</tspan><tspan x="0" dy="21">Fontes autorizadas do workspace.</tspan><tspan x="0" dy="21">Relevância com Jev opcional.</tspan></text>
-    <text class="micro" y="218">RAG + EVIDÊNCIAS</text>
+    <text class="body" y="133"><tspan x="0">Trechos úteis para sua pergunta.</tspan><tspan x="0" dy="21">Busca nos materiais selecionados.</tspan><tspan x="0" dy="21">Jev avalia trechos, se ativado.</tspan></text>
+    <text class="micro" y="218">IDEIAS COM RESPALDO</text>
   </g>
   <g transform="translate(638 235)">
-    <text class="label" y="0">03 / COORDENAR</text>
+    <text class="label" y="0">03 / AJUDAR</text>
     <g class="icon" transform="translate(0 24)"><path d="M7 9l24 1-12 25z"/><circle cx="7" cy="9" r="5" fill="#111316"/><circle cx="31" cy="10" r="5" fill="#111316"/><circle cx="19" cy="35" r="5" fill="#111316"/></g>
     <text class="heading" y="104">Agentes e ações</text>
-    <text class="body" y="133"><tspan x="0">Brains escolhem a abordagem.</tspan><tspan x="0" dy="21">Invokta aplica regras às ações.</tspan><tspan x="0" dy="21">Eve orquestra o perfil de agentes.</tspan></text>
-    <text class="micro" y="218">GERAÇÃO REMOTA CONFIGURÁVEL</text>
+    <text class="body" y="133"><tspan x="0">Tutores sugerem como estudar.</tspan><tspan x="0" dy="21">Action Engine executa tarefas.</tspan><tspan x="0" dy="21">Agentes podem colaborar.</tspan></text>
+    <text class="micro" y="218">AJUDA NO SEU APRENDIZADO</text>
   </g>
   <g transform="translate(924 235)">
     <text class="label" y="0">04 / APRENDER</text>
     <g class="icon" transform="translate(0 24)"><path d="M2 1h36v29H13L2 39z M10 12l6 6 13-12 M10 24h20"/></g>
     <text class="heading" y="104">Estudar e conferir</text>
-    <text class="body" y="133"><tspan x="0">Tutorial, quiz e flashcards.</tspan><tspan x="0" dy="21">Citações para abrir e conferir.</tspan><tspan x="0" dy="21">Progresso validado no backend.</tspan></text>
+    <text class="body" y="133"><tspan x="0">Tutorial, quiz e flashcards.</tspan><tspan x="0" dy="21">Citações para abrir e conferir.</tspan><tspan x="0" dy="21">Acompanhe seu progresso.</tspan></text>
     <text class="micro" y="218">MATERIAL + FONTES + PRÁTICA</text>
   </g>
   <rect x="44" y="506" width="1110" height="86" rx="14" fill="#161419" stroke="#3A323E"/>
   <g class="icon" transform="translate(66 529)"><path d="M24 1A20 20 0 1 0 37 31 19 19 0 0 1 24 1" stroke="#B8A6F4"/><path class="star" d="M40 1v12 M34 7h12" stroke="#B8A6F4"/></g>
-  <text x="130" y="539" class="heading" font-size="20">Dreamer · aprender com experiências consentidas</text>
-  <text x="130" y="566" class="body">Consolidar → avaliar propostas → versionar ou reverter. Promoções dependem de evidência.</text>
-  <text class="body" x="44" y="622" font-size="12">Com LLM configurada: geração remota. Sem LLM: modo extrativo identificado. Jev e busca web exigem configuração.</text>
-  <text class="micro" x="1154" y="642" text-anchor="end">ILUSTRAÇÃO DO FLUXO · NÃO É TELEMETRIA</text>
+  <text x="130" y="539" class="heading" font-size="20">Dreamer · aprender com você, com sua permissão</text>
+  <text x="130" y="566" class="body">Rever experiências → testar propostas → avaliar resultados antes de mudar. Mudanças podem ser desfeitas.</text>
+  <text class="body" x="44" y="622" font-size="12">IA e Jev dependem de configuração. Sem IA, o Atlas apresenta trechos originais e identifica esse modo de estudo.</text>
+  <text class="micro" x="1154" y="642" text-anchor="end">COMO FUNCIONA · FLUXO ILUSTRADO</text>
 </svg>
