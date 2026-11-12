@@ -6,3 +6,5 @@
 A direção de cores, marca e tipografia está em [DESIGN_ATLAS.md](../DESIGN_ATLAS.md). O banner tem fundo próprio para manter a identidade nos temas claro e escuro do GitHub. A descrição alternativa e o texto do README continuam legíveis sem as imagens.
 
 Ao atualizar a captura, use uma fonte sintética e preserve as indicações reais de capacidades. O arquivo é uma imagem da interface, não um mockup ou comprovação de uma integração externa.
+
+Os badges em `badges/` são SVGs locais, com rótulos e descrições acessíveis. Suas versões resumem os manifests de frontend/backend, o lock Python e o runtime do CI; revise-os junto com atualizações dessas dependências. Não consultam serviços externos, não contam visitas e não representam status de CI, licença ou deploy. Cada badge no README leva ao arquivo ou guia correspondente.

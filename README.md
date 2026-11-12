@@ -19,8 +19,28 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/Oracle-hackatom-g10-team-4/Nova-mente-Solution">Repositório Oracle</a> ·
-  <a href="https://github.com/No-Country-simulation/nuevamente-g10-latam-Equipo-4">Repositório No Country</a>
+  <a href="https://github.com/Oracle-hackatom-g10-team-4/Nova-mente-Solution">💻 Oracle</a> ·
+  <a href="https://github.com/No-Country-simulation/nuevamente-g10-latam-Equipo-4">🤝 No Country</a> ·
+  <a href="docs/NovaMente_Atlas_Guia_Arquitetura_Iniciantes.pdf">📘 Guia da equipe</a> ·
+  <a href="#conexões-e-modelos">🔑 Configurar API</a>
+</p>
+
+<p align="center">
+  <a href="apps/web/package.json"><img src="docs/assets/badges/nextjs.svg" alt="Next.js 16" /></a>
+  <a href="apps/web/package.json"><img src="docs/assets/badges/react.svg" alt="React 19" /></a>
+  <a href="apps/web/package.json"><img src="docs/assets/badges/typescript.svg" alt="TypeScript 5.9 no frontend" /></a>
+  <a href="apps/api/package.json"><img src="docs/assets/badges/nestjs.svg" alt="NestJS 11" /></a>
+  <a href=".github/workflows/ci.yml"><img src="docs/assets/badges/python.svg" alt="Python 3.12" /></a>
+  <a href="services/cognition/requirements.lock"><img src="docs/assets/badges/fastapi.svg" alt="FastAPI 0.115" /></a>
+</p>
+
+<p align="center">
+  <a href="apps/api/package.json"><img src="docs/assets/badges/eve.svg" alt="Eve 0.80" /></a>
+  <a href="apps/api/package.json"><img src="docs/assets/badges/invokta.svg" alt="Invokta 0.9" /></a>
+  <a href="#arquitetura-em-linguagem-simples"><img src="docs/assets/badges/sqlite.svg" alt="SQLite local" /></a>
+  <a href="apps/web/package.json"><img src="docs/assets/badges/motion.svg" alt="Motion 12" /></a>
+  <a href="apps/web/package.json"><img src="docs/assets/badges/animejs.svg" alt="anime.js 4" /></a>
+  <a href="apps/web/package.json"><img src="docs/assets/badges/mui.svg" alt="Material UI 7" /></a>
 </p>
 
 ---
