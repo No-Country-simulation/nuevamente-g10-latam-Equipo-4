@@ -20,6 +20,7 @@
 </p>
 
 <p align="center">
+  <a href="https://atlas-explore-aprenda.andrevictorandrade.chatgpt.site">🌐 Site do projeto</a> ·
   <a href="https://github.com/Oracle-hackatom-g10-team-4/Nova-mente-Solution">💻 Oracle</a> ·
   <a href="https://github.com/No-Country-simulation/nuevamente-g10-latam-Equipo-4">🤝 No Country</a> ·
   <a href="docs/NovaMente_Atlas_Guia_Arquitetura_Iniciantes.pdf">📘 Guia da equipe</a> ·

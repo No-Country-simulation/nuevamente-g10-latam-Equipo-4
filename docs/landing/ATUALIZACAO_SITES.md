@@ -1,10 +1,12 @@
 # Atlas · conteúdo para atualizar a landing page no Sites
 
-Preparado em **12/11/2026** a partir do README e das capacidades verificadas do projeto. **Ainda não publicado no Sites**: o conector e o endereço do site não estão disponíveis nesta sessão. Este arquivo prepara a atualização; não representa uma alteração no site hospedado.
+Preparado em **12/11/2026** a partir do README e das capacidades verificadas do projeto. **Atualização ainda não publicada no Sites**: o conector não está disponível nesta sessão. O endereço existente é [Atlas · Explore, aprenda](https://atlas-explore-aprenda.andrevictorandrade.chatgpt.site), fornecido pela equipe. A tentativa de leitura pelo ambiente retornou HTTP 403 na conexão do proxy; isso não comprova indisponibilidade do site. Este arquivo prepara a atualização; não representa uma alteração no site hospedado.
 
 ## Identidade e navegação
 
 Preservar o nome **NovaMente Atlas**, a marca orbital, o fundo escuro, o destaque coral, Instrument Serif nos títulos e Plus Jakarta Sans na interface. Referência: [direção visual](../DESIGN_ATLAS.md) e [banner Atlas](../assets/atlas-readme-banner.svg). O banner é uma peça de apresentação; não usar como substituto de todo o conteúdo acessível da página.
+
+Preservar esse endereço ao atualizar a publicação; não criar um segundo site.
 
 Navegação: **Como funciona · Tutores · Para a equipe · Contributors · Código**. Usar somente destinos reais. Ainda não há URL pública da aplicação nem vídeo de demonstração confirmados para inserir em botões.
 
