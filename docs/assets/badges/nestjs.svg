@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="82" height="22" viewBox="0 0 82 22" role="img" aria-labelledby="title">
+  <title id="title">NestJS · 11</title>
+  <clipPath id="bounds"><rect width="82" height="22" rx="4"/></clipPath>
+  <g clip-path="url(#bounds)"><path fill="#30363D" d="M0 0h54v22H0z"/><path fill="#B51D43" d="M54 0h28v22H54z"/></g>
+  <g font-family="Arial, Helvetica, sans-serif" font-size="11" text-anchor="middle"><text x="27" y="15" fill="#FFFFFF">NestJS</text><text x="68" y="15" fill="#FFFFFF">11</text></g>
+</svg>
