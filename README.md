@@ -1,24 +1,74 @@
-# NovaMente Atlas
+<p align="center">
+  <img src="docs/assets/atlas-readme-banner.svg" alt="Atlas — NovaMente. Explore, pense, aprenda, evolua." width="1200" />
+</p>
 
-**Uma biblioteca que pensa com você.** O Atlas transforma documentos em materiais de estudo com fontes verificáveis, tutoria e prática. Projeto ONE G10 — Oracle + Alura.
+<h1 align="center">NovaMente Atlas</h1>
 
-Este README foi escrito também para quem está começando. Siga a ordem abaixo; você não precisa configurar inteligência artificial paga para fazer a primeira execução.
+<p align="center">
+  <strong>Suas fontes. Novas perspectivas. Um jeito seu de aprender.</strong><br />
+  Um estúdio de aprendizagem que conecta documentos, tutores, citações e prática.<br />
+  Projeto educacional ONE G10 · Oracle + Alura · No Country
+</p>
 
-> **Estado atual:** primeiro incremento funcional, em um workspace local. Ainda não é o MVP completo nem uma aplicação pronta para acesso público multiusuário. Sem chaves, o sistema usa trechos literais e busca lexical de demonstração. Isso é diferente de uma resposta gerada por LLM ou de embeddings semânticos.
+<p align="center">
+  <a href="#primeira-execução-passo-a-passo">Começar</a> ·
+  <a href="#seu-primeiro-estudo">Primeiro estudo</a> ·
+  <a href="#arquitetura-em-linguagem-simples">Arquitetura</a> ·
+  <a href="#verificações-qual-comando-responde-a-qual-pergunta">Testes</a> ·
+  <a href="#rotina-git-para-a-equipe">Contribuir</a>
+</p>
 
-Repositórios sincronizados: [Oracle](https://github.com/Oracle-hackatom-g10-team-4/Nova-mente-Solution) e [No Country](https://github.com/No-Country-simulation/nuevamente-g10-latam-Equipo-4).
+<p align="center">
+  <a href="https://github.com/Oracle-hackatom-g10-team-4/Nova-mente-Solution">Repositório Oracle</a> ·
+  <a href="https://github.com/No-Country-simulation/nuevamente-g10-latam-Equipo-4">Repositório No Country</a>
+</p>
 
-Arquitetura atual: [Agent Factory 0.3](docs/SPEC_AGENT_FACTORY_V03.md) + [Conexões e entrega 0.4](docs/architecture/connections-and-delivery.md).
+---
 
-**Revisão de requisitos:** [Matriz MVP e pós-MVP](docs/AUDITORIA_MVP_POS_MVP.md), conferida com o PDF do hackathon. **Configuração:** [chaves, login local, SDKs e deploy por GitHub Actions/GHCR](docs/CONFIGURACAO_E_DEPLOY.md). O edital exige Object Storage e prova vetorial; OCI Compute é opcional.
+## Do documento à compreensão
 
-## Acesso e biblioteca 0.6 — branch em revisão
+O Atlas parte do material de quem estuda. Você adiciona uma fonte, escolhe um objetivo e encontra um percurso com referências que pode abrir, atividades que pode praticar e progresso acompanhado pelo servidor.
 
-Novo cliente opcional: [Atlas local com OAuth ChatGPT](integrations/chatgpt-desktop/README.md).
-Usa o DevKit oficial e cofre do SO, sem domínio/Client ID manual nesse modo.
-Conta elegível autoriza o uso explicitamente; limites e modelos são da conta.
-Não transfere tokens para Oracle nem troca geração para API paga automaticamente.
-O login por e-mail pode ser habilitado com `ATLAS_REQUIRE_LOGIN=1`; a liberação pública de produção continua pendente. Consulte [autenticação e builds](docs/architecture/auth-and-builds.md).
+| 01 · Traga suas fontes | 02 · Explore perspectivas | 03 · Pratique no seu ritmo |
+| --- | --- | --- |
+| PDF textual, Markdown e TXT, com biblioteca, seleção e remoção de documentos. | Sete tutores, métodos independentes e materiais com citações consultáveis. | Quiz, flashcards, trilhas persistentes e XP sem duplicação pelo mesmo acerto. |
+
+> **Estado do projeto:** protótipo funcional para uso local. Sem credenciais, o modo extrativo organiza trechos literais e usa busca lexical. Geração por LLM, avaliação Jev, pesquisa Firecrawl e armazenamento OCI precisam de configuração e validação próprias. A conclusão do MVP e a liberação pública continuam pendentes.
+
+## O Atlas em ação
+
+<p align="center">
+  <img src="docs/assets/atlas-workspace.png" alt="Captura real do estúdio Atlas: quiz extrativo, sete tutores na lateral e documento original no painel de fontes." width="1440" />
+</p>
+
+<p align="center"><em>Aplicação real com fonte sintética, em modo extrativo. As capacidades disponíveis ficam identificadas na própria interface.</em></p>
+
+### Um projeto, quatro partes que trabalham juntas
+
+| Interface | Regras e ações | Documentos e memória | Agentes |
+| --- | --- | --- | --- |
+| Next.js + TypeScript | NestJS + Invokta | Python + SQLite | Eve + provedores externos |
+
+O Dreamer faz parte do núcleo: memória consentida, consolidação, avaliação e rollback de políticas pedagógicas. Promoções dependem de evidência; o sistema não declara uma melhoria só porque um ciclo foi iniciado.
+
+**Documentação para seguir:** [autenticação e builds](docs/architecture/auth-and-builds.md) · [Agent Factory](docs/SPEC_AGENT_FACTORY_V03.md) · [conexões e entrega](docs/architecture/connections-and-delivery.md) · [direção visual](docs/DESIGN_ATLAS.md).
+
+**Requisitos e operação:** [matriz MVP/pós-MVP](docs/AUDITORIA_MVP_POS_MVP.md) · [configuração e deploy](docs/CONFIGURACAO_E_DEPLOY.md) · [.env.example](.env.example). O edital exige OCI Object Storage e prova vetorial; OCI Compute é opcional.
+
+## Acesso e biblioteca 0.6 — integrado à main
+
+Sete tutores: **Guia, Faísca, Prisma, Trama, Elo, Ágora e Clara**. Método e tutor são independentes. A biblioteca aceita PDF textual, Markdown e TXT de até **80 MiB**, com parser e contexto limitados. **Gerenciar fontes** permite pesquisa e remoção múltipla confirmada.
+
+O login por e-mail pode ser habilitado com `ATLAS_REQUIRE_LOGIN=1`. Para geração por API, o perfil Eve usa provedores configurados no servidor; comece por [configurar integrações](#configurar-integrações-uma-por-vez). Chaves ficam no backend.
+
+**Sua API pelo painel:** em [Conexões e modelos](#conexões-e-modelos), escolha “Minha chave de API”, o provedor e o modelo. O servidor salva a chave criptografada; consultas retornam apenas o estado da configuração. Com login obrigatório, administradores gerenciam essas conexões. A hospedagem precisa de chave mestra e volume persistente do cofre; salve a chave e confirme uma geração real antes da demonstração.
+
+[Autenticação e builds](docs/architecture/auth-and-builds.md) · [Especificação de acesso e fontes](docs/specs/access-learning-80mb.md) · [Arquitetura local/Oracle](docs/architecture/chatgpt-local.md).
+
+<details>
+<summary><strong>Opcional: aplicativo pessoal com OAuth ChatGPT</strong></summary>
+
+O [Atlas local com OAuth ChatGPT](integrations/chatgpt-desktop/README.md) usa o DevKit oficial e cofre do SO, sem domínio ou Client ID manual nesse perfil. A conta elegível autoriza o uso explicitamente; limites e modelos são da conta. Não transfere tokens para Oracle nem troca geração para API paga automaticamente.
 
 ```bash
 # Após preparar o ambiente e npm run build na raiz:
@@ -26,17 +76,16 @@ npm run chatgpt:setup
 npm run chatgpt:start
 ```
 
-[Arquitetura local/Oracle](docs/architecture/chatgpt-local.md) e
-[spec de acesso, fontes80MiB e personas](docs/specs/access-learning-80mb.md).
-Sete personas: Guia, Faísca, Prisma, Trama, Elo, Ágora e Clara. Método e tutor são
-independentes. Biblioteca aceita PDF textual/MD/TXT até80MiB, com parser/contexto
-limitados; Gerenciar fontes permite pesquisa e remoção múltipla confirmada.
-O perfil ChatGPT local usa geração direta validada; Eve/debates seguem no perfil
-por API. Login/uso real de uma assinatura precisa de teste interativo do usuário.
+Esse cliente é separado do login por e-mail do Atlas. OAuth e uso real de uma assinatura ainda precisam de teste interativo com a conta do usuário. Eve e os debates permanecem no perfil por API.
 
-## Entrega 0.5 em branch — 28/10/2026
+</details>
 
-A evolução está em `feat/andre-pos-mvp-quality-20261028`, sem atualizar `main`.
+<details>
+<summary><strong>Histórico da entrega 0.5 · arquitetura, roadmap e PDFs</strong></summary>
+
+## Entrega 0.5 — 28/10/2026
+
+O pacote registra a entrega originalmente preparada em `feat/andre-pos-mvp-quality-20261028`, posteriormente integrada à `main`. Os documentos datados preservam o contexto daquela etapa.
 [Pacote da entrega](docs/entrega-2026-10-28/README.md): arquitetura modular,
 recibos de comandos, trilhas persistentes, regras de progresso no backend,
 novos nomes dos tutores preservando IDs e testes de interação/HTTP.
@@ -52,8 +101,9 @@ em um workspace isolado, sem chamadas pagas.
 Node/Python compilados. `npm run quality:setup` instala analisadores de
 desenvolvimento; `npm run quality` bloqueia novas violações e regressões inclusive
 na UI. [Regras e limites](docs/quality/README.md). Não reduzir gates para passar.
-Para publicar esta entrega, use `bash scripts/push-branch-both.sh`; o script antigo
-`push-both.sh` publica main e não deve ser usado nesta tarefa.
+Para publicar uma branch revisada nos dois destinos, use `bash scripts/push-branch-both.sh` e abra os PRs. O fluxo de contribuição está na [rotina Git](#rotina-git-para-a-equipe).
+
+</details>
 
 ## Por onde começar
 
@@ -63,7 +113,7 @@ Para publicar esta entrega, use `bash scripts/push-branch-both.sh`; o script ant
 | Quero entender como tudo se conecta | [Guia didático em PDF](docs/NovaMente_Atlas_Guia_Arquitetura_Iniciantes.pdf) |
 | Quero editar o guia | [Fonte do guia em Markdown](docs/GUIA_ARQUITETURA.md) |
 | Quero fazer minha primeira contribuição | [Onde alterar](#onde-alterar-cada-coisa) e [rotina Git](#rotina-git-para-a-equipe) |
-| Quero conhecer os requisitos e pendências | [Especificação](docs/SPEC.md) e [estado real](docs/STATUS.md) |
+| Quero conhecer os requisitos e pendências | [Especificação](docs/SPEC.md) e [histórico das entregas](docs/STATUS.md) |
 | Quero aprofundar os brains e engines | [Arquitetura da orquestração](docs/architecture/brains-and-action-engines.md) |
 | Quero configurar um fornecedor | [.env.example](.env.example) e [pesquisa de integrações](docs/research/integrations.md) |
 
@@ -189,7 +239,7 @@ O uso cotidiano continua sem modelo dedicado de embeddings: lexical, contexto de
 A landing segue o novo book: Instrument Serif nos títulos, Plus Jakarta Sans na interface, superfícies escuras, órbitas e laranja. Veja os tokens e limites em [Direção visual Atlas](docs/DESIGN_ATLAS.md).
 
 1. Em **Crie seu próprio Atlas**, digite um nome de até 24 caracteres.
-2. Escolha uma das quatro cores e um dos cinco tutores como perspectiva inicial.
+2. Escolha uma das quatro cores e um dos sete tutores como perspectiva inicial.
 3. Clique em **Criar meu Atlas e começar**. O estúdio abre com esse tutor selecionado.
 4. Use **Personalizar [nome]** na barra lateral para editar ou restaurar os tutores originais. No celular, abra primeiro o menu de navegação.
 
@@ -225,7 +275,7 @@ Depois de atualizar dependências do repositório, pare os serviços e execute o
 1. Abra **Estúdio de adaptação**. Há uma fonte demonstrativa da equipe quando o workspace está vazio e o seed está habilitado.
 2. Clique em **Adicionar fonte** e envie o [exemplo de primeiro estudo](docs/examples/primeiro-estudo.md), um PDF com texto selecionável, um `.md` ou `.txt` UTF-8.
 3. Selecione a fonte. Comece com um documento curto para entender o fluxo.
-4. Escolha **Iniciante**, o formato desejado e um dos cinco tutores. Deixe o método automático no início.
+4. Escolha **Iniciante**, o formato desejado e um dos sete tutores. Deixe o método automático no início.
 5. Escreva um objetivo concreto, como “Explique os principais conceitos deste documento”. Gere o material.
 6. Clique em uma citação e confira o trecho no painel de fontes. Citação é evidência; não é só decoração.
 7. Experimente um quiz. A resposta correta é conferida no servidor; repetir o acerto da mesma atividade não gera XP novamente.
@@ -309,7 +359,7 @@ apps/web/                      Interface Next e proxy do servidor
 apps/api/                      API Nest, Invokta e autoria Eve
   src/main.ts                  Rotas, adapters e montagem das dependências
   src/policy.ts                Contratos de entrada, decisão e judge
-  src/orchestration/brains.ts  Registro e fluxo dos cinco brains
+  src/orchestration/brains.ts  Registro e fluxo dos sete brains
   src/orchestration/actions.ts Engines, capacidades, schemas e acesso
   agent/                       Instruções e configuração do runtime Eve
   test/                        Testes Node de política e orquestração
@@ -465,13 +515,13 @@ npm run test:proxy -w @atlas/web
 
 | Comando | O que verifica | Precisa dos serviços ativos? |
 | --- | --- | --- |
-| `npm test` | 11 testes Node e 14 Python na versão documentada | Não; Python usa diretórios temporários |
+| `npm test` | Testes da API Node, domínio Python, ambiente e fronteira web | Não; Python usa diretórios temporários |
 | `npm run typecheck` | Consistência de tipos, incluindo autoria Eve | Não |
 | `npm run build` | Compilação Nest e Next | Não; prefira parar o Next dev ao gerar seu build |
 | `npm run smoke` | Fluxo HTTP real com upload, citação, quiz, Dreamer e grupo | Sim; altera a biblioteca local com dados de teste |
-| `npm run test:proxy -w @atlas/web` | Oito verificações da fronteira Next | Sim |
+| `npm run test:proxy -w @atlas/web` | Verificações HTTP da fronteira Next | Sim |
 
-Para compilar o Next, pare o terminal A, rode o build e reinicie `npm run dev` antes dos testes HTTP. Os números de testes podem crescer; consulte a saída real e o [STATUS](docs/STATUS.md). Provedor controlado em teste não significa chamada remota real.
+Para compilar o Next, pare o terminal A, rode o build e reinicie `npm run dev` antes dos testes HTTP. Os números de testes podem crescer; consulte a saída real. O [STATUS](docs/STATUS.md) reúne registros datados das entregas anteriores. Provedor controlado em teste não significa chamada remota real.
 
 ## Rotina Git para a equipe
 
@@ -641,10 +691,14 @@ Leia [AGENTS.md](AGENTS.md), [SPEC](docs/SPEC.md), [STATUS](docs/STATUS.md) e a 
 
 ## Publicar o mesmo commit nos dois repositórios
 
-Depois de revisar e commitar, execute `bash scripts/push-both.sh`. O script envia
-`HEAD` para `main` nos dois destinos, sem force, e confere o SHA remoto. Se o
-segundo falhar, informa sincronização parcial; preserve os commits e corrija
-acesso/divergência antes de repetir. Não há transação atômica entre dois GitHubs.
+Trabalhe em uma branch de contribuição. Depois de revisar e commitar, execute
+`bash scripts/push-branch-both.sh`: ele publica a mesma branch nos dois remotes,
+recusa `main`/`master` e confere o SHA enviado. Abra um PR em cada destino e
+preserve os commits individuais na integração.
+
+Se um envio falhar, confira acesso e histórico antes de repetir; não use force
+push. Os commits de merge das duas `main` podem ter SHAs diferentes: compare
+também o conteúdo. Não há transação atômica entre dois repositórios GitHub.
 
 
 ## Build e registry fora da VPS
@@ -691,9 +745,9 @@ Pacotes legados com referências ausentes ou de outro tenant são inventariados 
 `package_integrity_issues` e ficam indisponíveis até reconciliação; nenhum conteúdo
 é apagado silenciosamente. Schema4 também protege derivados de contexto legado
 sem proveniência. [Migração e reparo manual](docs/architecture/migration-06.md).
-Consulte a especificação desta branch antes de operar reparo administrativo ou abrir o serviço ao público.
+Consulte a [especificação de acesso](docs/specs/access-learning-80mb.md) e o [guia de migração](docs/architecture/migration-06.md) antes de operar reparo administrativo ou abrir o serviço ao público.
 
-Em **Gerenciar fontes**, busque pelo nome, selecione até20 documentos e confirme a
+Em **Gerenciar fontes**, busque pelo nome, selecione até 20 documentos e confirme a
 remoção de uma vez. O resultado aparece por fonte; falhas não desfazem remoções
 anteriores, e limpezas externas pendentes continuam sendo acompanhadas. A lixeira
 individual permanece disponível para conferir o impacto detalhado de uma fonte.
