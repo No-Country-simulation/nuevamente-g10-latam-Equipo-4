@@ -64,6 +64,14 @@ O Atlas parte do material de quem estuda. Você adiciona uma fonte, escolhe um o
 
 > **Estado do projeto:** protótipo funcional para uso local. Sem credenciais, o modo extrativo organiza trechos literais e usa busca lexical. Geração por LLM, avaliação Jev, pesquisa Firecrawl e armazenamento OCI precisam de configuração e validação próprias. A conclusão do MVP e a liberação pública continuam pendentes.
 
+## Como o Atlas trabalha
+
+<p align="center">
+  <img src="docs/assets/atlas-operation.svg" alt="Fluxo ilustrado do Atlas: biblioteca, recuperação de evidências, agentes e ações, resposta com citações; Dreamer com consentimento e avaliação." width="1200" />
+</p>
+
+O SVG apresenta o que acontece com seu material: encontrar trechos úteis, organizar a ajuda dos tutores e estudar com referências. A animação respeita a preferência por movimento reduzido. É uma ilustração do funcionamento; os recursos de IA dependem de configuração. [Diagramas técnicos em Mermaid](#arquitetura-em-linguagem-simples).
+
 ## O Atlas em ação
 
 <p align="center">
@@ -71,6 +79,23 @@ O Atlas parte do material de quem estuda. Você adiciona uma fonte, escolhe um o
 </p>
 
 <p align="center"><em>Aplicação real com fonte sintética, em modo extrativo. As capacidades disponíveis ficam identificadas na própria interface.</em></p>
+
+<details>
+<summary><strong>Ver a fonte original e o feedback do exercício</strong></summary>
+
+### Conferir o trecho usado
+
+![Citação aberta no painel de fontes, com a passagem original destacada](docs/assets/atlas-source-evidence.png)
+
+Clique na citação para abrir a passagem original. A captura usa documento sintético e mostra o modo extrativo, com avaliação externa pendente.
+
+### Praticar com retorno imediato
+
+![Quiz extrativo após resposta correta, com feedback e atualização de XP](docs/assets/atlas-quiz-feedback.png)
+
+O backend confere o acerto e controla a pontuação. As duas capturas são reais, registradas no fluxo de demonstração de 12/11/2026; não comprovam uma geração LLM ou integração externa.
+
+</details>
 
 ### Um projeto, quatro partes que trabalham juntas
 

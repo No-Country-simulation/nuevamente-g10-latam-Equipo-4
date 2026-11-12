@@ -16,7 +16,6 @@ Os perfis e a presença nos repositórios foram conferidos em **12/11/2026**.
 
 [@tIILUNGI](https://github.com/tIILUNGI) aparece no histórico dos dois repositórios como TiIlungi e exibe o nome público Ebenezer C. Vilola Cangondo. O perfil recebe crédito pelas contribuições registradas, sem presumir que duas contas com o mesmo nome pertençam à mesma pessoa.
 
-[@superjonic](https://github.com/superjonic), Leandro Buzeta Bernasconi, também consta como colaborador do repositório Oracle. Seu papel específico no Atlas não foi informado; o crédito não atribui autoria de código ou função técnica não confirmada.
 
 O acesso de colaborador e a autoria de commits são registros diferentes. A página considera a união dos dois repositórios, sem classificar integrantes por quantidade de commits.
 
