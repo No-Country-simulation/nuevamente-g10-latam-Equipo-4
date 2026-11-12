@@ -15,7 +15,8 @@
   <a href="#seu-primeiro-estudo">Primeiro estudo</a> ·
   <a href="#arquitetura-em-linguagem-simples">Arquitetura</a> ·
   <a href="#verificações-qual-comando-responde-a-qual-pergunta">Testes</a> ·
-  <a href="#rotina-git-para-a-equipe">Contribuir</a>
+  <a href="CONTRIBUTING.md">Contribuir</a> ·
+  <a href="CONTRIBUTORS.md">Contributors</a>
 </p>
 
 <p align="center">
@@ -41,6 +42,13 @@
   <a href="apps/web/package.json"><img src="docs/assets/badges/motion.svg" alt="Motion 12" /></a>
   <a href="apps/web/package.json"><img src="docs/assets/badges/animejs.svg" alt="anime.js 4" /></a>
   <a href="apps/web/package.json"><img src="docs/assets/badges/mui.svg" alt="Material UI 7" /></a>
+</p>
+
+
+<p align="center">
+  <a href="LICENSE"><img src="docs/assets/badges/license.svg" alt="Código original Atlas sob licença MIT" /></a> ·
+  <a href="CONTRIBUTORS.md">Equipe e créditos</a> ·
+  <a href="THIRD_PARTY_NOTICES.md">Licenças de terceiros</a>
 </p>
 
 ---
@@ -331,7 +339,24 @@ precisa ser medida com os fornecedores configurados.
 
 Pense em uma biblioteca: a interface é o balcão; o proxy entrega o pedido; o Nest organiza o atendimento; o brain escolhe a abordagem; a Action Engine executa uma tarefa com regras; o Python localiza e organiza as evidências. O Dreamer revisa experiências autorizadas para propor um atendimento melhor no futuro.
 
-![Mapa dos serviços Atlas](docs/diagrams/architecture.svg)
+```mermaid
+flowchart LR
+    User["Quem estuda"] --> Web["Next.js · interface e proxy"]
+    Web --> API["NestJS · autenticação e brains"]
+    API --> Actions["Invokta · ações tipadas"]
+    API --> Eve["Eve · agentes e delegação"]
+    Actions --> Python["Python · documentos e aprendizagem"]
+    Python -. "perfil Eve: pedido interno" .-> API
+    Python --> DB[("SQLite · dados e memória")]
+    Python --> Dreamer["Dreamer · replay, avaliação e rollback"]
+    Dreamer --> DB
+    Eve -. "configurado" .-> LLM["Provedor de geração"]
+    API -. "configurado" .-> Jev["Jev · decisão e avaliação"]
+    Actions -. "configurado" .-> Firecrawl["Firecrawl · pesquisa web"]
+    Python -. "configurado" .-> OCI["OCI Object Storage"]
+```
+
+As conexões pontilhadas dependem de credenciais e configuração; o diagrama não comprova que o deploy ou os fornecedores estejam ativos. O Dreamer usa experiências consentidas e só promove políticas após avaliação. [Mapa alternativo em SVG](docs/diagrams/architecture.svg).
 
 ### Brain, agente, método, modelo e engine são diferentes
 
@@ -357,15 +382,41 @@ Os principals — identidades confiáveis de execução — são criados pelo se
 
 ### O percurso de um pedido
 
-```text
-Navegador → proxy Next → Nest → brain da persona
-  → fontes autorizadas + política consentida do Dreamer
-  → decisão TypeSafe ou política local
-  → Learning Engine → Python → recuperação de evidências
-  → LLM/Eve configurado ou demonstração extrativa
-  → validação, citações, judge quando configurado e persistência
-  → material de volta à interface
+```mermaid
+sequenceDiagram
+    actor Student as Estudante
+    participant Web as Interface Next.js
+    participant API as NestJS / Invokta
+    participant Python as Domínio Python
+    participant Agents as Eve / provedor
+    Student->>Web: Adiciona uma fonte
+    Web->>API: Envia documento
+    API->>Python: Valida, extrai e persiste a fonte autorizada
+    Python-->>API: Fonte disponível
+    API-->>Web: Atualiza biblioteca
+    Student->>Web: Define objetivo e pede material
+    Web->>API: Envia pedido de estudo
+    Note over API: Brain coordena método e formato, Jev é opcional
+    API->>Python: Invokta solicita geração com fontes autorizadas
+    Python->>Python: Recupera evidências
+    alt Perfil Eve configurado
+        Python->>API: Pedido interno de geração com evidências
+        API->>Agents: Executa agentes e delegações
+        Agents-->>API: Proposta de material
+        API-->>Python: Proposta de material
+    else Perfil direto configurado
+        Python->>Agents: Chama provedor diretamente
+        Agents-->>Python: Proposta de material
+    else Modo extrativo
+        Python->>Python: Organiza trechos literais da fonte
+    end
+    Note over Python: Valida citações, aplica gates e persiste
+    Python-->>API: Material validado ou erro explícito
+    API-->>Web: Resultado, estado e fontes consultáveis
+    Web-->>Student: Estudo com referências e prática
 ```
+
+O desenho resume o percurso de estudo. Quando habilitados, o debate de agentes e o judge acontecem no backend; a política pode interromper a geração ou pedir revisão de evidências antes de entregar o resultado.
 
 O browser não chama o Python diretamente nem recebe as chaves dos fornecedores. O gabarito do quiz também permanece no servidor. O endpoint interno autenticado `/v1/orchestration` permite inspecionar o catálogo de brains/engines; ele não está liberado no proxy Next.
 
@@ -774,3 +825,12 @@ individual permanece disponível para conferir o impacto detalhado de uma fonte.
 ### Administração de conexões
 
 O cadastro não concede privilégios pelo endereço de e-mail. No servidor confiável, após criar a conta, conceda o papel pelo ID exato do usuário: `cd apps/api && node dist/auth/grant-admin.js usr_<id>`. Use o mesmo `ATLAS_DATA_DIR` da API. O comando requer acesso local ao banco de usuários.
+
+
+## Equipe, contribuição e licença
+
+O Atlas reúne **André** no full stack e arquitetura, **Jadeilton** em cloud, **Taylam** no backend, **Samuel** em testes e **Ebenezer** no frontend. A página [Contributors](CONTRIBUTORS.md) registra os perfis, os papéis e os demais colaboradores presentes nos repositórios.
+
+Quer participar? Consulte [CONTRIBUTING.md](CONTRIBUTING.md) para preparar o ambiente, escolher a área, validar sua mudança e abrir um PR com commits pequenos e justificados.
+
+O código e a documentação originais do Atlas seguem a [licença MIT](LICENSE). Dependências, skills, fontes e o DevKit opcional mantêm seus próprios termos, incluindo restrições identificadas. Consulte [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md): a MIT não relicencia esses materiais nem resolve suas pendências de redistribuição.
