@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="83" height="22" viewBox="0 0 83 22" role="img" aria-labelledby="title">
+  <title id="title">Next.js · 16</title>
+  <clipPath id="bounds"><rect width="83" height="22" rx="4"/></clipPath>
+  <g clip-path="url(#bounds)"><path fill="#30363D" d="M0 0h55v22H0z"/><path fill="#111316" d="M55 0h28v22H55z"/></g>
+  <g font-family="Arial, Helvetica, sans-serif" font-size="11" text-anchor="middle"><text x="27.5" y="15" fill="#FFFFFF">Next.js</text><text x="69" y="15" fill="#FFFFFF">16</text></g>
+</svg>
